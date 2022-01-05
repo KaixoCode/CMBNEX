@@ -157,7 +157,7 @@ namespace Kaixo
             plsw->max = 100;         pann->max = 50;          nois->max = 100;
             plsw->reset = 0;         pann->reset = 0;         nois->reset = 0;
             plsw->decimals = 1;      pann->decimals = 1;      nois->decimals = 1;
-            plsw->unit = " %";       pann->unit = "";         nois->unit = " %";
+            plsw->unit = " %";       pann->unit = "pan";      nois->unit = " %";
             plsw->type = 2;          pann->type = 2;          nois->type = 2;
 
             fltr->name = "L,H,B";    freq->name = "Freq";     reso->name = "Reso";
@@ -168,7 +168,7 @@ namespace Kaixo
             fltr->unit = "";         freq->unit = " Hz";      reso->unit = " %";
             fltr->type = 4;          freq->type = 0;          reso->type = 2;
 
-            rphs->name = "Random";   shpr->name = "SHPR-X";   shp2->name = "SHPR-Y";
+            rphs->name = "Random";   shpr->name = "SHP-X";    shp2->name = "SHP-Y";
             rphs->min = 0;           shpr->min = 0;           shp2->min = 0;
             rphs->max = 1;           shpr->max = 100;         shp2->max = 100;
             rphs->reset = 0;         shpr->reset = 0;         shp2->reset = 0;

@@ -4,6 +4,8 @@ namespace Kaixo
 {
     namespace Shapers
     {
+        double noShaper(double x, double amt) { return x; }
+
         double shaper1(double x, double amt)
         {
             const double cos1 = std::cos(159 * x);
@@ -34,30 +36,51 @@ namespace Kaixo
             return constrain(res, -1, 1);
         }
 
-        double shaper4(double x, double amt)
+        double shaper5(double x, double amt)
         {
-            if (amt < 0.33)
-            {
-                double r = amt * 3;
-                const double s1 = shaper2(x, r);
-                return s1 * r + x * (1 - r);
-            }
-            else if (amt < 0.66)
-            {
-                double r = (amt - 0.33) * 3;
-                const double s1 = shaper2(x, 1 - r);
-                const double s2 = shaper3(x, r);
-                return s2 * r + s1 * (1 - r);
-            }
-            else
-            {
-                double r = (amt - 0.66) * 3;
-                const double s2 = shaper3(x, 1 - r);
-                const double s3 = shaper1(x, r);
-                return s3 * r + s2 * (1 - r);
-            }
+            const double cos1 = std::cos((amt * 5 + 22) * x * x);
+            const double sin1 = std::sin(312 * x * x);
+            const double fp = 2 * std::pow(0.1 * x, 3);
+            const double sp = x * x * x;
+            const double res = (fp * cos1 + sin1 + sp);
+            return constrain(res, -1, 1);
         }
 
+        double shaper4(double x, double amt)
+        {
+            constexpr double steps = 4;
+            constexpr double (*funcs[(int)steps + 1])(double, double){
+                noShaper, shaper2, shaper3, shaper5, shaper1
+            };
+
+            for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
+            {
+                double r = (amt - (i - 1) / steps) * steps;
+                const double s1 = funcs[i - 1](x, 1 - r);
+                const double s2 = funcs[i](x, r);
+                return (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
+            }
+
+            return 0;
+        }
+
+        double shaper24(double x, double amt)
+        {
+            constexpr double steps = 4;
+            constexpr double (*funcs[(int)steps + 1])(double, double){
+                noShaper, shaper2, shaper3, shaper5, shaper1
+            };
+
+            for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
+            {
+                double r = (amt - (i - 1) / steps) * steps;
+                const double s1 = funcs[i - 1](x, 1 - r);
+                const double s2 = funcs[i](x, r);
+                return (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
+            }
+
+            return 0;
+        }
 
         double simpleshaper(double x, double amt)
         {
@@ -78,30 +101,6 @@ namespace Kaixo
                 const double p1 = x * x * x * x * x;
                 double r = (amt - 0.5) * 2;
                 return p1 * r + x * (1 - r);
-            }
-        }
-
-        double shaper24(double x, double amt)
-        {
-            if (amt < 0.33)
-            {
-                double r = amt * 3;
-                const double s1 = shaper2(x, r);
-                return s1 * r + x * (1 - r);
-            }
-            else if (amt < 0.66)
-            {
-                double r = (amt - 0.33) * 3;
-                const double s1 = shaper2(x, 1 - r);
-                const double s2 = shaper3(x, r);
-                return s2 * r + s1 * (1 - r);
-            }
-            else
-            {
-                double r = (amt - 0.66) * 3;
-                const double s2 = shaper3(x, 1 - r);
-                const double s3 = shaper1(x, r);
-                return s3 * r + s2 * (1 - r);
             }
         }
     }
@@ -165,7 +164,7 @@ namespace Kaixo
     {
         if (c != 0) return;
         if (m_Phase >= 0 && (m_Phase < settings.attack + settings.decay || !m_Gate))
-            m_Phase += 1.0 / (double)SAMPLE_RATE;
+            m_Phase += settings.timeMult / (double)SAMPLE_RATE;
 
         else if (m_Gate)
             m_Phase = settings.attack + settings.decay;

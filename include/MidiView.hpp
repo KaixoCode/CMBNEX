@@ -82,8 +82,8 @@ namespace Kaixo
             retr->setTag(Params::Retrigger);
             ovsm->setTag(Params::Oversample);
             oscv->setTag(Params::OscVel);
-            frqk->setTag(Params::FreqKey);
-            frqv->setTag(Params::FreqVel);
+            frqk->setTag(Params::Panning);
+            frqv->setTag(Params::Time);
             clip->setTag(Params::Clipping);
 
             tnsp->name = "Transp";    bend->name = "Bend";
@@ -110,12 +110,12 @@ namespace Kaixo
             retr->unit = "";         ovsm->unit = "";         oscv->unit = " %";
             retr->type = 3;          ovsm->type = 4;          oscv->type = 2;
 
-            frqk->name = "Freq<Key"; frqv->name = "Freq<Vel";
-            frqk->min = 0;           frqv->min = 0;
-            frqk->max = 100;         frqv->max = 100;
-            frqk->reset = 1;         frqv->reset = 0;
+            frqk->name = "Pan";      frqv->name = "Time";
+            frqk->min = -50;         frqv->min = -100;
+            frqk->max = 50;          frqv->max = 100;
+            frqk->reset = 0;         frqv->reset = 0;
             frqk->decimals = 1;      frqv->decimals = 1;
-            frqk->unit = " %";       frqv->unit = " %";
+            frqk->unit = "pan";      frqv->unit = " %";
             frqk->type = 2;          frqv->type = 2;
 
             clip->name = "Warm,Hard,Clip";

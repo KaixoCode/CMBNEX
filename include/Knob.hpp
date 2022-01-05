@@ -171,7 +171,7 @@ namespace Kaixo
             }
             else if (unit == " s")
             {
-                val = std::pow(_v, 2) * (max - min) + min;
+                val = std::pow(_v, 3) * (max - min) + min;
                 if (val > 1000)
                 {
                     val /= 1000;
@@ -183,6 +183,14 @@ namespace Kaixo
                     std::string _format = std::format("{:." + std::to_string((int)decimals + (val > 10 ? 0 : 1)) + "f}", val);
                     str = _format.c_str() + String{ " ms" };
                 }
+            }
+            else if (unit == "pan")
+            {
+                int _iv = _v * 100 - 50;
+                std::string _nmr = std::to_string(std::abs(_iv));
+                if (_iv == 0) str = "C";
+                else if (_iv < 0) str = _nmr.c_str() + String{ "L" };
+                else if (_iv > 0) str = _nmr.c_str() + String{ "R" };
             }
             else
             {

@@ -4,7 +4,7 @@
 
 namespace Kaixo
 {
-    inline double noteToFreq(double note) { return (440. / 32.) * pow(2, ((note - 9) / 12.0)); }
+    inline double noteToFreq(double note) { return note > 137 ? 22000 : (440. / 32.) * pow(2, ((note - 9) / 12.0)); }
 
 #define db2lin(db) std::powf(10.0f, 0.05 * (db))
 #define lin2db(lin) (20.0f * std::log10f(static_cast<float>(lin)))
@@ -15,10 +15,12 @@ namespace Kaixo
 
     namespace Shapers
     {
+        double noShaper(double x, double amt);
         double shaper1(double x, double amt);
         double shaper2(double x, double amt);
         double shaper3(double x, double amt);
         double shaper4(double x, double amt);
+        double shaper5(double x, double amt);
         double shaper24(double x, double amt);
         double simpleshaper(double x, double amt);
     }
@@ -80,6 +82,8 @@ namespace Kaixo
 
             double attackLevel = 0;
             double decayLevel = 1;
+
+            double timeMult = 1;
             
             bool legato = false;
         } settings;
