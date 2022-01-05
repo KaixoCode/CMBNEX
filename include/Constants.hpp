@@ -34,7 +34,28 @@ enum Params
 
     SubOct, SubGain, SubOvertone,
 
+    LFORate1,   LFORate2,   LFORate3,   LFORate4,   LFORate5,
+    LFOLvl1,    LFOLvl2,    LFOLvl3,    LFOLvl4,    LFOLvl5,
+    LFOPhase1,  LFOPhase2,  LFOPhase3,  LFOPhase4,  LFOPhase5,
+    LFOPos1,    LFOPos2,    LFOPos3,    LFOPos4,    LFOPos5,
+    LFOShaper1, LFOShaper2, LFOShaper3, LFOShaper4, LFOShaper5,
+
+    Env1A,   Env2A,   Env3A,   Env4A,   Env5A,
+    Env1AC,  Env2AC,  Env3AC,  Env4AC,  Env5AC,
+    Env1AL,  Env2AL,  Env3AL,  Env4AL,  Env5AL,
+    Env1D,   Env2D,   Env3D,   Env4D,   Env5D,
+    Env1DC,  Env2DC,  Env3DC,  Env4DC,  Env5DC,
+    Env1DL,  Env2DL,  Env3DL,  Env4DL,  Env5DL,
+    Env1S,   Env2S,   Env3S,   Env4S,   Env5S,
+    Env1R,   Env2R,   Env3R,   Env4R,   Env5R,
+    Env1RC,  Env2RC,  Env3RC,  Env4RC,  Env5RC,
+
+    Transpose, Bend, Glide,
+    FreqKey, FreqVel, OscVel,
+    
     ModCount,
+
+    Clipping, Oversample, Retrigger,
 
     FilterX, FilterY, FilterZ,
     DCX,     DCY,     DCZ,
@@ -43,12 +64,6 @@ enum Params
 
     Filter1,      Filter2,      Filter3,      Filter4,
     RandomPhase1, RandomPhase2, RandomPhase3, RandomPhase4,
-
-    LFORate1,   LFORate2,   LFORate3,   LFORate4,   LFORate5,
-    LFOLvl1,    LFOLvl2,    LFOLvl3,    LFOLvl4,    LFOLvl5,
-    LFOPhase1,  LFOPhase2,  LFOPhase3,  LFOPhase4,  LFOPhase5,
-    LFOPos1,    LFOPos2,    LFOPos3,    LFOPos4,    LFOPos5,
-    LFOShaper1, LFOShaper2, LFOShaper3, LFOShaper4, LFOShaper5,
 
     LFO1M1,  LFO2M1,  LFO3M1,  LFO4M1,  LFO5M1,
     LFO1M1A, LFO2M1A, LFO3M1A, LFO4M1A, LFO5M1A,
@@ -61,16 +76,6 @@ enum Params
     LFO1M5,  LFO2M5,  LFO3M5,  LFO4M5,  LFO5M5,
     LFO1M5A, LFO2M5A, LFO3M5A, LFO4M5A, LFO5M5A,
 
-    Env1A,   Env2A,   Env3A,   Env4A,   Env5A,
-    Env1AC,  Env2AC,  Env3AC,  Env4AC,  Env5AC,
-    Env1AL,  Env2AL,  Env3AL,  Env4AL,  Env5AL,
-    Env1D,   Env2D,   Env3D,   Env4D,   Env5D,
-    Env1DC,  Env2DC,  Env3DC,  Env4DC,  Env5DC,
-    Env1DL,  Env2DL,  Env3DL,  Env4DL,  Env5DL,
-    Env1S,   Env2S,   Env3S,   Env4S,   Env5S,
-    Env1R,   Env2R,   Env3R,   Env4R,   Env5R,
-    Env1RC,  Env2RC,  Env3RC,  Env4RC,  Env5RC,
-
     Env1M1,  Env2M1,  Env3M1,  Env4M1,  Env5M1,
     Env1M1A, Env2M1A, Env3M1A, Env4M1A, Env5M1A,
     Env1M2,  Env2M2,  Env3M2,  Env4M2,  Env5M2,
@@ -82,33 +87,102 @@ enum Params
     Env1M5,  Env2M5,  Env3M5,  Env4M5,  Env5M5,
     Env1M5A, Env2M5A, Env3M5A, Env4M5A, Env5M5A,
 
+    PitchBend,
+
     Size
 };
 
+constexpr bool Divider(int x)
+{
+    return x == 0 || x == 1 || x == 2 || x == 3 
+        || x == 52 
+        || x == 53 
+        || x == 54 
+        || x == 64 
+        || x == 67 
+        || x == 68 
+        || x == 69 
+        || x == 70 
+        || x == 71 
+        || x == 92 || x == 93 || x == 94 || x == 95 || x == 96 
+        || x == 137;
+}
+
+constexpr int ParamOrder[]
+{
+    -1, 0, 4,  8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, // Osc 1
+    -1, 1, 5,  9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, // Osc 2
+    -1, 2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, // Osc 3
+    -1, 3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, // Osc 4
+
+    -1, 52, 55, 58, 61, // Combine X
+    -1, 53, 56, 59, 62, // Combine Y
+    -1, 54, 57, 60, 63, // Combine Z
+
+    -1, 64, 65, 66, // Sub Osc
+
+    -1, 67, 72, 77, 82, 87, // LFO 1
+    -1, 68, 73, 78, 83, 88, // LFO 2
+    -1, 69, 74, 79, 84, 89, // LFO 3
+    -1, 70, 75, 80, 85, 90, // LFO 4
+    -1, 71, 76, 81, 86, 91, // LFO 5
+
+    -1, 92,  97, 102, 107, 112, 117, 122, 127, 132, // Env 1
+    -1, 93,  98, 103, 108, 113, 118, 123, 128, 133, // Env 2
+    -1, 94,  99, 104, 109, 114, 119, 124, 129, 134, // Env 3
+    -1, 95, 100, 105, 110, 115, 120, 125, 130, 135, // Env 4
+    -1, 96, 101, 106, 111, 116, 121, 126, 131, 136, // Env 5
+
+    -1, 137, 138, 139, 140, 141, 142 // Midi
+};
+
+constexpr auto ParamOrderSize = std::size(ParamOrder);
+
 constexpr ParamInfo ParamNames[]
 { 
-    { "Gain A", 1 },           { "Gain B", 0 },           { "Gain C", 0 },           { "Gain D", 0 },
-    { "Pitch A", 0.5, 1, 0 },  { "Pitch B", 0.5, 1, 0 },  { "Pitch C", 0.5, 1, 0 },  { "Pitch D", 0.5, 1, 0 },
-    { "Detune A", 0.5, 1, 0 }, { "Detune B", 0.5, 1, 0 }, { "Detune C", 0.5, 1, 0 }, { "Detune D", 0.5, 1, 0 },
-    { "Pos A", 0 },            { "Pos B", 0 },            { "Pos C", 0 },            { "Pos D", 0 },
-    { "Sync A", 0 },           { "Sync B", 0 },           { "Sync C", 0 },           { "Sync D", 0 },
-    { "PW A", 0.5, 1 },        { "PW B", 0.5, 1 },        { "PW C", 0.5, 1 },        { "PW D", 0.5, 1 },
-    { "Phase A", 0 },          { "Phase B", 0 },          { "Phase C", 0 },          { "Phase D", 0 },
-    { "SHPR-X A", 0 },         { "SHPR-X B", 0 },         { "SHPR-X C", 0 },         { "SHPR-X D", 0 },
-    { "SHPR-Y A", 0 },         { "SHPR-Y B", 0 },         { "SHPR-Y C", 0 },         { "SHPR-Y D", 0 },
-    { "Pan A", 0.5, 1 },       { "Pan B", 0.5, 1 },       { "Pan C", 0.5, 1 },       { "Pan D", 0.5, 1 },
-    { "Freq A", 1 },           { "Freq B", 1 },           { "Freq C", 1 },           { "Freq D", 1 },
-    { "Reso A", 0 },           { "Reso B", 0 },           { "Reso C", 0 },           { "Reso D", 0 },
-    { "Noise A", 0 },          { "Noise B", 0 },          { "Noise C", 0 },          { "Noise D", 0 },
+    { "A Gain", 1 },           { "B Gain", 0 },           { "C Gain", 0 },           { "D Gain", 0 },
+    { "A Pitch", 0.5, 1, 0 },  { "B Pitch", 0.5, 1, 0 },  { "C Pitch", 0.5, 1, 0 },  { "D Pitch", 0.5, 1, 0 },
+    { "A Detune", 0.5, 1, 0 }, { "B Detune", 0.5, 1, 0 }, { "C Detune", 0.5, 1, 0 }, { "D Detune", 0.5, 1, 0 },
+    { "A Pos", 0 },            { "B Pos", 0 },            { "C Pos", 0 },            { "D Pos", 0 },
+    { "A Sync", 0 },           { "B Sync", 0 },           { "C Sync", 0 },           { "D Sync", 0 },
+    { "A PW", 0.5, 1 },        { "B PW", 0.5, 1 },        { "C PW", 0.5, 1 },        { "D PW", 0.5, 1 },
+    { "A Phase", 0 },          { "B Phase", 0 },          { "C Phase", 0 },          { "D Phase", 0 },
+    { "A SHP-X", 0 },          { "B SHP-X", 0 },          { "C SHP-X", 0 },          { "D SHP-X", 0 },
+    { "A SHP-Y", 0 },          { "B SHP-Y", 0 },          { "C SHP-Y", 0 },          { "D SHP-Y", 0 },
+    { "A Pan", 0.5, 1 },       { "B Pan", 0.5, 1 },       { "C Pan", 0.5, 1 },       { "D Pan", 0.5, 1 },
+    { "A Freq", 1 },           { "B Freq", 1 },           { "C Freq", 1 },           { "D Freq", 1 },
+    { "A Reso", 0 },           { "B Reso", 0 },           { "C Reso", 0 },           { "D Reso", 0 },
+    { "A Noise", 0 },          { "B Noise", 0 },          { "C Noise", 0 },          { "D Noise", 0 },
 
-    { "Gain X", 1 }, { "Gain Y", 1 }, { "Gain Z", 1 }, 
-    { "Mode X", 0 }, { "Mode Y", 0 }, { "Mode Z", 0 },
-    { "Freq X", 1 }, { "Freq Y", 1 }, { "Freq Z", 1 },
-    { "Reso X", 0 }, { "Reso Y", 0 }, { "Reso Z", 0 },
+    { "X Gain", 1 }, { "Y Gain", 1 }, { "Z Gain", 1 },
+    { "X Mode", 0 }, { "Y Mode", 0 }, { "Z Mode", 0 },
+    { "X Freq", 1 }, { "Y Freq", 1 }, { "Z Freq", 1 },
+    { "X Reso", 0 }, { "Y Reso", 0 }, { "Z Reso", 0 },
 
-    { "Sub Oct", 0.5, false, true, true, 4 }, { "Sub Gain", 0 }, { "Sub Overtone", 0 },
+    { "Octave", 0.5, false, true, true, 4 }, { "Sub Gain", 0 }, { "Overtone", 0 },
+
+    { "LFO 1 Rate",  0 },   { "LFO 2 Rate", 0 },    { "LFO 3 Rate",  0 },   { "LFO 4 Rate",  0 },   { "LFO 5 Rate",  0 },
+    { "LFO 1 Amount", 1 },  { "LFO 2 Amount", 1 },  { "LFO 3 Amount", 1 },  { "LFO 4 Amount", 1 },  { "LFO 5 Amount", 1 },
+    { "LFO 1 Pos",  0 },    { "LFO 2 Pos",  0 },    { "LFO 3 Pos",  0 },    { "LFO 4 Pos",  0 },    { "LFO 5 Pos",  0 },
+    { "LFO 1 Offset", 0 },  { "LFO 2 Offset", 0 },  { "LFO 3 Offset", 0 },  { "LFO 4 Offset", 0 },  { "LFO 5 Offset", 0 },
+    { "LFO 1 Shaper", .5 }, { "LFO 2 Shaper", .5 }, { "LFO 3 Shaper", .5 }, { "LFO 4 Shaper", .5 }, { "LFO 5 Shaper", .5 },
+
+    { "Gain A Time",  0 },     { "Env 1 A Time", 0 },       { "Env 2 A Time",  0 },      { "Env 3 A Time",  0 },      { "Env 4 A Time",  0 },
+    { "Gain A Slope", .5 },    { "Env 1 A Slope", .5 },     { "Env 2 A Slope", .5 },     { "Env 3 A Slope", .5 },     { "Env 4 A Slope", .5 },
+    { "Gain A Value",  0 },    { "Env 1 A Value",  0 },     { "Env 2 A Value",  0 },     { "Env 3 A Value",  0 },     { "Env 4 A Value",  0 },
+    { "Gain D Time", 0.34615 },{ "Env 1 D Time", 0.34615 }, { "Env 2 D Time", 0.34615 }, { "Env 3 D Time", 0.34615 }, { "Env 4 D Time", 0.34615 },
+    { "Gain D Slope",   0 },   { "Env 1 D Slope",   0 },    { "Env 2 D Slope",   0 },    { "Env 3 D Slope",   0 },    { "Env 4 D Slope",   0 },
+    { "Gain D Value",   1 },   { "Env 1 D Value",   1 },    { "Env 2 D Value",   1 },    { "Env 3 D Value",   1 },    { "Env 4 D Value",   1 },
+    { "Gain Sustain", .5 },    { "Env 1 Sustain", .5 },     { "Env 2 Sustain", .5 },     { "Env 3 Sustain", .5 },     { "Env 4 Sustain", .5 },
+    { "Gain R Time", 0.34615 },{ "Env 1 R Time", 0.34615 }, { "Env 2 R Time", 0.34615 }, { "Env 3 R Time", 0.34615 }, { "Env 4 R Time", 0.34615 },
+    { "Gain R Slope", 0 },     { "Env 1 R Slope", 0 },      { "Env 2 R Slope", 0 },      { "Env 3 R Slope", 0 },      { "Env 4 R Slope", 0 },
+
+    { "Transpose", 0.5 }, { "Bend", 0.0416666 }, { "Glide", 0 },
+    { "Freq<Key", 0 }, { "Freq<Vel", 0 }, { "Osc<Vel", 0 },
 
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
+
+    { "Clipping", 1 }, { "Oversample", 1 }, { "Retrigger", 1 },
 
     { "Filter X", 0 }, { "Filter Y", 0 }, { "Filter Z", 0 },
     { "DC X", 0 },     { "DC Y", 0 },     { "DC Z", 0 }, 
@@ -118,12 +192,6 @@ constexpr ParamInfo ParamNames[]
 
     { "Filter A", 0 },      { "Filter B", 0 },      { "Filter C", 0 },      { "Filter D", 0 },
     { "Random A", 0 },      { "Random B", 0 },      { "Random C", 0 },      { "Random D", 0 },
-
-    { "Rate 1",  0 },   { "Rate 2", 0 },    { "Rate 3",  0 },   { "Rate 4",  0 },   { "Rate 5",  0 },
-    { "Amount 1", 1 },  { "Amount 2", 1 },  { "Amount 3", 1 },  { "Amount 4", 1 },  { "Amount 5", 1 },
-    { "Pos 1",  0 },    { "Pos 2",  0 },    { "Pos 3",  0 },    { "Pos 4",  0 },    { "Pos 5",  0 },
-    { "Offset 1", 0 },  { "Offset 2", 0 },  { "Offset 3", 0 },  { "Offset 4", 0 },  { "Offset 5", 0 },
-    { "Shaper 1", .5 }, { "Shaper 2", .5 }, { "Shaper 3", .5 }, { "Shaper 4", .5 }, { "Shaper 5", .5 },
 
     { "LM1M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM2M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM3M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM4M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM5M1",  0, false, true, false, 0, ParameterInfo::kIsHidden },
     { "LM1M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM2M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM3M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM4M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM5M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden },
@@ -136,16 +204,6 @@ constexpr ParamInfo ParamNames[]
     { "LM1M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM2M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM3M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM4M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM5M5",  0, false, true, false, 0, ParameterInfo::kIsHidden },
     { "LM1M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM2M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM3M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM4M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "LM5M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden },
 
-    { "Attack 1",  0 },       { "Attack 2", 0 },        { "Attack 3",  0 },       { "Attack 4",  0 },        { "Attack 5",  0 },
-    { "Attack Curve 1", .5 }, { "Attack Curve 2", .5 }, { "Attack Curve 3", .5 }, { "Attack Curve 4", .5 },  { "Attack Curve 5", .5 },
-    { "Attack Level 1",  0 }, { "Attack Level 2",  0 }, { "Attack Level 3",  0 }, { "Attack Level 4",  0 },  { "Attack Level 5",  0 },  
-    { "Decay 1", 0.34615 },   { "Decay 2", 0.34615 },   { "Decay 3", 0.34615 },   { "Decay 4", 0.34615 },    { "Decay 5", 0.34615 },
-    { "Decay Curve 1",   0 }, { "Decay Curve 2",   0 }, { "Decay Curve 3",   0 }, { "Decay Curve 4",   0 },  { "Decay Curve 5",   0 },
-    { "Decay Level 1",   1 }, { "Decay Level 2",   1 }, { "Decay Level 3",   1 }, { "Decay Level 4",   1 },  { "Decay Level 5",   1 },
-    { "Sustain 1", .5 },      { "Sustain 2", .5 },      { "Sustain 3", .5 },      { "Sustain 4", .5 },       { "Sustain 5", .5 },
-    { "Release 1", 0.34615 }, { "Release 2", 0.34615 }, { "Release 3", 0.34615 }, { "Release 4", 0.34615 },  { "Release 5", 0.34615 },
-    { "Release Curve 1", 0 }, { "Release Curve 2", 0 }, { "Release Curve 3", 0 }, { "Release Curve 4", 0 },  { "Release Curve 5", 0 },
-    
     { "EM1M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM2M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM3M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM4M1",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM5M1",  0, false, true, false, 0, ParameterInfo::kIsHidden },
     { "EM1M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM2M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM3M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM4M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM5M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden },
     { "EM1M2",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM2M2",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM3M2",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM4M2",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM5M2",  0, false, true, false, 0, ParameterInfo::kIsHidden },
@@ -156,4 +214,6 @@ constexpr ParamInfo ParamNames[]
     { "EM1M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM2M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM3M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM4M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM5M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden },
     { "EM1M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM2M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM3M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM4M5",  0, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM5M5",  0, false, true, false, 0, ParameterInfo::kIsHidden },
     { "EM1M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM2M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM3M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM4M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden }, { "EM5M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden },
+
+    { "Pitch Bend", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
 };

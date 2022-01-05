@@ -15,7 +15,7 @@ namespace Kaixo
     {
     public:
         using Params = T;
-        virtual float Apply(float s, Params& p) = 0;
+        virtual double Apply(double s, Params& p) = 0;
     };
 
     class FilterParameters
@@ -76,7 +76,7 @@ namespace Kaixo
             } break;
             case FilterType::LowPass:
             {
-                off = f0 >= 21900;
+                off = f0 >= (sampleRate / 2 - 100);
                 alpha = sinw0 / (2.0 * Q);
                 //alpha = sinw0 * std::sinh((log2 / 2.0) * BW * (w0 / sinw0));
                 b0 = (1.0 - cosw0) / 2.0, b1 = 1.0 - cosw0, b2 = b0;
@@ -154,7 +154,7 @@ namespace Kaixo
     class BiquadFilter : public Filter<P>
     {
     public:
-        float Apply(float s, P& p) override
+        double Apply(double s, P& p) override
         {
             x[0] = s;
             y[0] = p.b0a0 * x[0] + p.b1a0 * x[1] + p.b2a0 * x[2] - p.a1a0 * y[1] - p.a2a0 * y[2];
@@ -267,7 +267,7 @@ namespace Kaixo
             : m_Params(a), m_Filters()
         {}
 
-        float Apply(float s)
+        double Apply(double s)
         {
             for (int i = 0; i < N; i++)
                 if (m_Params[i].type != FilterType::Off)
@@ -289,7 +289,7 @@ namespace Kaixo
             : m_Params(a), m_Filters()
         {}
 
-        float Apply(float s, int c)
+        double Apply(double s, int c)
         {
             int channel = c % N;
             if (m_Params.type != FilterType::Off)

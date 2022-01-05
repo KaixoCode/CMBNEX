@@ -97,6 +97,7 @@ namespace Kaixo
                     amnt->setVisible(true);
                     posi->setVisible(true);
                     offs->setVisible(true);
+                    shpr->setVisible(true);
 
                     for (int i = 0; i < 5; i++)
                         mod[i]->setVisible(false), moda[i]->setVisible(false);
@@ -110,6 +111,7 @@ namespace Kaixo
                     amnt->setVisible(false);
                     posi->setVisible(false);
                     offs->setVisible(false);
+                    shpr->setVisible(false);
 
                     for (int i = 0; i < 5; i++)
                         mod[i]->setVisible(true), moda[i]->setVisible(true);
@@ -154,8 +156,8 @@ namespace Kaixo
                 moda[i]->setVisible(false);
                 moda[i]->setListener(listener);
 
-                mod[i] = new OptionMenu{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 20 }, listener, Params::LFO1M1 + index + (i * 10) };
-                mod[i]->setNbItemsPerColumn(16);
+                mod[i] = new OptionMenu{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 20 }, listener, Params::LFO1M1 + index + (i * 10), nullptr, nullptr, OptionMenu::kCheckStyle };
+                mod[i]->setNbItemsPerColumn(32);
                 mod[i]->setFrameColor({ 0, 0, 0, 0 });
                 mod[i]->setBackColor({ 0, 0, 0, 0 });
                 mod[i]->setFontColor({ 128, 128, 128, 255 });
@@ -163,8 +165,14 @@ namespace Kaixo
                 mod[i]->addEntry("None");
                 mod[i]->setVisible(false);
                 mod[i]->registerControlListener(this);
+                int _offset = 0;
                 for (int j = 0; j < Params::ModCount; j++)
-                    mod[i]->addEntry(ParamNames[j].name);
+                {
+                    int _index = ParamOrder[j + _offset];
+                    if (_index == -1)
+                        mod[i]->addSeparator(), ++_offset, _index = ParamOrder[j + _offset];
+                    mod[i]->addEntry(ParamNames[_index].name);
+                }
             }
 
             lfol = new Label{ {  85, 130,  85 + 80, 130 + 20 } };

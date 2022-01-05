@@ -15,10 +15,11 @@ namespace Kaixo
         EditController* controller;
     };
 
-    class TestController : public EditControllerEx1
+    class TestController : public EditControllerEx1, public IMidiMapping
     {
     public:
-        TestController () = default;
+        TestController() = default;
+
         ~TestController () override = default;
 
         IPlugView* PLUGIN_API createView(FIDString name) override
@@ -98,8 +99,19 @@ namespace Kaixo
         //tresult PLUGIN_API getParamStringByValue (ParamID tag, ParamValue valueNormalized, String128 string) override;
         //tresult PLUGIN_API getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized) override;
 
+        tresult PLUGIN_API getMidiControllerAssignment(int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id) override
+        {
+            if (busIndex == 0 && midiControllerNumber == ControllerNumbers::kPitchBend)
+            {
+                id = Params::PitchBend;
+                return kResultTrue;
+            }
+            return kResultFalse;
+        }
+
+        OBJ_METHODS(TestController, EditControllerEx1)
         DEFINE_INTERFACES
-            // DEF_INTERFACE (Vst::IXXX) 
+            DEF_INTERFACE(IMidiMapping)
         END_DEFINE_INTERFACES (EditController)
         DELEGATE_REFCOUNT (EditController)
     protected:

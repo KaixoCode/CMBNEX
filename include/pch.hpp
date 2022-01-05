@@ -7,6 +7,7 @@
 #include "pluginterfaces/vst/vsttypes.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
 #include "vstgui/vstgui.h"
 #include "vstgui/vstgui_uidescription.h"
