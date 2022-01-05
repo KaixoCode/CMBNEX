@@ -122,7 +122,7 @@
 			},
 			"UIAttributesController": {},
 			"UIViewCreatorDataSource": {
-				"SelectedRow": "12"
+				"SelectedRow": "32"
 			},
 			"UIColorsDataSource": {
 				"SelectedRow": "0"
@@ -250,58 +250,6 @@
 							"class": "CViewContainer",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "620, 430",
-							"size": "70, 200",
-							"transparent": "false",
-							"wants-focus": "false"
-						},
-						"children": {
-							"CTextLabel": {
-								"attributes": {
-									"back-color": "~ TransparentCColor",
-									"background-offset": "0, 0",
-									"class": "CTextLabel",
-									"default-value": "0.5",
-									"font": "~ NormalFontVeryBig",
-									"font-antialias": "true",
-									"font-color": "Gray",
-									"frame-color": "~ TransparentCColor",
-									"frame-width": "1",
-									"max-value": "1",
-									"min-value": "0",
-									"mouse-enabled": "true",
-									"opacity": "1",
-									"origin": "0, 5",
-									"round-rect-radius": "6",
-									"shadow-color": "~ TransparentCColor",
-									"size": "70, 20",
-									"style-3D-in": "false",
-									"style-3D-out": "false",
-									"style-no-draw": "false",
-									"style-no-frame": "false",
-									"style-no-text": "false",
-									"style-round-rect": "false",
-									"style-shadow-text": "false",
-									"text-alignment": "center",
-									"text-inset": "0, 0",
-									"text-rotation": "0",
-									"text-shadow-offset": "1, 1",
-									"title": "Sub",
-									"transparent": "false",
-									"value-precision": "2",
-									"wants-focus": "false",
-									"wheel-inc-value": "0.1"
-								}
-							}
-						}
-					},
-					"CViewContainer": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "CViewContainer",
-							"mouse-enabled": "true",
-							"opacity": "1",
 							"origin": "700, 430",
 							"size": "335, 200",
 							"transparent": "false",
@@ -385,6 +333,20 @@
 							"opacity": "1",
 							"origin": "700, 220",
 							"size": "335, 200",
+							"transparent": "false",
+							"wants-focus": "false"
+						}
+					},
+					"SubOsc": {
+						"attributes": {
+							"background-color": "bgd",
+							"background-color-draw-style": "filled and stroked",
+							"class": "SubOsc",
+							"index": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "620, 430",
+							"size": "70, 200",
 							"transparent": "false",
 							"wants-focus": "false"
 						}

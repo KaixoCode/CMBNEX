@@ -8,6 +8,7 @@
 #include "CombineView.hpp"
 #include "ModeView.hpp"
 #include "LFOView.hpp"
+#include "SubOscView.hpp"
 
 /**
  * 
@@ -334,7 +335,7 @@ namespace Kaixo
 
                 double _vs = osc[i].sample;
                 _vs += 2 * modulated[Params::Noise1 + i] * ((std::rand() % 32767) / 32767. - 0.5); // Add noise
-                _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
+                if (!filterp[i].off) _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
                 _vs *= modulated[Params::Volume1 + i]; // Adjust for volume
                 _vs *= std::min((channel == 1 ? 2 * modulated[Params::Pan1 + i] : 2 - 2 * modulated[Params::Pan1 + i]), 1.); // Panning
 
@@ -344,16 +345,26 @@ namespace Kaixo
             }
 
             double _res = 0;
+            if (modulated[Params::SubGain] != 0)
+            {
+                int _octave = std::round(modulated[Params::SubOct] * 4 - 2);
+                sub.settings.frequency = noteToFreq(frequency + _octave * 12);
+                sub.settings.oversample = 1;
+                sub.settings.wtpos = modulated[Params::SubOvertone];
+                sub.Generate(channel);
+                _res = modulated[Params::SubGain] * sub.sample;
+            }
+
             for (int i = 0; i < Combines; i++)
             {
                 double _v = Combine(_cs[i * 2], _cs[i * 2 + 1], modulated[Params::ModeX + i]);
                 _v = std::max(std::min(_v * modulated[Params::GainX + i], 1.), -1.);
-                _v = cfilter[i].Apply(_v, channel);
+                if (!cfilterp[i].off) _v = cfilter[i].Apply(_v, channel);
                 _v = params[Params::DCX + i] > 0.5 ? dcoff[i].Apply(_v, channel) : _v;
 
                 if (i == Combines - 1)
                 {
-                    _res = _v;
+                    _res += _v;
                     break;
                 }
 
@@ -401,6 +412,8 @@ namespace Kaixo
         double envelope = 0;
         double frequency = 440;
         size_t pressed = 0;
+
+        Oscillator sub{ {.wavetable = Wavetables::sub } };
 
         Oscillator osc[Oscillators];
         Oscillator lfo[LFOs];

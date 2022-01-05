@@ -186,6 +186,7 @@ namespace Kaixo
             }
             else
             {
+                if (decimals == 0 && std::round(val) == 0) val = 0;
                 std::string _format = std::format("{:." + std::to_string((int)decimals) + "f}", val);
                 str = _format.c_str() + unit;
             }

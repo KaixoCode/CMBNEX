@@ -30,6 +30,7 @@ namespace Kaixo
         double square(double phase, double wtpos);
         double triangle(double phase, double wtpos);
         double basic(double phase, double wtpos);
+        double sub(double phase, double wtpos);
     }
 
     struct Range

@@ -51,6 +51,7 @@ namespace Kaixo
         union { double Q, BW, S = 1; };
         double f0 = 22000, dbgain = 0;
         double sampleRate = 48000;
+        bool off = false;
         FilterType type = FilterType::Off;
 
         void RecalculateParameters()
@@ -75,6 +76,7 @@ namespace Kaixo
             } break;
             case FilterType::LowPass:
             {
+                off = f0 >= 21900;
                 alpha = sinw0 / (2.0 * Q);
                 //alpha = sinw0 * std::sinh((log2 / 2.0) * BW * (w0 / sinw0));
                 b0 = (1.0 - cosw0) / 2.0, b1 = 1.0 - cosw0, b2 = b0;
@@ -82,6 +84,7 @@ namespace Kaixo
             } break;
             case FilterType::HighPass:
             {
+                off = f0 <= 21;
                 alpha = sinw0 / (2.0 * Q);
                 b0 = (1.0 + cosw0) / 2.0, b1 = -(1.0 + cosw0), b2 = b0;
                 a0 = 1.0 + alpha, a1 = -2.0 * cosw0, a2 = 1.0 - alpha;

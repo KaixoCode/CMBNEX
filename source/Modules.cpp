@@ -151,6 +151,11 @@ namespace Kaixo
                 return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
             }
         }
+    
+        double sub(double phase, double wtpos)
+        {
+            return Shapers::simpleshaper(sine(phase, wtpos), -wtpos * 0.5 + 0.5);
+        }
     }
 
 

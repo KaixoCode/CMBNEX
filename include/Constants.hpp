@@ -32,6 +32,8 @@ enum Params
     FreqX, FreqY, FreqZ,
     ResoX, ResoY, ResoZ,
 
+    SubOct, SubGain, SubOvertone,
+
     ModCount,
 
     FilterX, FilterY, FilterZ,
@@ -103,6 +105,8 @@ constexpr ParamInfo ParamNames[]
     { "Mode X", 0 }, { "Mode Y", 0 }, { "Mode Z", 0 },
     { "Freq X", 1 }, { "Freq Y", 1 }, { "Freq Z", 1 },
     { "Reso X", 0 }, { "Reso Y", 0 }, { "Reso Z", 0 },
+
+    { "Sub Oct", 0.5, false, true, true, 4 }, { "Sub Gain", 0 }, { "Sub Overtone", 0 },
 
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
 
