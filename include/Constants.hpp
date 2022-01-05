@@ -65,6 +65,8 @@ enum Params
     Filter1,      Filter2,      Filter3,      Filter4,
     RandomPhase1, RandomPhase2, RandomPhase3, RandomPhase4,
 
+    LFOSync1,   LFOSync2,   LFOSync3,   LFOSync4,   LFOSync5,
+
     LFO1M1,  LFO2M1,  LFO3M1,  LFO4M1,  LFO5M1,
     LFO1M1A, LFO2M1A, LFO3M1A, LFO4M1A, LFO5M1A,
     LFO1M2,  LFO2M2,  LFO3M2,  LFO4M2,  LFO5M2,
@@ -161,7 +163,7 @@ constexpr ParamInfo ParamNames[]
 
     { "Octave", 0.5, false, true, true, 4 }, { "Sub Gain", 0 }, { "Overtone", 0 },
 
-    { "LFO 1 Rate",  0 },   { "LFO 2 Rate", 0 },    { "LFO 3 Rate",  0 },   { "LFO 4 Rate",  0 },   { "LFO 5 Rate",  0 },
+    { "LFO 1 Rate", 0, 0, 0, 1, 0 },   { "LFO 2 Rate", 0, 0, 0, 1, 0 },    { "LFO 3 Rate", 0, 0, 0, 1, 0 },   { "LFO 4 Rate", 0, 0, 0, 1, 0 },   { "LFO 5 Rate", 0, 0, 0, 1, 0 },
     { "LFO 1 Amount", 1 },  { "LFO 2 Amount", 1 },  { "LFO 3 Amount", 1 },  { "LFO 4 Amount", 1 },  { "LFO 5 Amount", 1 },
     { "LFO 1 Pos",  0 },    { "LFO 2 Pos",  0 },    { "LFO 3 Pos",  0 },    { "LFO 4 Pos",  0 },    { "LFO 5 Pos",  0 },
     { "LFO 1 Offset", 0 },  { "LFO 2 Offset", 0 },  { "LFO 3 Offset", 0 },  { "LFO 4 Offset", 0 },  { "LFO 5 Offset", 0 },
@@ -170,14 +172,14 @@ constexpr ParamInfo ParamNames[]
     { "Gain A Time",  0 },     { "Env 1 A Time", 0 },       { "Env 2 A Time",  0 },      { "Env 3 A Time",  0 },      { "Env 4 A Time",  0 },
     { "Gain A Slope", .5 },    { "Env 1 A Slope", .5 },     { "Env 2 A Slope", .5 },     { "Env 3 A Slope", .5 },     { "Env 4 A Slope", .5 },
     { "Gain A Value",  0 },    { "Env 1 A Value",  0 },     { "Env 2 A Value",  0 },     { "Env 3 A Value",  0 },     { "Env 4 A Value",  0 },
-    { "Gain D Time", 0.34615 },{ "Env 1 D Time", 0.34615 }, { "Env 2 D Time", 0.34615 }, { "Env 3 D Time", 0.34615 }, { "Env 4 D Time", 0.34615 },
+    { "Gain D Time", 0.49300 },{ "Env 1 D Time", 0.49300 }, { "Env 2 D Time", 0.49300 }, { "Env 3 D Time", 0.49300 }, { "Env 4 D Time", 0.49300 },
     { "Gain D Slope",   0 },   { "Env 1 D Slope",   0 },    { "Env 2 D Slope",   0 },    { "Env 3 D Slope",   0 },    { "Env 4 D Slope",   0 },
     { "Gain D Value",   1 },   { "Env 1 D Value",   1 },    { "Env 2 D Value",   1 },    { "Env 3 D Value",   1 },    { "Env 4 D Value",   1 },
     { "Gain Sustain", .5 },    { "Env 1 Sustain", .5 },     { "Env 2 Sustain", .5 },     { "Env 3 Sustain", .5 },     { "Env 4 Sustain", .5 },
-    { "Gain R Time", 0.34615 },{ "Env 1 R Time", 0.34615 }, { "Env 2 R Time", 0.34615 }, { "Env 3 R Time", 0.34615 }, { "Env 4 R Time", 0.34615 },
+    { "Gain R Time", 0.49300 },{ "Env 1 R Time", 0.49300 }, { "Env 2 R Time", 0.49300 }, { "Env 3 R Time", 0.49300 }, { "Env 4 R Time", 0.49300 },
     { "Gain R Slope", 0 },     { "Env 1 R Slope", 0 },      { "Env 2 R Slope", 0 },      { "Env 3 R Slope", 0 },      { "Env 4 R Slope", 0 },
 
-    { "Transpose", 0.5 }, { "Bend", 0.0416666 }, { "Glide", 0, false, true, false },
+    { "Transpose", 0.5, true, false, true }, { "Bend", 0.0416666 }, { "Glide", 0, false, true, false },
     { "Pan", 0.5 }, { "Time", 0.5 }, { "Osc<Vel", 0 },
 
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
@@ -192,6 +194,8 @@ constexpr ParamInfo ParamNames[]
 
     { "Filter A", 0 },      { "Filter B", 0 },      { "Filter C", 0 },      { "Filter D", 0 },
     { "Random A", 0 },      { "Random B", 0 },      { "Random C", 0 },      { "Random D", 0 },
+    
+    { "LFO 1 Sync", 0 }, { "LFO 2 Sync", 0 }, { "LFO 3 Sync", 0 }, { "LFO 4 Sync", 0 }, { "LFO 5 Sync", 0 },
 
     { "LM1M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
     { "LM1M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
@@ -203,6 +207,7 @@ constexpr ParamInfo ParamNames[]
     { "LM1M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
     { "LM1M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
     { "LM1M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
+    
     { "EM1M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
     { "EM1M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
     { "EM1M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
@@ -216,3 +221,13 @@ constexpr ParamInfo ParamNames[]
 
     { "Pitch Bend", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
 };
+
+constexpr static const char* TimesString[]{
+    "4", "3", "2", "1", "1/2", "1/3", "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32", "1/64",
+};
+
+constexpr static double TimesValue[]{
+    4.0, 3.0, 2.0, 1.0, 1./2., 1./3., 1./4., 1./6., 1./8., 1./12., 1./16., 1./24., 1./32., 1./64.,
+};
+
+constexpr static size_t TimesAmount = std::size(TimesValue);

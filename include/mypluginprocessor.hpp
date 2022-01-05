@@ -199,7 +199,7 @@ namespace Kaixo
             IBStreamer streamer(state, kLittleEndian);
 
             for (size_t i = 0; i < Params::Size; i++)
-                streamer.readDouble(params[i]);
+                streamer.readDouble(paramgoals[i]);
 
             return kResultOk;
         }
@@ -209,7 +209,7 @@ namespace Kaixo
             IBStreamer streamer(state, kLittleEndian);
 
             for (size_t i = 0; i < Params::Size; i++)
-                streamer.writeDouble(params[i]);
+                streamer.writeDouble(paramgoals[i]);
 
             return kResultOk;
         }
@@ -257,6 +257,7 @@ namespace Kaixo
                         osc[i].phase = params[Params::RandomPhase1 + i] ? (std::rand() % 32767) / 32767. : 0;
                     for (int i = 0; i < LFOs; i++)
                         lfo[i].phase = 0;
+                    sub.phase = 0;
                 }
                 
                 for (int i = 0; i < Envelopes; i++)
@@ -282,6 +283,7 @@ namespace Kaixo
 
                         if (params[Params::Retrigger] > 0.5)
                         {
+                            sub.phase = 0;
                             for (int i = 0; i < Oscillators; i++)
                                 osc[i].phase = params[Params::RandomPhase1 + i] ? (std::rand() % 32767) / 32767. : 0;
                             for (int i = 0; i < LFOs; i++)
@@ -306,6 +308,9 @@ namespace Kaixo
 
         double GenerateSample(size_t channel, ProcessData& data)
         {
+            double bpm = 128;
+            if (data.processContext->state & ProcessContext::kTempoValid)
+                bpm = data.processContext->tempo;
 
             if (channel == 0) // Only do all parameter generating on channel 0
             {
@@ -339,7 +344,15 @@ namespace Kaixo
                 for (int i = 0; i < LFOs; i++)
                 {   // Adjust lfo parameters 
                     lfo[i].settings.oversample = 1;
-                    lfo[i].settings.frequency = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1;
+
+                    if (params[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
+                    {
+                        size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
+                        double _ps = (bpm / 60.) / (TimesValue[_type] * 4); // (beats per phase / bpm) / 60 = seconds per phase
+                        lfo[i].settings.frequency = _ps;
+                    }
+                    else
+                        lfo[i].settings.frequency = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1;
                     lfo[i].settings.wtpos = modulated[Params::LFOPos1 + i];
                     lfo[i].settings.shaper3 = modulated[Params::LFOShaper1 + i];
                     lfo[i].sample = lfo[i].Offset(modulated[Params::LFOPhase1 + i]);
@@ -541,7 +554,7 @@ namespace Kaixo
         }
         
         double envelope = 0;
-        double frequency = 0;
+        double frequency = 40;
         double pressed = 0;
         double pressedOld = 0;
         double deltaf = 0;

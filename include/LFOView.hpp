@@ -20,6 +20,7 @@ namespace Kaixo
         Knob* posi;
         Knob* offs;
         Knob* shpr;
+        Knob* sync;
 
         Label* lfol;
         Label* modu;
@@ -37,12 +38,32 @@ namespace Kaixo
         void valueChanged(CControl* pControl)
         {
             bool _f = false;
-            if (pControl == rate) curve->repeat = 3 + rate->getValue() * rate->getValue() * 10, _f = true;
+            if (pControl == sync)
+            {
+                if (sync->getValue()) rate->unit = "time";
+                else rate->unit = " Hz";
+                rate->setDirty(true);
+                _f = true;
+            }
+            
+            if (pControl == rate || pControl == sync)
+            {
+                if (sync->getValue())
+                {
+                    size_t _index = std::floor(rate->getValue() * (TimesAmount - 1));
+                    curve->repeat = 1 + _index;
+                }
+                else
+                {
+                    curve->repeat = 1 + rate->getValue() * rate->getValue() * 20;
+                }
+                _f = true;
+            }
             else if (pControl == amnt) curve->level = amnt->getValue() * 2 - 1, _f = true;
             else if (pControl == posi) curve->pos = posi->getValue(), _f = true;
             else if (pControl == offs) curve->phase = offs->getValue(), _f = true;
             else if (pControl == shpr) curve->shaper3 = shpr->getValue(), _f = true;
-
+            
             for (int i = 0; i < 5; i++)
                 if (pControl == mod[i])
                 {
@@ -75,6 +96,7 @@ namespace Kaixo
                 amnt->setTag(Params::LFOLvl1 + index);
                 posi->setTag(Params::LFOPos1 + index);
                 offs->setTag(Params::LFOPhase1 + index);
+                sync->setTag(Params::LFOSync1 + index);
 
                 for (int i = 0; i < 5; i++)
                     mod[i]->setTag(Params::LFO1M1 + index + (i * 10)), moda[i]->setTag(Params::LFO1M1A + index + (i * 10));
@@ -84,7 +106,7 @@ namespace Kaixo
                 return kMouseEventHandled;
             }
 
-            if (where.y - getViewSize().top > 125 && where.y - getViewSize().top < 150)
+            if (where.y - getViewSize().top > 125 && where.y - getViewSize().top < 150 && where.x - getViewSize().left < 285)
             {
                 int _page = std::floor((where.x - getViewSize().left) / 167);
 
@@ -135,6 +157,7 @@ namespace Kaixo
             posi = new Knob{ { 135, 155, 135 + 65, 155 + 40 } };
             offs = new Knob{ { 200, 155, 200 + 65, 155 + 40 } };
             shpr = new Knob{ { 265, 155, 265 + 65, 155 + 40 } };
+            sync = new Knob{ { 285, 128, 285 + 45, 128 + 20 } };
             curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
 
             for (int i = 0; i < 5; i++)
@@ -217,18 +240,21 @@ namespace Kaixo
             posi->setListener(listener);
             offs->setListener(listener);
             shpr->setListener(listener);
+            sync->setListener(listener);
 
             rate->registerControlListener(this);
             amnt->registerControlListener(this);
             posi->registerControlListener(this);
             offs->registerControlListener(this);
             shpr->registerControlListener(this);
+            sync->registerControlListener(this);
 
             rate->setTag(Params::LFORate1 + index);
             amnt->setTag(Params::LFOLvl1 + index);
             posi->setTag(Params::LFOPos1 + index);
             offs->setTag(Params::LFOPhase1 + index);
             shpr->setTag(Params::LFOShaper1 + index);
+            sync->setTag(Params::LFOSync1 + index);
 
             for (int i = 0; i < 5; i++)
                 mod[i]->setTag(Params::LFO1M1 + index + (i * 10)), moda[i]->setTag(Params::LFO1M1A + index + (i * 10));
@@ -241,19 +267,20 @@ namespace Kaixo
             rate->unit = " Hz";  amnt->unit = " %";       posi->unit = " %";
             rate->type = 2;      amnt->type = 2;          posi->type = 2;
 
-            offs->name = "Offset"; shpr->name = "Shaper";
-            offs->min = 0;         shpr->min = -100;
-            offs->max = 100;       shpr->max = 100;
-            offs->reset = 0;       shpr->reset = 0;
-            offs->decimals = 1;    shpr->decimals = 1;
-            offs->unit = " %";     shpr->unit = " %";
-            offs->type = 2;        shpr->type = 2;
+            offs->name = "Offset"; shpr->name = "Shaper"; sync->name = "Sync";
+            offs->min = 0;         shpr->min = -100;      sync->min = 0;
+            offs->max = 100;       shpr->max = 100;       sync->max = 1;
+            offs->reset = 0;       shpr->reset = 0;       sync->reset = 0;
+            offs->decimals = 1;    shpr->decimals = 1;    sync->decimals = 1;
+            offs->unit = " %";     shpr->unit = " %";     sync->unit = "";
+            offs->type = 2;        shpr->type = 2;        sync->type = 3;
 
             addView(rate);
             addView(amnt);
             addView(posi);
             addView(offs);
             addView(shpr);
+            addView(sync);
 
             addView(curve);
 

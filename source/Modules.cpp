@@ -18,7 +18,8 @@ namespace Kaixo
         {
             const double cos1 = std::cos((amt * 518 + 22) * x * x);
             const double sin1 = std::sin(10 * x * x);
-            const double fp = 9 * std::pow(0.64 * x, 5);
+            const double m1 = 0.64 * x;
+            const double fp = 9 * m1 * m1 * m1 * m1 * m1;
             const double sp = x * x * x * x * x * x * x;
             const double res = (fp * cos1 + sin1 + sp);
             return constrain(res, -1, 1);
@@ -40,7 +41,8 @@ namespace Kaixo
         {
             const double cos1 = std::cos((amt * 5 + 22) * x * x);
             const double sin1 = std::sin(312 * x * x);
-            const double fp = 2 * std::pow(0.1 * x, 3);
+            const double m1 = 0.1 * x;
+            const double fp = 2 * m1 * m1 * m1;
             const double sp = x * x * x;
             const double res = (fp * cos1 + sin1 + sp);
             return constrain(res, -1, 1);

@@ -51,7 +51,9 @@ namespace Kaixo
                     if (buttons.isDoubleClick())
                     {
                         beginEdit();
-                        if (unit == " Hz" || unit == " s")
+                        if (unit == " s")
+                            setValue(std::pow((reset - min) / std::max(max - min, 0.0001), 1./3.));
+                        else if (unit == " Hz")
                             setValue(std::sqrt((reset - min) / std::max(max - min, 0.0001)));
                         else
                             setValue((reset - min) / std::max(max - min, 0.0001));
@@ -68,6 +70,7 @@ namespace Kaixo
                     setDirty(true);
                     break;
                 case GROUP:
+                    if (max <= 1) break;
                     beginEdit();
                     setValue(reset == 0  
                         ? (std::floor(max * (where.y - getViewSize().top) / getViewSize().getHeight()) / (max - 1)) 
@@ -183,6 +186,11 @@ namespace Kaixo
                     std::string _format = std::format("{:." + std::to_string((int)decimals + (val > 10 ? 0 : 1)) + "f}", val);
                     str = _format.c_str() + String{ " ms" };
                 }
+            }
+            else if (unit == "time")
+            {
+                size_t _type = std::floor(_v * (TimesAmount - 1));
+                str = TimesString[_type];
             }
             else if (unit == "pan")
             {

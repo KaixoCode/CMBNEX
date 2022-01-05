@@ -155,7 +155,7 @@ namespace Kaixo
 
         double ValueAt(double p, double step)
         {
-            constexpr auto _oversample = 128.;
+            constexpr auto _oversample = 1.;
             double _val = 0;
             if (step == 0)
                 _val = env.Offset(p);
