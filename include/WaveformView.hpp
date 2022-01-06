@@ -30,6 +30,7 @@ namespace Kaixo
             double _val = 0;
             for (double v = p; v < p + step; v += step / _oversample)
             {
+                v = constrain(v, -1, 1);
                 double _pw = pw * 2 - 1;
                 if (_pw > 0)
                 {

@@ -306,7 +306,7 @@ namespace Kaixo
             }
         }
 
-        double GenerateSample(size_t channel, ProcessData& data)
+        double GenerateSample(size_t channel, ProcessData& data, double samplerate)
         {
             double bpm = 128;
             if (data.processContext->state & ProcessContext::kTempoValid)
@@ -317,7 +317,7 @@ namespace Kaixo
                 double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
                 double _timeMult = modulated[Params::Time] < 0.5 ? (modulated[Params::Time] + 0.5) : ((modulated[Params::Time] - 0.5) * 2 + 1);
 
-                deltaf = _timeMult * std::abs((pressed - pressedOld) / (0.001 + modulated[Params::Glide] * modulated[Params::Glide] * modulated[Params::Glide] * 10 * Module::SAMPLE_RATE));
+                deltaf = _timeMult * std::abs((pressed - pressedOld) / (0.001 + modulated[Params::Glide] * modulated[Params::Glide] * modulated[Params::Glide] * 10 * samplerate));
                 if (frequency > pressed)
                     if (frequency - deltaf < pressed) frequency = pressed;
                     else frequency -= deltaf;
@@ -328,6 +328,7 @@ namespace Kaixo
 
                 for (int i = 0; i < Envelopes; i++)
                 {   // Adjust Envelope parameters and generate
+                    env[i].SAMPLE_RATE = samplerate;
                     env[i].settings.attack = modulated[Params::Env1A + i] * modulated[Params::Env1A + i] * modulated[Params::Env1A + i] * 5;
                     env[i].settings.attackCurve = modulated[Params::Env1AC + i] * 2 - 1;
                     env[i].settings.attackLevel = modulated[Params::Env1AL + i];
@@ -343,7 +344,8 @@ namespace Kaixo
 
                 for (int i = 0; i < LFOs; i++)
                 {   // Adjust lfo parameters 
-                    lfo[i].settings.oversample = 1;
+                    //lfo[i].settings.oversample = 1;
+                    lfo[i].SAMPLE_RATE = samplerate;
 
                     if (params[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
                     {
@@ -358,8 +360,8 @@ namespace Kaixo
                     lfo[i].sample = lfo[i].Offset(modulated[Params::LFOPhase1 + i]);
                 }
 
-                for (int i = 0; i < Params::ModCount; i++)
-                    modulated[i] = params[i]; // Move params to modulated so we can adjust their values
+                // Move params to modulated so we can adjust their values
+                std::memcpy(modulated, params, Params::ModCount * sizeof(double));
 
                 for (int e = 0; e < Envelopes; e++) // Loop over envelopes
                     for (int m = 0; m < 5; m++) // Loop over modulators of envelope
@@ -386,12 +388,12 @@ namespace Kaixo
                     dcoffp[i].f0 = 35;
                     dcoffp[i].type = FilterType::HighPass;
                     dcoffp[i].Q = 1;
-                    dcoffp[i].sampleRate = Module::SAMPLE_RATE;
+                    dcoffp[i].sampleRate = samplerate;
                     dcoffp[i].RecalculateParameters();
 
                     auto _ft = std::floor(params[Params::FilterX + i] * 3); // Filter parameters
-                    cfilterp[i].sampleRate = Module::SAMPLE_RATE;
-                    cfilterp[i].f0 = std::pow(modulated[Params::FreqX + i], 2) * (22000 - 20) + 20;
+                    cfilterp[i].sampleRate = samplerate;
+                    cfilterp[i].f0 = modulated[Params::FreqX + i] * modulated[Params::FreqX + i] * (22000 - 20) + 20;
                     cfilterp[i].Q = modulated[Params::ResoX + i] * 16 + 1;
                     cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
                     cfilterp[i].RecalculateParameters();
@@ -399,6 +401,7 @@ namespace Kaixo
 
                 for (int i = 0; i < Oscillators; i++)
                 {   // Oscillator parameters
+                    osc[i].SAMPLE_RATE = samplerate;
                     osc[i].settings.frequency = noteToFreq(frequency + _bendOffset
                         + modulated[Params::Detune1 + i] * 4 - 2 + modulated[Params::Pitch1 + i] * 48 - 24);
                     osc[i].settings.wtpos = modulated[Params::WTPos1 + i];
@@ -406,11 +409,11 @@ namespace Kaixo
                     osc[i].settings.pw = modulated[Params::PulseW1 + i];
                     osc[i].settings.shaper = modulated[Params::Shaper1 + i];
                     osc[i].settings.shaper2 = modulated[Params::Shaper21 + i];
-                    osc[i].settings.oversample = 1;
+                    //osc[i].settings.oversample = 1;
 
                     auto _ft = std::floor(params[Params::Filter1 + i] * 3); // Filter parameters
-                    filterp[i].sampleRate = Module::SAMPLE_RATE;
-                    filterp[i].f0 = std::pow(modulated[Params::Freq1 + i], 2) * (22000 - 20) + 20;
+                    filterp[i].sampleRate = samplerate;
+                    filterp[i].f0 = modulated[Params::Freq1 + i] * modulated[Params::Freq1 + i] * (22000 - 20) + 20;
                     filterp[i].Q = modulated[Params::Reso1 + i] * 16 + 1;
                     filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
                     filterp[i].RecalculateParameters();
@@ -421,8 +424,9 @@ namespace Kaixo
 
                 { // Sub oscillator
                     int _octave = std::round(modulated[Params::SubOct] * 4 - 2);
+                    sub.SAMPLE_RATE = samplerate;
                     sub.settings.frequency = noteToFreq(frequency + _octave * 12 + +_bendOffset);
-                    sub.settings.oversample = 1;
+                    //sub.settings.oversample = 1;
                     sub.settings.wtpos = modulated[Params::SubOvertone];
                     sub.Generate(channel);
                 }
@@ -432,10 +436,12 @@ namespace Kaixo
             for (int i = 0; i < Oscillators; i++)
             {
                 double _vs = osc[i].sample;
-                _vs += 2 * modulated[Params::Noise1 + i] * ((std::rand() % 32767) / 32767. - 0.5); // Add noise
+                if (modulated[Params::Noise1 + i])
+                    _vs += modulated[Params::Noise1 + i] * random(); // Add noise
                 if (!filterp[i].off) _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
                 _vs *= modulated[Params::Volume1 + i]; // Adjust for volume
-                _vs *= std::min((channel == 1 ? 2 * modulated[Params::Pan1 + i] : 2 - 2 * modulated[Params::Pan1 + i]), 1.); // Panning
+                if (modulated[Params::Pan1 + i] != 0.5)
+                    _vs *= std::min((channel == 1 ? 2 * modulated[Params::Pan1 + i] : 2 - 2 * modulated[Params::Pan1 + i]), 1.); // Panning
 
                 size_t _dests = params[Params::DestA + i] * 64.;
                 for (int j = 0; j < Combines * 2; j++)
@@ -446,6 +452,8 @@ namespace Kaixo
 
             for (int i = 0; i < Combines; i++)
             {
+                constexpr static size_t _offsets[]{ 4, 2, 0 };
+                constexpr static size_t _mult[]{ 16, 4, 0 };
                 double _v = Combine(_cs[i * 2], _cs[i * 2 + 1], modulated[Params::ModeX + i]);
                 _v = std::max(std::min(_v * modulated[Params::GainX + i], 8.), -8.);
                 if (!cfilterp[i].off) _v = cfilter[i].Apply(_v, channel);
@@ -457,9 +465,8 @@ namespace Kaixo
                     break;
                 }
 
-                const size_t _offset = 2 * (Combines - i - 1);
-                const size_t _dests = params[Params::DestX + i] * std::pow(2, _offset);
-                for (int j = 0; j < _offset; j++)
+                const size_t _dests = params[Params::DestX + i] * _mult[i];
+                for (int j = 0; j < _offsets[i]; j++)
                     if ((_dests >> j) & 1U) _cs[j + (i + 1) * 2] += _v;
             }
 
@@ -476,12 +483,12 @@ namespace Kaixo
             size_t _index = std::floor(params[Params::Oversample] * 4);
             size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
             
-            Module::SAMPLE_RATE = data.processContext->sampleRate * _osa;
+            double samplerate = data.processContext->sampleRate * _osa;
 
             if (_osa == 1)
-                return Clip(GenerateSample(channel, data), channel);
+                return Clip(GenerateSample(channel, data, samplerate), channel);
 
-            aafp.sampleRate = Module::SAMPLE_RATE;
+            aafp.sampleRate = samplerate;
             aafp.f0 = data.processContext->sampleRate * 0.4;
             aafp.Q = 0.6;
             aafp.type = FilterType::LowPass;
@@ -490,7 +497,7 @@ namespace Kaixo
             double _sum = 0;
             for (int k = 0; k < _osa; k++)
             {
-                double _s = GenerateSample(channel, data);
+                double _s = GenerateSample(channel, data, samplerate);
 
                 if (!aafp.off)
                 _s = aaf.Apply(_s, channel);
@@ -536,7 +543,7 @@ namespace Kaixo
             double _ab = 0;
             switch (mode) {
             case AND:  _ab = 1.5 * (std::bit_cast<double>(_a & _b)); break;
-            case OR:   _ab = 0.3 * (std::bit_cast<double>(_a | _b)); break;
+            case OR:   _ab = 0.3 * (std::bit_cast<double>(_a | _b)); if (std::isnan(_ab)) _ab = 0; break;
             case XOR:  _ab = 0.5 * (((_as ^ _bs) % (2 * 4294967296)) / 4294967296. - 1.0); break;
             case PONG: _ab = 1.2 * (a > 0 ? a : b < 0 ? b : 0); break;
             case INLV: _ab = 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA))); break;
@@ -545,10 +552,7 @@ namespace Kaixo
             case MOD:  _ab = 1.4 * (std::bit_cast<double>(_a % (_b == 0 ? 1 : _b))); break;
             case MULT: _ab = 1.8 * (a * b); break;
             case ADD:  _ab = (a + b); break;
-            }
-
-            if (std::isnan(_ab))
-                _ab = 0;
+            }            
 
             return _ab;
         }

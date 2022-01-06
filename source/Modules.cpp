@@ -4,18 +4,38 @@ namespace Kaixo
 {
     namespace Shapers
     {
+        struct Table
+        {
+            constexpr static size_t precision = 1000;
+            constexpr Table(auto&& l)
+            {
+                for (int a = 0; a < precision + 1; a++)
+                    for (int b = 0; b < precision + 1; b++)
+                        table[a][b] = l(a / (precision / 2.) - 1., b/(double)precision);
+            }
+
+            inline double get(double x, double amt) const
+            {
+                return table[(int)((x + 1) * (precision / 2.))][(int)(amt * precision)];
+            }
+
+            double table[precision + 1][precision + 1];
+        };
         double noShaper(double x, double amt) { return x; }
+
+        const static Table shaper1l = [](double x, double amt) {
+            const double cos1 = std::cos(159 * x);
+            const double sin1 = std::sin(59 + 132 * amt * x - 7.8);
+            const double res = 1.2 * (cos1 * cos1 + sin1 * sin1 * sin1 + cos1 * sin1);
+            return constrain(res, -1, 1);
+        };
 
         double shaper1(double x, double amt)
         {
-            const double cos1 = std::cos(159 * x);
-            const double sin1 = std::sin(59 + 132 * amt * x - 7.8);
-            const double res = (cos1 * cos1 + sin1 * sin1 * sin1 + cos1 * sin1);
-            return 1.2 * constrain(res, -1, 1);
+            return shaper1l.get(x, amt);
         }
 
-        double shaper2(double x, double amt)
-        {
+        const static Table shaper2l = [](double x, double amt) {
             const double cos1 = std::cos((amt * 518 + 22) * x * x);
             const double sin1 = std::sin(10 * x * x);
             const double m1 = 0.64 * x;
@@ -23,10 +43,14 @@ namespace Kaixo
             const double sp = x * x * x * x * x * x * x;
             const double res = (fp * cos1 + sin1 + sp);
             return constrain(res, -1, 1);
+        };
+
+        double shaper2(double x, double amt)
+        {
+            return shaper2l.get(x, amt);
         }
 
-        double shaper3(double x, double amt)
-        {
+        const static Table shaper3l = [](double x, double amt) {
             const double x1 = x * 5;
             const double cos1 = std::cos((42 + amt * 2) * x);
             const double cos2 = std::cos((23 + amt * 2) * x);
@@ -35,10 +59,14 @@ namespace Kaixo
             const double res = (0.1 * cos2 + 0.1 * sin1 * sin1 - 0.4
                 * cos1 * cos1 * cos1 + 0.4 * sin2);
             return constrain(res, -1, 1);
+        };
+
+        double shaper3(double x, double amt)
+        {
+            return shaper3l.get(x, amt);
         }
 
-        double shaper5(double x, double amt)
-        {
+        const static Table shaper5l = [](double x, double amt) {
             const double cos1 = std::cos((amt * 5 + 22) * x * x);
             const double sin1 = std::sin(312 * x * x);
             const double m1 = 0.1 * x;
@@ -46,12 +74,18 @@ namespace Kaixo
             const double sp = x * x * x;
             const double res = (fp * cos1 + sin1 + sp);
             return constrain(res, -1, 1);
+        };
+
+        double shaper5(double x, double amt)
+        {
+            return shaper5l.get(x, amt);
         }
 
         double shaper4(double x, double amt)
         {
-            constexpr double steps = 4;
-            constexpr double (*funcs[(int)steps + 1])(double, double){
+            if (amt == 0) return x;
+            constexpr static double steps = 4;
+            constexpr static double (*funcs[(int)steps + 1])(double, double){
                 noShaper, shaper2, shaper3, shaper5, shaper1
             };
 
@@ -60,7 +94,8 @@ namespace Kaixo
                 double r = (amt - (i - 1) / steps) * steps;
                 const double s1 = funcs[i - 1](x, 1 - r);
                 const double s2 = funcs[i](x, r);
-                return (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
+                const double res = (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
+                return constrain(res, 0, 1);
             }
 
             return 0;
@@ -68,8 +103,9 @@ namespace Kaixo
 
         double shaper24(double x, double amt)
         {
-            constexpr double steps = 4;
-            constexpr double (*funcs[(int)steps + 1])(double, double){
+            if (amt == 0) return x;
+            constexpr static double steps = 4;
+            constexpr static double (*funcs[(int)steps + 1])(double, double){
                 noShaper, shaper2, shaper3, shaper5, shaper1
             };
 
@@ -138,17 +174,17 @@ namespace Kaixo
             double p = phase;
             if (wtpos < 0.33)
             {
-                double r = wtpos * 3;
+                const double r = wtpos * 3;
                 return triangle(p, wtpos) * r + sine(p, wtpos) * (1 - r);
             }
             else if (wtpos < 0.66)
             {
-                double r = (wtpos - 0.33) * 3;
+                const double r = (wtpos - 0.33) * 3;
                 return saw(p, wtpos) * r + triangle(p, wtpos) * (1 - r);
             }
             else
             {
-                double r = (wtpos - 0.66) * 3;
+                const double r = (wtpos - 0.66) * 2.9;
                 return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
             }
         }
@@ -243,53 +279,55 @@ namespace Kaixo
     double Oscillator::OffsetOnce(double phaseoffset)
     {
         double _s = 0;
-        double _pw = settings.pw * 2 - 1;
+        const double _pw = settings.pw * 2 - 1;
         if (_pw > 0)
         {
-            double _ph = Shapers::shaper4(phase, settings.shaper);
-            double _d = std::max(0.000001, 1 - _pw);
-            double _p1 = _ph / _d;
+            const double _ph = Shapers::shaper4(phase, settings.shaper);
+            const double _d = std::max(0.000001, 1 - _pw);
+            const double _p1 = _ph / _d;
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(
                 Shapers::shaper24(settings.wavetable(std::fmod((_ph + phaseoffset) * settings.sync / _d, 1.), settings.wtpos)
                     , settings.shaper2), settings.shaper3);
         }
         else
         {
-            double _ph = Shapers::shaper4(phase, settings.shaper);
-            double _d = std::max(0.000001, 1 + _pw);
-            double _p1 = (1 - _ph) / _d;
+            const double _ph = Shapers::shaper4(phase, settings.shaper);
+            const double _d = std::max(0.000001, 1 + _pw);
+            const double _p1 = (1 - _ph) / _d;
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(
                 Shapers::shaper24(settings.wavetable(std::fmod((_ph + _pw + phaseoffset) * settings.sync / _d, 1.), settings.wtpos)
                     , settings.shaper2), settings.shaper3);
         }
 
-        double delta = settings.frequency / (SAMPLE_RATE * settings.oversample);
-        phase = std::fmod(1 + phase + delta, 1);
+        //const double delta = settings.frequency / (SAMPLE_RATE * settings.oversample);
+        phase = phase + settings.frequency / SAMPLE_RATE;
+        if (phase > 1) phase -= 1;
+        //phase = std::fmod(1 + phase + delta, 1);
         return _s;
     }
 
     double Oscillator::Offset(double phaseoffset)
     {
         // No oversampling
-        if (settings.oversample == 1)
+        //if (settings.oversample == 1)
             return OffsetOnce(phaseoffset);
 
-        double _avg = 0;
-        m_Params.sampleRate = SAMPLE_RATE * settings.oversample;
-        m_Params.f0 = SAMPLE_RATE * 0.4;
-        m_Params.Q = 1;
-        m_Params.type = FilterType::LowPass;
-        m_Params.RecalculateParameters();
-
-        for (int i = 0; i < settings.oversample; i++)
-        {
-            double _s = OffsetOnce(phaseoffset);
-            for (auto& i : m_Filter)
-                _s = i.Apply(_s, m_Params);
-            _avg += _s;
-        }
-        _avg /= settings.oversample;
-        return constrain(_avg, -1, 1);
+        //double _avg = 0;
+        //m_Params.sampleRate = SAMPLE_RATE * settings.oversample;
+        //m_Params.f0 = SAMPLE_RATE * 0.4;
+        //m_Params.Q = 1;
+        //m_Params.type = FilterType::LowPass;
+        //m_Params.RecalculateParameters();
+        //
+        //for (int i = 0; i < settings.oversample; i++)
+        //{
+        //    double _s = OffsetOnce(phaseoffset);
+        //    for (auto& i : m_Filter)
+        //        _s = i.Apply(_s, m_Params);
+        //    _avg += _s;
+        //}
+        //_avg /= settings.oversample;
+        //return constrain(_avg, -1, 1);
     }
 
     double Oscillator::Apply(double s, size_t)

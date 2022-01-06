@@ -4,14 +4,54 @@
 
 namespace Kaixo
 {
-    inline double noteToFreq(double note) { return note > 137 ? 22000 : (440. / 32.) * pow(2, ((note - 9) / 12.0)); }
+
+    struct Table1
+    {
+        constexpr static int precision = 100000;
+        constexpr static int start = -100;
+        constexpr static int end = 136;
+        constexpr Table1(auto&& l)
+        {
+            for (int i = 0; i < precision; i++)
+                table[i] = l((i / (double)precision) * (end - start) + start);
+        }
+
+        inline double get(double val) const
+        {
+            if (val < start) return 0.08;
+            if (val > end) return 22000;
+            return table[(int)(precision * (val - start) / (end - start))];
+        }
+
+        double table[precision];
+    };
+    
+    const static inline Table1 note2freq = [](double note) { return (440. / 32.) * pow(2, ((note - 9) / 12.0)); };
+
+    inline double noteToFreq(double note) { return note2freq.get(note); }
+
+    static inline unsigned long x = 123456789, y = 362436069, z = 521288629;
+    inline double random() {
+        
+        unsigned long t;
+        x ^= x << 16;
+        x ^= x >> 5;
+        x ^= x << 1;
+
+        t = x;
+        x = y;
+        y = z;
+        z = t ^ x ^ y;
+
+        return 2 * (z % 32767) / 32767. - 0.5;
+    }
 
 #define db2lin(db) std::powf(10.0f, 0.05 * (db))
 #define lin2db(lin) (20.0f * std::log10f(static_cast<float>(lin)))
 
     enum Polarity { Positive = 1, Negative = -1 };
 
-    using Wavetable = std::function<double(double, double)>;
+    using Wavetable = double(*)(double, double);
 
     namespace Shapers
     {
@@ -44,7 +84,7 @@ namespace Kaixo
     class Module
     {
     public:
-        static inline double SAMPLE_RATE = 44100.;
+        double SAMPLE_RATE = 44100.;
 
         virtual double Apply(double sample = 0, size_t channel = 0) { return sample; };
         virtual void Generate(size_t channel = 0) {};
@@ -131,7 +171,7 @@ namespace Kaixo
         {
             double frequency = 440;
             double wtpos = 0;
-            int oversample = 8;
+            //int oversample = 8;
             double sync = 1;
             double pw = 0.5;
             double shaper = 0;
@@ -148,8 +188,8 @@ namespace Kaixo
 
         float phase = 0;
     private:
-        BiquadParameters m_Params;
-        BiquadFilter<> m_Filter[1];
+        //BiquadParameters m_Params;
+        //BiquadFilter<> m_Filter[1];
 
         double OffsetOnce(double phaseoffset);
     };

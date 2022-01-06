@@ -28,3 +28,4 @@ using namespace VSTGUI;
 #include <charconv>
 #include <string>
 #include <iostream>
+#include <array>
