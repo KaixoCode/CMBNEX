@@ -3,7 +3,7 @@
 #include "myplugincids.hpp"
 #include "version.hpp"
 
-#define stringPluginName "Test"
+#define stringPluginName "CMBNEX"
 
 using namespace Steinberg::Vst;
 using namespace Kaixo;
@@ -21,18 +21,18 @@ BEGIN_FACTORY_DEF ("Kaixo",
 
     //---First Plug-in included in this factory-------
     // its kVstAudioEffectClass component
-    DEF_CLASS2 (INLINE_UID_FROM_FUID(kTestProcessorUID),
+    DEF_CLASS2 (INLINE_UID_FROM_FUID(kCMBNEXProcessorUID),
                 PClassInfo::kManyInstances,    // cardinality
                 kVstAudioEffectClass,    // the component category (do not changed this)
                 stringPluginName,        // here the Plug-in name (to be changed)
                 Vst::kDistributable,    // means that component and controller could be distributed on different computers
-                TestVST3Category, // Subcategory for this Plug-in (to be changed)
+                CMBNEXVST3Category, // Subcategory for this Plug-in (to be changed)
                 FULL_VERSION_STR,        // Plug-in version (to be changed)
                 kVstVersionString,        // the VST 3 SDK version (do not changed this, use always this define)
                 TestProcessor::createInstance)    // function pointer called when this component should be instantiated
 
     // its kVstComponentControllerClass component
-    DEF_CLASS2 (INLINE_UID_FROM_FUID (kTestControllerUID),
+    DEF_CLASS2 (INLINE_UID_FROM_FUID (kCMBNEXControllerUID),
                 PClassInfo::kManyInstances, // cardinality
                 kVstComponentControllerClass,// the Controller category (do not changed this)
                 stringPluginName "Controller",    // controller name (could be the same than component name)

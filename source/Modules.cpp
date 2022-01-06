@@ -212,26 +212,36 @@ namespace Kaixo
         sample = Offset(m_Phase);
     }
 
+    inline double fastPow(double a, double b) {
+        union {
+            double d;
+            int x[2];
+        } u = { a };
+        u.x[1] = (int)(b * (u.x[1] - 1072632447) + 1072632447);
+        u.x[0] = 0;
+        return u.d;
+    }
+
     double f(double x, double a)
     {
-        constexpr auto b = 0.5;
+        constexpr static auto b = 0.5;
         if (a >= 0)
         {
-            const auto pba = std::pow(b, a);
+            const auto pba = fastPow(b, a);
             return (std::pow(b * x + b, a) - pba) / (1 - pba);
         }
         else
         {
-            const auto pba = std::pow(b, -a);
+            const auto pba = fastPow(b, -a);
             return 1 - (std::pow(b * (1 - x) + b, -a) - pba) / (1 - pba);
         }
     }
 
     double ADSR::Offset(double p)
     {
-        double _ac = settings.attackCurve < 0 ? (settings.attackCurve * 8 - 1) : settings.attackCurve * 8 + 1;
-        double _dc = settings.decayCurve < 0 ? (settings.decayCurve * 8 - 1) : settings.decayCurve * 8 + 1;
-        double _rc = settings.releaseCurve < 0 ? (settings.releaseCurve * 8 - 1) : settings.releaseCurve * 8 + 1;
+        const double _ac = settings.attackCurve < 0 ? (settings.attackCurve * 8 - 1) : settings.attackCurve * 8 + 1;
+        const double _dc = settings.decayCurve < 0 ? (settings.decayCurve * 8 - 1) : settings.decayCurve * 8 + 1;
+        const double _rc = settings.releaseCurve < 0 ? (settings.releaseCurve * 8 - 1) : settings.releaseCurve * 8 + 1;
         return p < 0 ? 0
             : p < settings.attack ? f(p / settings.attack, _ac) * (settings.decayLevel - settings.attackLevel) + settings.attackLevel
             : p < settings.attack + settings.decay ? f((p - settings.attack) / settings.decay, _dc) * (settings.sustain - settings.decayLevel) + settings.decayLevel

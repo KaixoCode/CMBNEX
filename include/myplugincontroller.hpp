@@ -7,11 +7,12 @@ namespace Kaixo
     class MyEditor : public VST3Editor
     {
     public:
+
         MyEditor(EditController* controller)
-            : VST3Editor(controller, "view", "myplugineditor.uidesc"), 
+            : VST3Editor(new UIDescription{ CResourceDescription{ IDR_DATA1 } }, controller, "view"),
             controller(controller)
         {}
-
+    
         EditController* controller;
     };
 

@@ -30,11 +30,11 @@ namespace Kaixo
             double _val = 0;
             for (double v = p; v < p + step; v += step / _oversample)
             {
-                v = constrain(v, -1, 1);
+                double _rp = std::fmod(v, 1.0);
                 double _pw = pw * 2 - 1;
                 if (_pw > 0)
                 {
-                    double ph = Shapers::shaper4(v, shaper);
+                    double ph = Shapers::shaper4(_rp, shaper);
                     double _d = std::max(0.000001, 1 - _pw);
                     double _p1 = ph / _d;
                     _val += _p1 > 1 ? 0 : Shapers::simpleshaper(
@@ -43,7 +43,7 @@ namespace Kaixo
                 }
                 else
                 {
-                    double ph = Shapers::shaper4(std::fmod(v, 1.), shaper);
+                    double ph = Shapers::shaper4(std::fmod(_rp, 1.), shaper);
                     double _d = std::max(0.000001, 1 + _pw);
                     double _p1 = (1 - ph) / _d;
                     _val += _p1 > 1 ? 0 : Shapers::simpleshaper(

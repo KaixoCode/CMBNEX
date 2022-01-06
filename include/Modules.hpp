@@ -185,13 +185,13 @@ namespace Kaixo
         void Generate(size_t) override;
         double Apply(double s = 0, size_t = 0) override;
         double Offset(double phaseoffset);
+        double OffsetOnce(double phaseoffset);
 
         float phase = 0;
     private:
         //BiquadParameters m_Params;
         //BiquadFilter<> m_Filter[1];
 
-        double OffsetOnce(double phaseoffset);
     };
 
     class Chorus : public Module

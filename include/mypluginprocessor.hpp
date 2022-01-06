@@ -90,14 +90,13 @@ namespace Kaixo
     class Instrument : public AudioEffect
     {
     public:
-        Instrument() { setControllerClass(kTestControllerUID); }
+        Instrument() { setControllerClass(kCMBNEXControllerUID); }
         ~Instrument() override {};
 
         tresult PLUGIN_API initialize(FUnknown* context) override
         {
             tresult result = AudioEffect::initialize(context);
             if (result != kResultOk) return result;
-
             for (int i = 0; i < Params::Size; i++)
                 params[i] = paramgoals[i] = ParamNames[i].reset;
 
@@ -251,6 +250,8 @@ namespace Kaixo
             switch (event.type)
             {
             case Event::kNoteOnEvent:
+                if (paramgoals[Params::PitchBend] > 1 || paramgoals[Params::PitchBend] < 0) paramgoals[Params::PitchBend] = 0.5;
+
                 velocity = event.noteOn.velocity;
                 pressedOld = frequency;
                 pressed = event.noteOn.pitch + event.noteOn.tuning * 0.01;
@@ -258,7 +259,7 @@ namespace Kaixo
                 if (params[Params::Retrigger] > 0.5 || !env[0].Gate())
                 { 
                     for (int i = 0; i < Oscillators; i++)
-                        osc[i].phase = params[Params::RandomPhase1 + i] ? (std::rand() % 32767) / 32767. : 0;
+                        osc[i].phase = params[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
                     for (int i = 0; i < LFOs; i++)
                         lfo[i].phase = 0;
                     sub.phase = 0;
@@ -318,8 +319,8 @@ namespace Kaixo
 
             if (channel == 0) // Only do all parameter generating on channel 0
             {
-                double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
-                double _timeMult = modulated[Params::Time] < 0.5 ? (modulated[Params::Time] + 0.5) : ((modulated[Params::Time] - 0.5) * 2 + 1);
+                const double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
+                const double _timeMult = modulated[Params::Time] < 0.5 ? (modulated[Params::Time] + 0.5) : ((modulated[Params::Time] - 0.5) * 2 + 1);
 
                 deltaf = _timeMult * std::abs((pressed - pressedOld) / (0.001 + modulated[Params::Glide] * modulated[Params::Glide] * modulated[Params::Glide] * 10 * samplerate));
                 if (frequency > pressed)
@@ -361,7 +362,7 @@ namespace Kaixo
                         lfo[i].settings.frequency = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1;
                     lfo[i].settings.wtpos = modulated[Params::LFOPos1 + i];
                     lfo[i].settings.shaper3 = modulated[Params::LFOShaper1 + i];
-                    lfo[i].sample = lfo[i].Offset(modulated[Params::LFOPhase1 + i]);
+                    lfo[i].sample = lfo[i].OffsetOnce(modulated[Params::LFOPhase1 + i]);
                 }
 
                 // Move params to modulated so we can adjust their values
@@ -371,7 +372,8 @@ namespace Kaixo
                     for (int m = 0; m < 5; m++) // Loop over modulators of envelope
                         if (params[Params::Env1M1 + e + (m * 10)] != 0) // If we're modulating something
                         {   // Adjust index for the 'None' value, so ModCount + 1, then -1 to make None == -1
-                            size_t index = ParamOrder[(size_t)std::floor(params[Params::Env1M1 + e + (m * 10)] * (ParamOrderSize + 1)) - 1];
+                            int index = ParamOrder[(size_t)std::floor(params[Params::Env1M1 + e + (m * 10)] * (ParamOrderSize + 1)) - 1];
+                            if (index == -1) continue;
                             double amount = (2 * params[Params::Env1M1A + e + (m * 10)] - 1); // Modulation amount
                             double val = modulated[index] + (env[e].sample * amount); // Add the envelope * amount to the modulated value
                             modulated[index] = ParamNames[index].constrain ? constrain(val, 0, 1) : val; // Constrain if necessary
@@ -381,7 +383,8 @@ namespace Kaixo
                     for (int m = 0; m < 5; m++) // Loop over modulators of lfos
                         if (params[Params::LFO1M1 + e + (m * 10)] != 0) // If we're modulating something
                         {   // Adjust index for the 'None' value, so ModCount + 1, then -1 to make None == -1
-                            size_t index = ParamOrder[(size_t)std::floor(params[Params::LFO1M1 + e + (m * 10)] * (ParamOrderSize + 1)) - 1];
+                            int index = ParamOrder[(size_t)std::floor(params[Params::LFO1M1 + e + (m * 10)] * (ParamOrderSize + 1)) - 1];
+                            if (index == -1) continue;
                             double amount = (2 * params[Params::LFO1M1A + e + (m * 10)] - 1); // Modulation amount
                             double val = modulated[index] + ((params[Params::LFOLvl1 + e + (m * 10)] * 2 - 1) * lfo[e].sample * amount); // Add the lfos * amount to the modulated value
                             modulated[index] = ParamNames[index].constrain ? constrain(val, 0, 1) : val; // Constrain if necessary
@@ -409,7 +412,7 @@ namespace Kaixo
                     osc[i].settings.frequency = noteToFreq(frequency + _bendOffset
                         + modulated[Params::Detune1 + i] * 4 - 2 + modulated[Params::Pitch1 + i] * 48 - 24);
                     osc[i].settings.wtpos = modulated[Params::WTPos1 + i];
-                    osc[i].settings.sync = modulated[Params::Sync1 + i] * 8 + 1;
+                    osc[i].settings.sync = modulated[Params::Sync1 + i] * 7 + 1;
                     osc[i].settings.pw = modulated[Params::PulseW1 + i];
                     osc[i].settings.shaper = modulated[Params::Shaper1 + i];
                     osc[i].settings.shaper2 = modulated[Params::Shaper21 + i];
@@ -423,7 +426,7 @@ namespace Kaixo
                     filterp[i].RecalculateParameters();
 
                     if (modulated[Params::Volume1 + i]) // Generate oscillator sound
-                        osc[i].sample = osc[i].Offset(modulated[Params::Phase1 + i]) * (1 - (1 - velocity) * modulated[Params::OscVel]);
+                        osc[i].sample = osc[i].OffsetOnce(modulated[Params::Phase1 + i]) * (1 - (1 - velocity) * modulated[Params::OscVel]);
                 }
 
                 { // Sub oscillator
@@ -432,7 +435,7 @@ namespace Kaixo
                     sub.settings.frequency = noteToFreq(frequency + _octave * 12 + +_bendOffset);
                     //sub.settings.oversample = 1;
                     sub.settings.wtpos = modulated[Params::SubOvertone];
-                    sub.Generate(channel);
+                    sub.sample = sub.OffsetOnce(0);
                 }
             }
 
@@ -484,15 +487,15 @@ namespace Kaixo
             // If envelope is done, no sound so return 0
             if (env[0].Done()) return { 0, 0 };
 
-            size_t _index = std::floor(params[Params::Oversample] * 4);
-            size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
+            const size_t _index = std::floor(params[Params::Oversample] * 4);
+            const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
             
-            double samplerate = data.processContext->sampleRate * _osa;
+            const double samplerate = data.processContext->sampleRate * _osa;
 
             if (_osa == 1)
             {
-                double l = Clip(GenerateSample(0, data, samplerate), 0);
-                double r = Clip(GenerateSample(1, data, samplerate), 1);
+                const double l = Clip(GenerateSample(0, data, samplerate), 0);
+                const double r = Clip(GenerateSample(1, data, samplerate), 1);
                 return { l, r };
             }
 
@@ -521,9 +524,9 @@ namespace Kaixo
 
         enum CombineMode { ADD, MIN, MULT, PONG, MAX, MOD, AND, INLV, OR, XOR, Size };
 
-        double Clip(double a, int channel)
+        inline double Clip(double a, int channel)
         {
-            size_t f = std::floor(params[Params::Clipping] * 3);
+            const size_t f = std::floor(params[Params::Clipping] * 3);
             switch (f)
             {
             case 0: a = std::tanh(a) * 1.312; break;
@@ -532,25 +535,20 @@ namespace Kaixo
             return constrain(a, -1, 1);
         }
 
-        double Limit(double a, int channel)
+        inline double Combine(double a, double b, double mode)
         {
-            return a;
-        }
-
-        double Combine(double a, double b, double mode)
-        {
-            auto f = std::floor(mode * (Size - 1));
-            auto s = std::ceil(mode * (Size - 1));
-            auto p = (mode * (Size - 1)) - f;
+            const auto f = std::floor(mode * (Size - 1));
+            const auto s = std::ceil(mode * (Size - 1));
+            const auto p = (mode * (Size - 1)) - f;
             return CombineSingle(a, b, f) * (1 - p) + CombineSingle(a, b, s) * p;
         }
 
-        double CombineSingle(double a, double b, int mode)
+        inline double CombineSingle(double a, double b, int mode)
         {
-            uint64_t _a = std::bit_cast<uint64_t>(a);
-            uint64_t _b = std::bit_cast<uint64_t>(b);
-            uint64_t _as = a * 4294967296;
-            uint64_t _bs = b * 4294967296;
+            const uint64_t _a = std::bit_cast<uint64_t>(a);
+            const uint64_t _b = std::bit_cast<uint64_t>(b);
+            const uint64_t _as = a * 4294967296;
+            const uint64_t _bs = b * 4294967296;
             double _ab = 0;
             switch (mode) {
             case AND:  _ab = 1.5 * (std::bit_cast<double>(_a & _b)); break;

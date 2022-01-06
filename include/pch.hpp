@@ -1,3 +1,5 @@
+#define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseStopWhenDoneFlag
+
 #include "base/source/fstreamer.h"
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
@@ -13,6 +15,8 @@
 #include "vstgui/vstgui_uidescription.h"
 #include "vstgui/uidescription/detail/uiviewcreatorattributes.h"
 #include "vstgui/uidescription/uiviewfactory.h"
+
+#include "resource.h"
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;

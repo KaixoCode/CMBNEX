@@ -17,6 +17,7 @@ namespace Kaixo
         void draw(CDrawContext* pContext) override
         {
             CMenuItem* item = getEntry(currentIndex);
+
             drawBack(pContext);
             if (item)
             {

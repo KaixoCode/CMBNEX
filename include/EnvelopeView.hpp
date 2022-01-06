@@ -17,7 +17,7 @@ namespace Kaixo
 
         bool pressed = false;
         
-        enum Section { Attack, AttackCurve, Decay, DecayCurve, Sustain, Release, ReleaseCurve, None } section;
+        enum Section { Attack, AttackCurve, Decay, DecayCurve, Sustain, SustainLine, Release, ReleaseCurve, None } section;
         Section editing = None;
         CPoint pwhere{ 0, 0 };
         double pvaluea;
@@ -65,7 +65,7 @@ namespace Kaixo
             double _re = _rs + _space * (env.settings.release) / 5.;
             if (_x > _as && _x < _ds) return AttackCurve;
             if (_x > _ds && _x < _ss) return DecayCurve;
-            if (_x > _ss && _x < _rs) return Sustain;
+            if (_x > _ss && _x < _rs) return SustainLine;
             if (_x > _rs && _x < _re) return ReleaseCurve;
             return None;
         }
@@ -92,6 +92,7 @@ namespace Kaixo
                 case Decay: pvaluea = env.settings.decayLevel; pvalueb = env.settings.attack; break;
                 case DecayCurve: pvaluea = env.settings.decayCurve; break;
                 case Sustain: pvaluea = env.settings.sustain; pvalueb = env.settings.decay; break;
+                case SustainLine: pvaluea = env.settings.sustain; break;
                 case Release: pvalueb = env.settings.release; break;
                 case ReleaseCurve: pvaluea = env.settings.releaseCurve; break;
                 }
@@ -143,6 +144,7 @@ namespace Kaixo
                 case Decay:        env.settings.attack = pvalueb + _dxr, env.settings.decayLevel = pvaluea + _dyr; break;
                 case DecayCurve:   env.settings.decayCurve = pvaluea + _dyr * 5; break;
                 case Sustain:      env.settings.decay = pvalueb + _dxr, env.settings.sustain = pvaluea + _dyr; break;
+                case SustainLine:  env.settings.sustain = pvaluea + _dyr; break;
                 case Release:      env.settings.release = pvalueb + _dxr; break;
                 case ReleaseCurve: env.settings.releaseCurve = pvaluea + _dyr * 5; break;
                 }
@@ -189,7 +191,7 @@ namespace Kaixo
 
             CDrawContext::LineList _lines;
             CRect attackPoint, attackCurvePoint, 
-                decayPoint, decayCurvePoint, sustainPoint, 
+                decayPoint, decayCurvePoint, sustainPoint, sustainPoint1, 
                 releasePoint, releaseCurvePoint;
 
             env.Trigger();
@@ -252,6 +254,7 @@ namespace Kaixo
                 sustainPoint = { _px - _rsize / 2, _py - _rsize / 2, _px + _rsize / 2, _py + _rsize / 2 };
                 _lines.push_back({ { std::floor(_px), std::floor(_py) }, { std::floor(_x), std::floor(_y) } });
                 _px = _x;
+                sustainPoint1 = { _px - _rsize / 2, _py - _rsize / 2, _px + _rsize / 2, _py + _rsize / 2 };
             }
             pContext->setFrameColor(section == Sustain ? brgt : main);
             pContext->drawLines(_lines);
@@ -292,6 +295,7 @@ namespace Kaixo
             //pContext->drawEllipse(decayCurvePoint, kDrawFilledAndStroked);
             pContext->setFrameColor(section == Sustain ? brgt : main);
             pContext->drawRect(sustainPoint, kDrawFilledAndStroked);
+            pContext->drawRect(sustainPoint1, kDrawFilledAndStroked);
             pContext->setFrameColor(section == Release ? brgt : main);
             pContext->drawRect(releasePoint, kDrawFilledAndStroked);
             //pContext->drawEllipse(releaseCurvePoint, kDrawFilledAndStroked);

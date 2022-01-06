@@ -1,7 +1,10 @@
 #include <windows.h>
 #include "../include/version.hpp"
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
+
+IDR_DATA1 DATA "myplugineditor.uidesc"
 
 /////////////////////////////////////////////////////////////////////////////
 // Version
