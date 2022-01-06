@@ -172,9 +172,11 @@ namespace Kaixo
                     for (size_t param = 0; param < Params::Size; param++)
                         params[param] = ParamNames[param].smooth ? params[param] * 0.99 + paramgoals[param] * 0.01 : paramgoals[param];
 
-                    for (size_t channel = 0; channel < data.outputs[0].numChannels; channel++)
+                    auto [l, r] = Generate(data);
+                    if (data.outputs[0].numChannels == 2)
                     {
-                        ((Sample32**)out)[channel][sample] = static_cast<Sample32>(Generate(channel, data));
+                        ((Sample32**)out)[0][sample] = l;
+                        ((Sample32**)out)[1][sample] = r;
                     }
                 }
             }
@@ -185,9 +187,11 @@ namespace Kaixo
                     for (size_t param = 0; param < Params::Size; param++)
                         params[param] = ParamNames[param].smooth ? params[param] * 0.99 + paramgoals[param] * 0.01 : paramgoals[param];
 
-                    for (size_t channel = 0; channel < data.outputs[0].numChannels; channel++)
+                    auto[l, r] = Generate(data);
+                    if (data.outputs[0].numChannels == 2)
                     {
-                        ((Sample64**)out)[channel][sample] = Generate(channel, data);
+                        ((Sample64**)out)[0][sample] = l;
+                        ((Sample64**)out)[1][sample] = r;
                     }
                 }
             }
@@ -214,7 +218,7 @@ namespace Kaixo
             return kResultOk;
         }
 
-        virtual Sample64 Generate(size_t channel, ProcessData& data) = 0;
+        virtual std::pair<Sample64, Sample64> Generate(ProcessData& data) = 0;
         virtual void Event(Vst::Event& e) = 0;
         
         double params[Params::Size];
@@ -475,10 +479,10 @@ namespace Kaixo
             return env[0].Apply(_res, channel); // Envelope 0 is gain
         }
 
-        double Generate(size_t channel, ProcessData& data) override
+        std::pair<Sample64, Sample64> Generate(ProcessData& data) override
         {   
             // If envelope is done, no sound so return 0
-            if (env[0].Done()) return 0;
+            if (env[0].Done()) return { 0, 0 };
 
             size_t _index = std::floor(params[Params::Oversample] * 4);
             size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
@@ -486,7 +490,11 @@ namespace Kaixo
             double samplerate = data.processContext->sampleRate * _osa;
 
             if (_osa == 1)
-                return Clip(GenerateSample(channel, data, samplerate), channel);
+            {
+                double l = Clip(GenerateSample(0, data, samplerate), 0);
+                double r = Clip(GenerateSample(1, data, samplerate), 1);
+                return { l, r };
+            }
 
             aafp.sampleRate = samplerate;
             aafp.f0 = data.processContext->sampleRate * 0.4;
@@ -494,18 +502,21 @@ namespace Kaixo
             aafp.type = FilterType::LowPass;
             aafp.RecalculateParameters();
 
-            double _sum = 0;
+            double _suml = 0;
+            double _sumr = 0;
             for (int k = 0; k < _osa; k++)
             {
-                double _s = GenerateSample(channel, data, samplerate);
+                double _l = GenerateSample(0, data, samplerate);
+                double _r = GenerateSample(1, data, samplerate);
 
-                if (!aafp.off)
-                _s = aaf.Apply(_s, channel);
-
-                _sum += _s;
+                _l = aaf.Apply(_l, 0);
+                _r = aaf.Apply(_r, 1);
+                
+                _suml += _l;
+                _sumr += _r;
             }
 
-            return Clip(_sum / _osa, channel);
+            return { Clip(_suml / _osa, 0), Clip(_sumr / _osa, 1) };
         }
 
         enum CombineMode { ADD, MIN, MULT, PONG, MAX, MOD, AND, INLV, OR, XOR, Size };
