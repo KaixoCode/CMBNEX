@@ -17,8 +17,6 @@ set(SRC "${${PRJ_NAME}_SOURCE_DIR}/")
 file(GLOB_RECURSE SOURCE
   "${SRC}source/*.cpp"
   "${SRC}include/*.hpp"
-  "${SRC}resource/*.rc"
-  "${SRC}resource/*.h"
 )
 
 set(SMTG_VSTGUI_ROOT "${vst3sdk_SOURCE_DIR}")
@@ -30,14 +28,32 @@ smtg_add_vst3plugin(${PRJ_NAME}
     ${SOURCE}
 )
 
-target_include_directories(${PRJ_NAME} PUBLIC
+target_include_directories(${PRJ_NAME} PRIVATE
   include/
-  resource/
 )
 
-target_link_libraries(${PRJ_NAME}
-    PRIVATE
-        vstgui_support
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PRJ_NAME})
+
+#- VSTGUI Wanted ----
+if(SMTG_ADD_VSTGUI)
+    target_sources(${PRJ_NAME}
+        PRIVATE
+            resource/myplugineditor.uidesc
+    )
+    target_link_libraries(${PRJ_NAME}
+        PRIVATE
+            vstgui_support
+    )
+    smtg_target_add_plugin_resources(${PRJ_NAME}
+        RESOURCES
+            "resource/myplugineditor.uidesc"
+    )
+endif(SMTG_ADD_VSTGUI)
+# -------------------
+
+smtg_target_add_plugin_snapshots (${PRJ_NAME}
+    RESOURCES
+        resource/logo.bmp
 )
 
 target_link_libraries(${PRJ_NAME}
@@ -45,10 +61,33 @@ target_link_libraries(${PRJ_NAME}
         sdk
 )
 
+if(SMTG_MAC)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12)
+    smtg_target_set_bundle(${PRJ_NAME}
+        BUNDLE_IDENTIFIER me.kaixo.cmbnex
+        INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
+    )
+    smtg_target_set_debug_executable(${PRJ_NAME}
+        "/Applications/VST3PluginTestHost.app"
+        "--pluginfolder;$(BUILT_PRODUCTS_DIR)"
+    )
+elseif(SMTG_WIN)
+    target_sources(${PRJ_NAME} PRIVATE 
+        resource/win32resource.rc
+    )
+    if(MSVC)
+        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PRJ_NAME})
+
+        smtg_target_set_debug_executable(${PRJ_NAME}
+            "$(ProgramW6432)/Steinberg/VST3PluginTestHost/VST3PluginTestHost.exe"
+            "--pluginfolder \"$(OutDir)/\""
+        )
+    endif()
+endif(SMTG_MAC)
+
 source_group(TREE ${SRC} FILES ${SOURCE})
 
 target_precompile_headers(${PRJ_NAME} PUBLIC
   "${SRC}include/pch.hpp"
 )
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PRJ_NAME})

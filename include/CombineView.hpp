@@ -23,7 +23,7 @@ namespace Kaixo
         Label* inp2;
         Label* ftrl; // Filter title
 
-        void createControls(IControlListener* listener)
+        void createControls(IControlListener* listener, MyEditor* editor)
         {
             constexpr CColor main{ 0, 179, 98, 255 };
             constexpr CColor text{ 200, 200, 200, 255 };
@@ -31,12 +31,12 @@ namespace Kaixo
             constexpr CColor brdr{ 30, 30, 30, 255 };
             constexpr CColor offt{ 128, 128, 128, 255 };
 
-            gain = new Knob{ {   5,  35,   5 +  65,  35 + 90 } };
-            dcfr = new Knob{ { 105, 130, 105 +  30, 130 + 20 } };
-            mode = new Knob{ {   5, 130,   5 +  95, 130 + 20 } };
-            fltr = new Knob{ {  69, 175,  69 +  70, 175 + 20 } };
-            freq = new Knob{ {  70,  35,  70 +  65,  35 + 90 } };
-            reso = new Knob{ {   5, 155,   5 +  65, 155 + 40 } };
+            gain = new Knob{ {   5,  35,   5 +  65,  35 + 90 }, editor };
+            dcfr = new Knob{ { 105, 130, 105 +  30, 130 + 20 }, editor };
+            mode = new Knob{ {   5, 130,   5 +  95, 130 + 20 }, editor };
+            fltr = new Knob{ {  69, 175,  69 +  70, 175 + 20 }, editor };
+            freq = new Knob{ {  70,  35,  70 +  65,  35 + 90 }, editor };
+            reso = new Knob{ {   5, 155,   5 +  65, 155 + 40 }, editor };
 
             inp1 = new Label{ { 5, 8, 5 + 50, 8 + 30 } };
             inp1->fontsize = 16;
@@ -113,10 +113,10 @@ namespace Kaixo
             addView(inp2);
         }
 
-        CombineView(const CRect& size, int index, IControlListener* listener)
+        CombineView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            createControls(listener);
+            createControls(listener, editor);
             setBackgroundColor({ 23, 23, 23, 255 });
         }
     };
@@ -142,7 +142,8 @@ namespace Kaixo
             CRect _size{ CPoint{ 45, 45 }, CombineAttributes::Size };
             int _index = 0;
             attributes.getIntegerAttribute("index", _index);
-            auto* _value = new CombineView(_size, _index, description->getControlListener(""));
+            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
+            auto* _value = new CombineView(_size, _index, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }
@@ -170,14 +171,14 @@ namespace Kaixo
 
         Label* titl;
 
-        void createControls(IControlListener* listener)
+        void createControls(IControlListener* listener, MyEditor* editor)
         {
-            destA = new Knob{ { 0 * 24 + 5,  35, 0 * 24 + 5 + 20,  35 + 145 } };
-            destB = new Knob{ { 1 * 24 + 5,  35, 1 * 24 + 5 + 20,  35 + 145 } };
-            destC = new Knob{ { 2 * 24 + 5,  35, 2 * 24 + 5 + 20,  35 + 145 } };
-            destD = new Knob{ { 3 * 24 + 5,  35, 3 * 24 + 5 + 20,  35 + 145 } };
-            destX = new Knob{ { 4 * 24 + 5,  83, 4 * 24 + 5 + 20,  83 +  97 } };
-            destY = new Knob{ { 5 * 24 + 5, 131, 5 * 24 + 5 + 20, 131 +  49 } };
+            destA = new Knob{ { 0 * 24 + 5,  35, 0 * 24 + 5 + 20,  35 + 145 }, editor };
+            destB = new Knob{ { 1 * 24 + 5,  35, 1 * 24 + 5 + 20,  35 + 145 }, editor };
+            destC = new Knob{ { 2 * 24 + 5,  35, 2 * 24 + 5 + 20,  35 + 145 }, editor };
+            destD = new Knob{ { 3 * 24 + 5,  35, 3 * 24 + 5 + 20,  35 + 145 }, editor };
+            destX = new Knob{ { 4 * 24 + 5,  83, 4 * 24 + 5 + 20,  83 +  97 }, editor };
+            destY = new Knob{ { 5 * 24 + 5, 131, 5 * 24 + 5 + 20, 131 +  49 }, editor };
 
             lablA = new Label{ { 0 * 24 + 5, 178, 0 * 24 + 5 + 20, 178 + 25 } };
             lablB = new Label{ { 1 * 24 + 5, 178, 1 * 24 + 5 + 20, 178 + 25 } };
@@ -258,10 +259,10 @@ namespace Kaixo
             addView(titl);
         }
 
-        CombineModeView(const CRect& size, int index, IControlListener* listener)
+        CombineModeView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            createControls(listener);
+            createControls(listener, editor);
             setBackgroundColor({ 23, 23, 23, 255 });
         }
     };
@@ -287,7 +288,8 @@ namespace Kaixo
             CRect _size{ CPoint{ 45, 45 }, CombineModeAttributes::Size };
             int _index = 0;
             attributes.getIntegerAttribute("index", _index);
-            auto* _value = new CombineModeView(_size, _index, description->getControlListener(""));
+            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
+            auto* _value = new CombineModeView(_size, _index, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }

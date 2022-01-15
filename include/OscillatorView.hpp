@@ -46,23 +46,23 @@ namespace Kaixo
                 wfrm->setDirty(true);
         }
 
-        void createControls(IControlListener* listener)
+        void createControls(IControlListener* listener, MyEditor* editor)
         {
-            tune = new Knob{ {  60,   5,  60 + 70,   5 + 96 } };
-            wtps = new Knob{ { 135, 155, 135 + 65, 155 + 40 } };
-            sync = new Knob{ {   5, 105,   5 + 65, 105 + 40 } };
-            detn = new Knob{ {   5,  20,   5 + 55,  20 + 80 } };
-            volm = new Knob{ { 205,   5, 205 + 70,   5 + 95 } };
-            phse = new Knob{ { 135, 105, 135 + 65, 105 + 40 } };
-            plsw = new Knob{ {  70, 105,  70 + 65, 105 + 40 } };
-            pann = new Knob{ { 200, 105, 200 + 65, 105 + 40 } };
-            nois = new Knob{ { 200, 155, 200 + 65, 155 + 40 } };
-            fltr = new Knob{ { 264, 175, 264 + 70, 175 + 20 } };
-            freq = new Knob{ { 275,  20, 275 + 55,  20 + 80 } };
-            reso = new Knob{ { 265, 105, 265 + 65, 105 + 40 } };
-            rphs = new Knob{ { 135,  80, 135 + 65,  80 + 20 } };
-            shpr = new Knob{ {   5, 155,   5 + 65, 155 + 40 } };
-            shp2 = new Knob{ {  70, 155,  70 + 65, 155 + 40 } };
+            tune = new Knob{ {  60,   5,  60 + 70,   5 + 96 }, editor };
+            wtps = new Knob{ { 135, 155, 135 + 65, 155 + 40 }, editor };
+            sync = new Knob{ {   5, 105,   5 + 65, 105 + 40 }, editor };
+            detn = new Knob{ {   5,  20,   5 + 55,  20 + 80 }, editor };
+            volm = new Knob{ { 205,   5, 205 + 70,   5 + 95 }, editor };
+            phse = new Knob{ { 135, 105, 135 + 65, 105 + 40 }, editor };
+            plsw = new Knob{ {  70, 105,  70 + 65, 105 + 40 }, editor };
+            pann = new Knob{ { 200, 105, 200 + 65, 105 + 40 }, editor };
+            nois = new Knob{ { 200, 155, 200 + 65, 155 + 40 }, editor };
+            fltr = new Knob{ { 264, 175, 264 + 70, 175 + 20 }, editor };
+            freq = new Knob{ { 275,  20, 275 + 55,  20 + 80 }, editor };
+            reso = new Knob{ { 265, 105, 265 + 65, 105 + 40 }, editor };
+            rphs = new Knob{ { 135,  80, 135 + 65,  80 + 20 }, editor };
+            shpr = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
+            shp2 = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
 
             tune->index = index;
             wtps->index = index;
@@ -198,10 +198,10 @@ namespace Kaixo
             addView(ftrl);
         }
 
-        OscillatorView(const CRect& size, int index, IControlListener* listener)
+        OscillatorView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            createControls(listener);
+            createControls(listener, editor);
             setBackgroundColor({ 23, 23, 23, 255 });
         }
 
@@ -232,7 +232,8 @@ namespace Kaixo
             CRect _size{ CPoint{ 45, 45 }, OscillatorAttributes::Size };
             int _index = 0;
             attributes.getIntegerAttribute("index", _index);
-            auto* _value = new OscillatorView(_size, _index, description->getControlListener(""));
+            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
+            auto* _value = new OscillatorView(_size, _index, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }

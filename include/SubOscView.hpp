@@ -17,11 +17,11 @@ namespace Kaixo
         Label* titl;
         int index = 0;
 
-        void createControls(IControlListener* listener)
+        void createControls(IControlListener* listener, MyEditor* editor)
         {
-            gain = new Knob{ {  10,  35,  10 + 50,  30 + 80 } };
-            octv = new Knob{ {   5, 110,   6 + 60, 110 + 40 } };
-            ovrt = new Knob{ {   5, 155,   5 + 60, 155 + 40 } };
+            gain = new Knob{ {  10,  35,  10 + 50,  30 + 80 }, editor };
+            octv = new Knob{ {   5, 110,   6 + 60, 110 + 40 }, editor };
+            ovrt = new Knob{ {   5, 155,   5 + 60, 155 + 40 }, editor };
             
             titl = new Label{ { 0,   3, 0 + 70,   3 + 30 } };
             titl->fontsize = 24;
@@ -51,10 +51,10 @@ namespace Kaixo
             addView(titl);
         }
 
-        SubOscView(const CRect& size, int index, IControlListener* listener)
+        SubOscView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            createControls(listener);
+            createControls(listener, editor);
             setBackgroundColor({ 23, 23, 23, 255 });
         }
 
@@ -85,7 +85,8 @@ namespace Kaixo
             CRect _size{ CPoint{ 45, 45 }, SubOscAttributes::Size };
             int _index = 0;
             attributes.getIntegerAttribute("index", _index);
-            auto* _value = new SubOscView(_size, _index, description->getControlListener(""));
+            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
+            auto* _value = new SubOscView(_size, _index, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }

@@ -16,8 +16,6 @@
 #include "vstgui/uidescription/detail/uiviewcreatorattributes.h"
 #include "vstgui/uidescription/uiviewfactory.h"
 
-#include "resource.h"
-
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 using namespace VSTGUI;

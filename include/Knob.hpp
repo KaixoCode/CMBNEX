@@ -3,6 +3,7 @@
 #include "myplugincids.hpp"
 #include "Modules.hpp"
 #include "ViewFactoryBase.hpp"
+#include "myplugincontroller.hpp"
 
 namespace Kaixo
 {
@@ -27,8 +28,10 @@ namespace Kaixo
         String name;
         String unit;
 
-        Knob(const CRect& size)
-            : CControl(size)
+        MyEditor* editor;
+
+        Knob(const CRect& size, MyEditor* editor)
+            : editor(editor), CControl(size)
         {}
 
         CMouseEventResult onMouseCancel() override

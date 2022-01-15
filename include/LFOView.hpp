@@ -150,23 +150,23 @@ namespace Kaixo
             return _r;
         }
 
-        void createControls(IControlListener* listener)
+        void createControls(IControlListener* listener, MyEditor* editor)
         {
-            rate = new Knob{ {   5, 155,   5 + 65, 155 + 40 } };
-            amnt = new Knob{ {  70, 155,  70 + 65, 155 + 40 } };
-            posi = new Knob{ { 135, 155, 135 + 65, 155 + 40 } };
-            offs = new Knob{ { 200, 155, 200 + 65, 155 + 40 } };
-            shpr = new Knob{ { 265, 155, 265 + 65, 155 + 40 } };
-            sync = new Knob{ { 285, 128, 285 + 45, 128 + 20 } };
+            rate = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
+            amnt = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
+            posi = new Knob{ { 135, 155, 135 + 65, 155 + 40 }, editor };
+            offs = new Knob{ { 200, 155, 200 + 65, 155 + 40 }, editor };
+            shpr = new Knob{ { 265, 155, 265 + 65, 155 + 40 }, editor };
+            sync = new Knob{ { 285, 128, 285 + 45, 128 + 20 }, editor };
             curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
 
             for (int i = 0; i < 5; i++)
             {
-                modt[i] = new Knob{ { 0, 0, 1, 1 } };
+                modt[i] = new Knob{ { 0, 0, 1, 1 }, editor };
                 modt[i]->setListener(listener);
                 modt[i]->setTag(Params::LFO1M1 + index + (i * 10));
 
-                moda[i] = new Knob{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 40 } };
+                moda[i] = new Knob{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 40 }, editor };
                 moda[i]->setListener(listener);
                 moda[i]->setTag(Params::LFO1M1A + index + (i * 10));
                 moda[i]->name = "";
@@ -297,10 +297,10 @@ namespace Kaixo
                 addView(moda[i]), addView(mod[i]);
         }
 
-        LFOView(const CRect& size, int index, IControlListener* listener)
+        LFOView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            createControls(listener);
+            createControls(listener, editor);
             setBackgroundColor({ 23, 23, 23, 255 });
         }
     };
@@ -326,7 +326,8 @@ namespace Kaixo
             CRect _size{ CPoint{ 45, 45 }, LFOAttributes::Size };
             int _index = 0;
             attributes.getIntegerAttribute("index", _index);
-            auto* _value = new LFOView(_size, _index, description->getControlListener(""));
+            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
+            auto* _value = new LFOView(_size, _index, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }

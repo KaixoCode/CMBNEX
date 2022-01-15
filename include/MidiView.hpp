@@ -39,17 +39,17 @@ namespace Kaixo
 
         int index = 0;
 
-        void createControls(IControlListener* listener)
+        void createControls(IControlListener* listener, MyEditor* editor)
         {
-            clip = new Knob{ {   4, 25,   4 + 125, 25 + 20 } };
-            tnsp = new Knob{ { 135,  5, 135 +  65,  5 + 40 } };
-            bend = new Knob{ { 200,  5, 200 +  65,  5 + 40 } };
-            frqk = new Knob{ { 265,  5, 265 +  65,  5 + 40 } };
-            ovsm = new Knob{ {   4, 75,   4 + 100, 75 + 20 } };
-            retr = new Knob{ { 105, 75, 105 +  20, 75 + 20 } };
-            oscv = new Knob{ { 135, 55, 135 +  65, 55 + 40 } };
-            glde = new Knob{ { 200, 55, 200 +  65, 55 + 40 } };
-            frqv = new Knob{ { 265, 55, 264 +  70, 55 + 40 } };
+            clip = new Knob{ {   4, 25,   4 + 125, 25 + 20 }, editor };
+            tnsp = new Knob{ { 135,  5, 135 +  65,  5 + 40 }, editor };
+            bend = new Knob{ { 200,  5, 200 +  65,  5 + 40 }, editor };
+            frqk = new Knob{ { 265,  5, 265 +  65,  5 + 40 }, editor };
+            ovsm = new Knob{ {   4, 75,   4 + 100, 75 + 20 }, editor };
+            retr = new Knob{ { 105, 75, 105 +  20, 75 + 20 }, editor };
+            oscv = new Knob{ { 135, 55, 135 +  65, 55 + 40 }, editor };
+            glde = new Knob{ { 200, 55, 200 +  65, 55 + 40 }, editor };
+            frqv = new Knob{ { 265, 55, 264 +  70, 55 + 40 }, editor };
 
             ovsl = new Label{ {   5, 55,   5 + 90, 55 + 20 } };
             ovsl->fontsize = 14;
@@ -141,10 +141,10 @@ namespace Kaixo
             addView(clpl);
         }
 
-        MidiView(const CRect& size, int index, IControlListener* listener)
+        MidiView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            createControls(listener);
+            createControls(listener, editor);
             setBackgroundColor({ 23, 23, 23, 255 });
         }
 
@@ -175,7 +175,8 @@ namespace Kaixo
             CRect _size{ CPoint{ 45, 45 }, MidiAttributes::Size }; 
             int _index = 0;
             attributes.getIntegerAttribute("index", _index);
-            auto* _value = new MidiView(_size, _index, description->getControlListener(""));
+            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
+            auto* _value = new MidiView(_size, _index, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }

@@ -9,11 +9,16 @@ namespace Kaixo
     public:
 
         MyEditor(EditController* controller)
-            : VST3Editor(new UIDescription{ CResourceDescription{ IDR_DATA1 } }, controller, "view"),
+            : VST3Editor(controller, "view", "myplugineditor.uidesc"),
             controller(controller)
         {}
     
         EditController* controller;
+
+        bool isModulated(int32_t param) {
+            //controller->getParamNormalized(Params::);
+            
+        }
     };
 
     class TestController : public EditControllerEx1, public IMidiMapping
@@ -25,7 +30,7 @@ namespace Kaixo
 
         IPlugView* PLUGIN_API createView(FIDString name) override
         {
-            if (strcmp(name, ViewType::kEditor) == 0)
+            if (std::strcmp(name, ViewType::kEditor) == 0)
             {
                 return new MyEditor(this);
             }
