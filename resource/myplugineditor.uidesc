@@ -17,8 +17,7 @@
 			"bg": "#202020ff",
 			"bgd": "#171717ff"
 		},
-		"control-tags": {
-		},
+		"control-tags": {},
 		"custom": {
 			"FocusDrawing": {},
 			"UIGridController": {
@@ -32,8 +31,8 @@
 				"EditViewScale": "1",
 				"EditorSize": "0, 0, 1850, 896",
 				"EncodeBitmaps": "true",
-				"SplitViewSize_0_0": "0.8068965517241378782031802074925508350134",
-				"SplitViewSize_0_1": "0.1701149425287356298230889706246671266854",
+				"SplitViewSize_0_0": "0.8758620689655172153464945949963293969631",
+				"SplitViewSize_0_1": "0.1011494252873563204353501987498020753264",
 				"SplitViewSize_1_0": "0.4873563218390804530066873212490463629365",
 				"SplitViewSize_1_1": "0.5103448275862069172248425275029148906469",
 				"SplitViewSize_2_0": "0.809729729729729674758686996938195079565",
@@ -53,6 +52,9 @@
 			},
 			"UIBitmapsDataSource": {
 				"SelectedRow": "0"
+			},
+			"VST3Editor": {
+				"Path": "C:\\Users\\Jeroen\\source\\repos\\VstTest\\Test\\resource\\myplugineditor.uidesc"
 			}
 		},
 		"templates": {
@@ -64,7 +66,7 @@
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "1045, 640",
+					"size": "1045, 730",
 					"transparent": "false",
 					"wants-focus": "false"
 				},
@@ -77,8 +79,8 @@
 							"index": "2",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 220",
-							"size": "335, 200",
+							"origin": "10, 250",
+							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -92,7 +94,7 @@
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "355, 10",
-							"size": "335, 200",
+							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -105,8 +107,8 @@
 							"index": "3",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "355, 220",
-							"size": "335, 200",
+							"origin": "355, 250",
+							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -120,7 +122,7 @@
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "10, 10",
-							"size": "335, 200",
+							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -133,8 +135,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "170, 430",
-							"size": "140, 200",
+							"origin": "170, 490",
+							"size": "140, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -147,8 +149,8 @@
 							"index": "1",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "320, 430",
-							"size": "140, 200",
+							"origin": "320, 490",
+							"size": "140, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -161,8 +163,8 @@
 							"index": "2",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "470, 430",
-							"size": "140, 200",
+							"origin": "470, 490",
+							"size": "140, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -176,7 +178,7 @@
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "700, 110",
-							"size": "335, 200",
+							"size": "335, 210",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -189,8 +191,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 430",
-							"size": "150, 200",
+							"origin": "10, 490",
+							"size": "150, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -203,8 +205,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 320",
-							"size": "335, 200",
+							"origin": "700, 330",
+							"size": "335, 210",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -217,8 +219,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "620, 430",
-							"size": "70, 200",
+							"origin": "620, 490",
+							"size": "70, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -231,8 +233,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 530",
-							"size": "335, 100",
+							"origin": "700, 550",
+							"size": "335, 170",
 							"transparent": "false",
 							"wants-focus": "false"
 						}

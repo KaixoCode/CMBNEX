@@ -27,7 +27,7 @@ namespace Kaixo
             const double cos1 = std::cos(159 * x);
             const double sin1 = std::sin(59 + 132 * amt * x - 7.8);
             const double res = 1.2 * (cos1 * cos1 + sin1 * sin1 * sin1 + cos1 * sin1);
-            return constrain(res, -1, 1);
+            return constrain(res, -1., 1.);
         };
 
         double shaper1(double x, double amt)
@@ -42,7 +42,7 @@ namespace Kaixo
             const double fp = 9 * m1 * m1 * m1 * m1 * m1;
             const double sp = x * x * x * x * x * x * x;
             const double res = (fp * cos1 + sin1 + sp);
-            return constrain(res, -1, 1);
+            return constrain(res, -1., 1.);
         };
 
         double shaper2(double x, double amt)
@@ -58,7 +58,7 @@ namespace Kaixo
             const double sin2 = std::sin((80 + 40 * amt) * x);
             const double res = (0.1 * cos2 + 0.1 * sin1 * sin1 - 0.4
                 * cos1 * cos1 * cos1 + 0.4 * sin2);
-            return constrain(res, -1, 1);
+            return constrain(res, -1., 1.);
         };
 
         double shaper3(double x, double amt)
@@ -73,7 +73,7 @@ namespace Kaixo
             const double fp = 2 * m1 * m1 * m1;
             const double sp = x * x * x;
             const double res = (fp * cos1 + sin1 + sp);
-            return constrain(res, -1, 1);
+            return constrain(res, -1., 1.);
         };
 
         double shaper5(double x, double amt)
@@ -95,7 +95,7 @@ namespace Kaixo
                 const double s1 = funcs[i - 1](x, 1 - r);
                 const double s2 = funcs[i](x, r);
                 const double res = (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
-                return constrain(res, 0, 1);
+                return constrain(res, 0., 1.);
             }
 
             return 0;
@@ -239,9 +239,10 @@ namespace Kaixo
 
     double ADSR::Offset(double p)
     {
-        const double _ac = settings.attackCurve < 0 ? (settings.attackCurve * 8 - 1) : settings.attackCurve * 8 + 1;
-        const double _dc = settings.decayCurve < 0 ? (settings.decayCurve * 8 - 1) : settings.decayCurve * 8 + 1;
-        const double _rc = settings.releaseCurve < 0 ? (settings.releaseCurve * 8 - 1) : settings.releaseCurve * 8 + 1;
+        constexpr double MULT = 16;
+        const double _ac = settings.attackCurve < 0 ? (settings.attackCurve * MULT - 1) : settings.attackCurve * MULT + 1;
+        const double _dc = settings.decayCurve < 0 ? (settings.decayCurve * MULT - 1) : settings.decayCurve * MULT + 1;
+        const double _rc = settings.releaseCurve < 0 ? (settings.releaseCurve * MULT - 1) : settings.releaseCurve * MULT + 1;
         return p < 0 ? 0
             : p < settings.attack ? f(p / settings.attack, _ac) * (settings.decayLevel - settings.attackLevel) + settings.attackLevel
             : p < settings.attack + settings.decay ? f((p - settings.attack) / settings.decay, _dc) * (settings.sustain - settings.decayLevel) + settings.decayLevel

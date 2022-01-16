@@ -31,12 +31,12 @@ namespace Kaixo
             constexpr CColor brdr{ 30, 30, 30, 255 };
             constexpr CColor offt{ 128, 128, 128, 255 };
 
-            gain = new Knob{ {   5,  35,   5 +  65,  35 + 90 }, editor };
-            dcfr = new Knob{ { 105, 130, 105 +  30, 130 + 20 }, editor };
-            mode = new Knob{ {   5, 130,   5 +  95, 130 + 20 }, editor };
-            fltr = new Knob{ {  69, 175,  69 +  70, 175 + 20 }, editor };
-            freq = new Knob{ {  70,  35,  70 +  65,  35 + 90 }, editor };
-            reso = new Knob{ {   5, 155,   5 +  65, 155 + 40 }, editor };
+            gain = new Knob{ {   5,  35,   5 +  65,  35 + 100 }, editor };
+            freq = new Knob{ {  70,  35,  70 +  65,  35 + 100 }, editor };
+            dcfr = new Knob{ { 105, 140, 105 +  30, 140 +  20 }, editor };
+            mode = new Knob{ {   5, 140,   5 +  95, 140 +  20 }, editor };
+            fltr = new Knob{ {  69, 195,  69 +  70, 195 +  20 }, editor };
+            reso = new Knob{ {   5, 175,   5 +  65, 175 +  50 }, editor };
 
             inp1 = new Label{ { 5, 8, 5 + 50, 8 + 30 } };
             inp1->fontsize = 16;
@@ -56,7 +56,7 @@ namespace Kaixo
             titl->color = { 200, 200, 200, 255 };
             titl->value = index == 0 ? "X" : index == 1 ? "Y" : "Z";
 
-            ftrl = new Label{ { 70, 155, 70 + 65, 155 + 20 } };
+            ftrl = new Label{ { 70, 175, 70 + 65, 175 + 20 } };
             ftrl->fontsize = 14;
             ftrl->center = false;
             ftrl->color = { 200, 200, 200, 255 };
@@ -173,19 +173,19 @@ namespace Kaixo
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
-            destA = new Knob{ { 0 * 24 + 5,  35, 0 * 24 + 5 + 20,  35 + 145 }, editor };
-            destB = new Knob{ { 1 * 24 + 5,  35, 1 * 24 + 5 + 20,  35 + 145 }, editor };
-            destC = new Knob{ { 2 * 24 + 5,  35, 2 * 24 + 5 + 20,  35 + 145 }, editor };
-            destD = new Knob{ { 3 * 24 + 5,  35, 3 * 24 + 5 + 20,  35 + 145 }, editor };
-            destX = new Knob{ { 4 * 24 + 5,  83, 4 * 24 + 5 + 20,  83 +  97 }, editor };
-            destY = new Knob{ { 5 * 24 + 5, 131, 5 * 24 + 5 + 20, 131 +  49 }, editor };
+            destA = new Knob{ { 0 * 24 + 5,  35, 0 * 24 + 5 + 20,  35 + 145 + 24 }, editor };
+            destB = new Knob{ { 1 * 24 + 5,  35, 1 * 24 + 5 + 20,  35 + 145 + 24 }, editor };
+            destC = new Knob{ { 2 * 24 + 5,  35, 2 * 24 + 5 + 20,  35 + 145 + 24 }, editor };
+            destD = new Knob{ { 3 * 24 + 5,  35, 3 * 24 + 5 + 20,  35 + 145 + 24 }, editor };
+            destX = new Knob{ { 4 * 24 + 5,  83, 4 * 24 + 5 + 20,  83 +  97 + 24 }, editor };
+            destY = new Knob{ { 5 * 24 + 5, 131, 5 * 24 + 5 + 20, 131 +  49 + 24 }, editor };
 
-            lablA = new Label{ { 0 * 24 + 5, 178, 0 * 24 + 5 + 20, 178 + 25 } };
-            lablB = new Label{ { 1 * 24 + 5, 178, 1 * 24 + 5 + 20, 178 + 25 } };
-            lablC = new Label{ { 2 * 24 + 5, 178, 2 * 24 + 5 + 20, 178 + 25 } };
-            lablD = new Label{ { 3 * 24 + 5, 178, 3 * 24 + 5 + 20, 178 + 25 } };
-            lablX = new Label{ { 4 * 24 + 5, 178, 4 * 24 + 5 + 20, 178 + 25 } };
-            lablY = new Label{ { 5 * 24 + 5, 178, 5 * 24 + 5 + 20, 178 + 25 } };
+            lablA = new Label{ { 0 * 24 + 5, 178 + 24, 0 * 24 + 5 + 20, 178 + 25 + 24 } };
+            lablB = new Label{ { 1 * 24 + 5, 178 + 24, 1 * 24 + 5 + 20, 178 + 25 + 24 } };
+            lablC = new Label{ { 2 * 24 + 5, 178 + 24, 2 * 24 + 5 + 20, 178 + 25 + 24 } };
+            lablD = new Label{ { 3 * 24 + 5, 178 + 24, 3 * 24 + 5 + 20, 178 + 25 + 24 } };
+            lablX = new Label{ { 4 * 24 + 5, 178 + 24, 4 * 24 + 5 + 20, 178 + 25 + 24 } };
+            lablY = new Label{ { 5 * 24 + 5, 178 + 24, 5 * 24 + 5 + 20, 178 + 25 + 24 } };
 
             titl = new Label{ { 5, 3, 5 + 140, 3 + 30 } };
             titl->fontsize = 24;
@@ -226,17 +226,17 @@ namespace Kaixo
             destX->setTag(Params::DestX);
             destY->setTag(Params::DestY);
 
-            destA->name = "I,II,III,IV,V,VI";      destB->name = "I,II,III,IV,V,VI";      destC->name = "I,II,III,IV,V,VI";
+            destA->name = "I,II,III,IV,V,VI,O";      destB->name = "I,II,III,IV,V,VI,O";      destC->name = "I,II,III,IV,V,VI,O";
             destA->min = 4;                   destB->min = 4;                   destC->min = 4;
-            destA->max = 6;                   destB->max = 6;                   destC->max = 6;
+            destA->max = 7;                   destB->max = 7;                   destC->max = 7;
             destA->reset = 0;                 destB->reset = 0;                 destC->reset = 0;
             destA->decimals = 0;              destB->decimals = 0;              destC->decimals = 0;
             destA->unit = "";                 destB->unit = "";                 destC->unit = "";
             destA->type = 6;                  destB->type = 6;                  destC->type = 6;
                                                                                 
-            destD->name = "I,II,III,IV,V,VI"; destX->name = "III,IV,V,VI";      destY->name = "V,VI";
+            destD->name = "I,II,III,IV,V,VI,O"; destX->name = "III,IV,V,VI,O";      destY->name = "V,VI,O";
             destD->min = 4;                   destX->min = 4;                   destY->min = 4;
-            destD->max = 6;                   destX->max = 4;                   destY->max = 2;
+            destD->max = 7;                   destX->max = 5;                   destY->max = 3;
             destD->reset = 0;                 destX->reset = 0;                 destY->reset = 0;
             destD->decimals = 0;              destX->decimals = 0;              destY->decimals = 0;
             destD->unit = "";                 destX->unit = "";                 destY->unit = "";

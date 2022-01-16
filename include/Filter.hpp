@@ -3,7 +3,7 @@
 
 namespace Kaixo
 {
-#define constrain(x, y, z) (x < y ? y : x > z ? z : x)
+#define constrain(x, y, z) std::clamp(x, y, z)
 
     enum class FilterType
     {
@@ -61,12 +61,14 @@ namespace Kaixo
                 return;
 
             Qb = Q;
-            f0b = f0;
+            if (f0 - f0b > 1) f0b++;
+            else if (f0 - f0b < 1) f0b--;
+            else f0b = f0;
             sb = sampleRate;
             tb = type;
             dbgb = dbgain;
 
-            w0 = 6.28318530718 * (constrain(f0, 10, sampleRate / 2.1) / sampleRate);
+            w0 = 6.28318530718 * (constrain(f0b, 10., sampleRate / 2.1) / sampleRate);
             cosw0 = std::cos(w0), sinw0 = std::sin(w0);
 
             switch (type) {

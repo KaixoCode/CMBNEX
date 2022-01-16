@@ -14,6 +14,8 @@ namespace Kaixo
     public:
         int index = 0;
 
+        int dragIndex = -1;
+
         WaveformView* curve;
         Knob* rate;
         Knob* amnt;
@@ -22,18 +24,11 @@ namespace Kaixo
         Knob* shpr;
         Knob* sync;
 
-        Label* lfol;
-        Label* modu;
-
         Label* lfo1;
         Label* lfo2;
         Label* lfo3;
         Label* lfo4;
         Label* lfo5;
-
-        OptionMenu* mod[5];
-        Knob* modt[5];
-        Knob* moda[5];
 
         void valueChanged(CControl* pControl)
         {
@@ -64,18 +59,14 @@ namespace Kaixo
             else if (pControl == offs) curve->phase = offs->getValue(), _f = true;
             else if (pControl == shpr) curve->shaper3 = shpr->getValue(), _f = true;
             
-            for (int i = 0; i < 5; i++)
-                if (pControl == mod[i])
-                {
-                    _f = true;
-                    if (mod[i]->getValue() == 0)
-                        mod[i]->setFontColor({ 128, 128, 128, 255 });
-                    else
-                        mod[i]->setFontColor({ 200, 200, 200, 255 });
-                }
-
             if (_f)
                 curve->setDirty(true);
+        }
+        CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons) override
+        {
+            auto _r = CViewContainer::onMouseUp(where, buttons);
+            dragIndex = -1;
+            return kMouseEventHandled;
         }
 
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
@@ -84,7 +75,7 @@ namespace Kaixo
             if (where.y - getViewSize().top > 0 && where.y - getViewSize().top < 30 && where.x - getViewSize().left < 335 && where.x - getViewSize().left > 0)
             {
                 index = std::floor((where.x - getViewSize().left) / 65);
-
+                dragIndex = index;
                 lfo1->color = lfo2->color = lfo3->color = lfo4->color = lfo5->color = { 128, 128, 128, 255 };
                 if (index == 0) lfo1->color = { 200, 200, 200, 255 };
                 if (index == 1) lfo2->color = { 200, 200, 200, 255 };
@@ -98,116 +89,46 @@ namespace Kaixo
                 offs->setTag(Params::LFOPhase1 + index);
                 sync->setTag(Params::LFOSync1 + index);
 
-                for (int i = 0; i < 5; i++)
-                    mod[i]->setTag(Params::LFO1M1 + index + (i * 10)), moda[i]->setTag(Params::LFO1M1A + index + (i * 10));
-
                 setDirty(true);
 
                 return kMouseEventHandled;
             }
 
-            if (where.y - getViewSize().top > 125 && where.y - getViewSize().top < 150 && where.x - getViewSize().left < 285)
-            {
-                int _page = std::floor((where.x - getViewSize().left) / 167);
+            return _r;
+        }
 
-                lfol->color = modu->color = { 128, 128, 128, 255 };
-                switch (_page)
-                {
-                case 0:
-                {
-                    rate->setVisible(true);
-                    amnt->setVisible(true);
-                    posi->setVisible(true);
-                    offs->setVisible(true);
-                    shpr->setVisible(true);
-
-                    for (int i = 0; i < 5; i++)
-                        mod[i]->setVisible(false), moda[i]->setVisible(false);
-
-                    lfol->color = { 200, 200, 200, 255 };
-                    break;
-                }
-                case 1:
-                {
-                    rate->setVisible(false);
-                    amnt->setVisible(false);
-                    posi->setVisible(false);
-                    offs->setVisible(false);
-                    shpr->setVisible(false);
-
-                    for (int i = 0; i < 5; i++)
-                        mod[i]->setVisible(true), moda[i]->setVisible(true);
-
-                    modu->color = { 200, 200, 200, 255 };
-                    break;
-                }
-                }
-
-                setDirty(true);
-
+        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
+        {
+            auto _r = CViewContainer::onMouseMoved(where, buttons);
+            if (dragIndex != -1)
+            { 
+                int* _data = new int[1];
+                _data[0] = (int)ModSources::LFO1 + dragIndex;
+                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
+                dragIndex = -1;
                 return kMouseEventHandled;
             }
+
             return _r;
         }
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
-            rate = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
-            amnt = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
-            posi = new Knob{ { 135, 155, 135 + 65, 155 + 40 }, editor };
-            offs = new Knob{ { 200, 155, 200 + 65, 155 + 40 }, editor };
-            shpr = new Knob{ { 265, 155, 265 + 65, 155 + 40 }, editor };
+            rate = new Knob{ {   5, 150,   5 + 65, 150 + 55 }, editor };
+            amnt = new Knob{ {  70, 150,  70 + 65, 150 + 55 }, editor };
+            posi = new Knob{ { 135, 150, 135 + 65, 150 + 55 }, editor };
+            offs = new Knob{ { 200, 150, 200 + 65, 150 + 55 }, editor };
+            shpr = new Knob{ { 265, 150, 265 + 65, 150 + 55 }, editor };
             sync = new Knob{ { 285, 128, 285 + 45, 128 + 20 }, editor };
             curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
 
-            for (int i = 0; i < 5; i++)
-            {
-                modt[i] = new Knob{ { 0, 0, 1, 1 }, editor };
-                modt[i]->setListener(listener);
-                modt[i]->setTag(Params::LFO1M1 + index + (i * 10));
-
-                moda[i] = new Knob{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 40 }, editor };
-                moda[i]->setListener(listener);
-                moda[i]->setTag(Params::LFO1M1A + index + (i * 10));
-                moda[i]->name = "";
-                moda[i]->min = -100;
-                moda[i]->max = 100;
-                moda[i]->reset = 0;
-                moda[i]->decimals = 1;
-                moda[i]->unit = " %";
-                moda[i]->type = 2;
-                moda[i]->setVisible(false);
-                moda[i]->setListener(listener);
-
-                mod[i] = new OptionMenu{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 20 }, listener, Params::LFO1M1 + index + (i * 10), nullptr, nullptr, OptionMenu::kCheckStyle };
-                mod[i]->setNbItemsPerColumn(32);
-                mod[i]->setFrameColor({ 0, 0, 0, 0 });
-                mod[i]->setBackColor({ 0, 0, 0, 0 });
-                mod[i]->setFontColor({ 128, 128, 128, 255 });
-                mod[i]->center = false;
-                mod[i]->addEntry("None");
-                mod[i]->setVisible(false);
-                mod[i]->registerControlListener(this);
-                int _offset = 0;
-                for (int j = 0; j < Params::ModCount; j++)
-                {
-                    int _index = ParamOrder[j + _offset];
-                    if (_index == -1)
-                        mod[i]->addSeparator(), ++_offset, _index = ParamOrder[j + _offset];
-                    mod[i]->addEntry(ParamNames[_index].name);
-                }
-            }
-
-            lfol = new Label{ {  85, 130,  85 + 80, 130 + 20 } };
-            lfol->fontsize = 14;
-            lfol->center = true;
-            lfol->color = { 200, 200, 200, 255 };
-            lfol->value = "LFO";
-            modu = new Label{ { 165, 130, 165 + 80, 130 + 20 } };
-            modu->fontsize = 14;
-            modu->center = true;
-            modu->color = { 128, 128, 128, 255 };
-            modu->value = "Mod";
+            rate->color = MainLFO;
+            amnt->color = MainLFO;
+            posi->color = MainLFO;
+            offs->color = MainLFO;
+            shpr->color = MainLFO;
+            sync->color = MainLFO;
+            curve->color = MainLFO;
 
             lfo1 = new Label{ {   5,   5,   5 + 65,   5 + 20 } };
             lfo1->fontsize = 14;
@@ -256,9 +177,6 @@ namespace Kaixo
             shpr->setTag(Params::LFOShaper1 + index);
             sync->setTag(Params::LFOSync1 + index);
 
-            for (int i = 0; i < 5; i++)
-                mod[i]->setTag(Params::LFO1M1 + index + (i * 10)), moda[i]->setTag(Params::LFO1M1A + index + (i * 10));
-
             rate->name = "Rate"; amnt->name = "Amount";   posi->name = "Pos";
             rate->min = 0.1;     amnt->min = -100;        posi->min = 0;
             rate->max = 30;      amnt->max = 100;         posi->max = 100;
@@ -284,17 +202,11 @@ namespace Kaixo
 
             addView(curve);
 
-            addView(lfol);
-            addView(modu);
-
             addView(lfo1);
             addView(lfo2);
             addView(lfo3);
             addView(lfo4);
             addView(lfo5);
-
-            for (int i = 0; i < 5; i++)
-                addView(moda[i]), addView(mod[i]);
         }
 
         LFOView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)

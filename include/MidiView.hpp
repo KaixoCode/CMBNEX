@@ -42,14 +42,14 @@ namespace Kaixo
         void createControls(IControlListener* listener, MyEditor* editor)
         {
             clip = new Knob{ {   4, 25,   4 + 125, 25 + 20 }, editor };
-            tnsp = new Knob{ { 135,  5, 135 +  65,  5 + 40 }, editor };
-            bend = new Knob{ { 200,  5, 200 +  65,  5 + 40 }, editor };
-            frqk = new Knob{ { 265,  5, 265 +  65,  5 + 40 }, editor };
+            tnsp = new Knob{ { 135,  5, 135 +  65,  5 + 50 }, editor };
+            bend = new Knob{ { 200,  5, 200 +  65,  5 + 50 }, editor };
+            frqk = new Knob{ { 265,  5, 265 +  65,  5 + 50 }, editor };
             ovsm = new Knob{ {   4, 75,   4 + 100, 75 + 20 }, editor };
             retr = new Knob{ { 105, 75, 105 +  20, 75 + 20 }, editor };
-            oscv = new Knob{ { 135, 55, 135 +  65, 55 + 40 }, editor };
-            glde = new Knob{ { 200, 55, 200 +  65, 55 + 40 }, editor };
-            frqv = new Knob{ { 265, 55, 264 +  70, 55 + 40 }, editor };
+            oscv = new Knob{ { 135, 59, 135 +  65, 59 + 50 }, editor };
+            glde = new Knob{ { 200, 59, 200 +  65, 59 + 50 }, editor };
+            frqv = new Knob{ { 265, 59, 264 +  70, 59 + 50 }, editor };
 
             ovsl = new Label{ {   5, 55,   5 + 90, 55 + 20 } };
             ovsl->fontsize = 14;

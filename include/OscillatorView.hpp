@@ -11,6 +11,7 @@ namespace Kaixo
     class OscillatorView : public CViewContainer, public IControlListener
     {
     public:
+        Knob* enbl = nullptr; // Enable
         Knob* tune = nullptr; // Tune
         Knob* wtps = nullptr; // Pos
         Knob* sync = nullptr; // Sync
@@ -42,48 +43,91 @@ namespace Kaixo
             else if (pControl == shp2) wfrm->shaper2 = shp2->getValue(), _f =true;
             else if (pControl == plsw) wfrm->pw = plsw->getValue(), _f =true;
 
+            else if (pControl == enbl)
+            {
+                titl->color = enbl->getValue() > 0.5 ? CColor{ 200, 200, 200, 255 } : CColor{ 128, 128, 128, 255 };
+
+                CColor _clr = enbl->getValue() > 0.5 ? MainOsc : CColor{ 128, 128, 128, 255 };
+                wfrm->color = _clr;
+                tune->color = _clr;
+                volm->color = _clr;
+                detn->color = _clr;
+                freq->color = _clr;
+                rphs->color = _clr;
+                sync->color = _clr;
+                plsw->color = _clr;
+                phse->color = _clr;
+                pann->color = _clr;
+                reso->color = _clr;
+                shpr->color = _clr;
+                shp2->color = _clr;
+                wtps->color = _clr;
+                nois->color = _clr;
+                fltr->color = _clr;
+
+                tune->setDirty(true);
+                volm->setDirty(true);
+                detn->setDirty(true);
+                freq->setDirty(true);
+                rphs->setDirty(true);
+                sync->setDirty(true);
+                plsw->setDirty(true);
+                phse->setDirty(true);
+                pann->setDirty(true);
+                reso->setDirty(true);
+                shpr->setDirty(true);
+                shp2->setDirty(true);
+                wtps->setDirty(true);
+                nois->setDirty(true);
+                fltr->setDirty(true);
+                wfrm->setDirty(true);
+            }
+
             if (_f)
                 wfrm->setDirty(true);
         }
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
-            tune = new Knob{ {  60,   5,  60 + 70,   5 + 96 }, editor };
-            wtps = new Knob{ { 135, 155, 135 + 65, 155 + 40 }, editor };
-            sync = new Knob{ {   5, 105,   5 + 65, 105 + 40 }, editor };
-            detn = new Knob{ {   5,  20,   5 + 55,  20 + 80 }, editor };
-            volm = new Knob{ { 205,   5, 205 + 70,   5 + 95 }, editor };
-            phse = new Knob{ { 135, 105, 135 + 65, 105 + 40 }, editor };
-            plsw = new Knob{ {  70, 105,  70 + 65, 105 + 40 }, editor };
-            pann = new Knob{ { 200, 105, 200 + 65, 105 + 40 }, editor };
-            nois = new Knob{ { 200, 155, 200 + 65, 155 + 40 }, editor };
-            fltr = new Knob{ { 264, 175, 264 + 70, 175 + 20 }, editor };
-            freq = new Knob{ { 275,  20, 275 + 55,  20 + 80 }, editor };
-            reso = new Knob{ { 265, 105, 265 + 65, 105 + 40 }, editor };
-            rphs = new Knob{ { 135,  80, 135 + 65,  80 + 20 }, editor };
-            shpr = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
-            shp2 = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
+            enbl = new Knob{ { 153,   3     , 153 + 28,   3 + 28  }, editor };
+            tune = new Knob{ {  65,   5     ,  65 + 70,   5 + 96 + 10      }, editor };
+            volm = new Knob{ { 200,   5     , 200 + 70,   5 + 96 + 10      }, editor };
+            detn = new Knob{ {   5,  16     ,   5 + 60,  21 + 80 + 10      }, editor };
+            freq = new Knob{ { 270,  16     , 270 + 60,  21 + 80 + 10      }, editor };
+            rphs = new Knob{ { 134,  80 + 10, 134 + 66,  80 + 10 + 21 }, editor };
+            sync = new Knob{ {   5, 105 + 10,   5 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
+            plsw = new Knob{ {  70, 105 + 10,  70 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
+            phse = new Knob{ { 135, 105 + 10, 135 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
+            pann = new Knob{ { 200, 105 + 10, 200 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
+            reso = new Knob{ { 265, 105 + 10, 265 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
+            shpr = new Knob{ {   5, 152 + 20,   5 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
+            shp2 = new Knob{ {  70, 152 + 20,  70 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
+            wtps = new Knob{ { 135, 152 + 20, 135 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
+            nois = new Knob{ { 200, 152 + 20, 200 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
+            fltr = new Knob{ { 264, 172 + 20, 264 + 70, 172 + 20 + 00 + 20 }, editor };
 
-            tune->index = index;
-            wtps->index = index;
-            sync->index = index;
-            detn->index = index;
-            volm->index = index;
-            phse->index = index;
-            plsw->index = index;
-            pann->index = index;
-            nois->index = index;
-            fltr->index = index;
-            freq->index = index;
-            reso->index = index;
-            rphs->index = index;
-            shpr->index = index;
-            shp2->index = index;
+            enbl->color = MainOsc;
+            tune->color = MainOsc;
+            volm->color = MainOsc;
+            detn->color = MainOsc;
+            freq->color = MainOsc;
+            rphs->color = MainOsc;
+            sync->color = MainOsc;
+            plsw->color = MainOsc;
+            phse->color = MainOsc;
+            pann->color = MainOsc;
+            reso->color = MainOsc;
+            shpr->color = MainOsc;
+            shp2->color = MainOsc;
+            wtps->color = MainOsc;
+            nois->color = MainOsc;
+            fltr->color = MainOsc;
 
-            wfrm = new WaveformView{ { 135, 35, 135 + 65, 35 + 40 } };
+            wfrm = new WaveformView{ { 135, 35, 135 + 65, 35 + 50 } };
             wfrm->index = index;
 
             titl = new Label{ { 135,   3, 135 + 65,   3 + 30 } };
+            titl->setMouseEnabled(false);
             titl->fontsize = 24;
             titl->center = true;
             titl->color = { 200, 200, 200, 255 };
@@ -91,12 +135,13 @@ namespace Kaixo
             a += (char)('A' + index);
             titl->value = a.c_str();
 
-            ftrl = new Label{ { 265, 155, 265 + 65, 155 + 20 } };
+            ftrl = new Label{ { 265, 152 + 20, 265 + 65, 152 + 20 + 20 } };
             ftrl->fontsize = 14;
             ftrl->center = false;
             ftrl->color = { 200, 200, 200, 255 };            
             ftrl->value = "Filter";
 
+            enbl->setListener(listener);
             tune->setListener(listener);
             wtps->setListener(listener);
             sync->setListener(listener);
@@ -113,6 +158,7 @@ namespace Kaixo
             shpr->setListener(listener);
             shp2->setListener(listener);
 
+            enbl->registerControlListener(this);
             phse->registerControlListener(this);
             wtps->registerControlListener(this);
             plsw->registerControlListener(this);
@@ -120,6 +166,7 @@ namespace Kaixo
             shp2->registerControlListener(this);
             sync->registerControlListener(this);
 
+            enbl->setTag(Params::Enable1 + index);
             tune->setTag(Params::Pitch1 + index);
             wtps->setTag(Params::WTPos1 + index);
             sync->setTag(Params::Sync1 + index);
@@ -176,6 +223,15 @@ namespace Kaixo
             rphs->unit = "";         shpr->unit = " %";       shp2->unit = " %";
             rphs->type = 3;          shpr->type = 2;          shp2->type = 2;
 
+            enbl->name = "";
+            enbl->min = 0;
+            enbl->max = 1;
+            enbl->reset = 0;
+            enbl->decimals = 0;
+            enbl->unit = "";
+            enbl->type = 3;
+
+            addView(enbl);
             addView(tune);
             addView(wtps);
             addView(sync);

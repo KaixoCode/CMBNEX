@@ -100,6 +100,9 @@ namespace Kaixo
             for (int i = 0; i < Params::Size; i++)
                 params[i] = paramgoals[i] = ParamNames[i].reset;
 
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+                modgoals[i] = 0, modamount[i] = 0.5;
+
             addAudioInput(STR16("Stereo In"), Vst::SpeakerArr::kStereo);
             addAudioOutput(STR16("Stereo Out"), Vst::SpeakerArr::kStereo);
             addEventInput(STR16("Event In"), 1);
@@ -140,6 +143,20 @@ namespace Kaixo
                         auto param = paramQueue->getParameterId();
                         if (param < Params::Size)
                             paramgoals[param] = end;
+                        else
+                        {
+                            param -= Params::Size;
+                            if (param % 2 == 0)
+                            {
+                                param /= 2;
+                                modgoals[param] = end;
+                            }
+                            else
+                            {
+                                (param -= 1) /= 2;
+                                modamount[param] = end;
+                            }
+                        }
                     }
                 }
             }
@@ -204,6 +221,12 @@ namespace Kaixo
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.readDouble(paramgoals[i]);
 
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                streamer.readDouble(modgoals[i]);
+                streamer.readDouble(modamount[i]);
+            }
+
             return kResultOk;
         }
 
@@ -214,6 +237,12 @@ namespace Kaixo
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.writeDouble(paramgoals[i]);
 
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                streamer.writeDouble(modgoals[i]);
+                streamer.writeDouble(modamount[i]);
+            }
+
             return kResultOk;
         }
 
@@ -222,6 +251,9 @@ namespace Kaixo
         
         double params[Params::Size];
         double paramgoals[Params::Size];
+
+        double modgoals[Params::ModCount * ModAmt];
+        double modamount[Params::ModCount * ModAmt];
     };
 
 
@@ -368,27 +400,26 @@ namespace Kaixo
                 // Move params to modulated so we can adjust their values
                 std::memcpy(modulated, params, Params::ModCount * sizeof(double));
 
-                for (int e = 0; e < Envelopes; e++) // Loop over envelopes
-                    for (int m = 0; m < 5; m++) // Loop over modulators of envelope
-                        if (params[Params::Env1M1 + e + (m * 10)] != 0) // If we're modulating something
-                        {   // Adjust index for the 'None' value, so ModCount + 1, then -1 to make None == -1
-                            int index = ParamOrder[(size_t)std::floor(params[Params::Env1M1 + e + (m * 10)] * (ParamOrderSize + 1)) - 1];
-                            if (index == -1) continue;
-                            double amount = (2 * params[Params::Env1M1A + e + (m * 10)] - 1); // Modulation amount
-                            double val = modulated[index] + (env[e].sample * amount); // Add the envelope * amount to the modulated value
-                            modulated[index] = ParamNames[index].constrain ? constrain(val, 0, 1) : val; // Constrain if necessary
-                        }
+                for (int i = 0; i < ModAmt; i++)
+                {
+                    for (int m = 0; m < Params::ModCount; m++)
+                    {
+                        int index = m * ModAmt + i;
+                        int source = (modgoals[index] * (int)ModSources::Amount);
+                        if (source == 0) continue;
+                        double amount = modamount[index] * 2 - 1;
 
-                for (int e = 0; e < LFOs; e++) // Loop over lfos
-                    for (int m = 0; m < 5; m++) // Loop over modulators of lfos
-                        if (params[Params::LFO1M1 + e + (m * 10)] != 0) // If we're modulating something
-                        {   // Adjust index for the 'None' value, so ModCount + 1, then -1 to make None == -1
-                            int index = ParamOrder[(size_t)std::floor(params[Params::LFO1M1 + e + (m * 10)] * (ParamOrderSize + 1)) - 1];
-                            if (index == -1) continue;
-                            double amount = (2 * params[Params::LFO1M1A + e + (m * 10)] - 1); // Modulation amount
-                            double val = modulated[index] + ((params[Params::LFOLvl1 + e + (m * 10)] * 2 - 1) * lfo[e].sample * amount); // Add the lfos * amount to the modulated value
-                            modulated[index] = ParamNames[index].constrain ? constrain(val, 0, 1) : val; // Constrain if necessary
-                        }
+                        int mindex = ((int)source - 1) % 5;
+                        bool a = ((int)source - 1) / 5;
+                        if (a)
+                            modulated[m] += (env[mindex].sample * amount);
+                        else 
+                            modulated[m] += ((params[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
+
+                        if (ParamNames[m].constrain)
+                            modulated[m] = constrain(modulated[i], -1., 1.);
+                    }
+                }
 
                 for (int i = 0; i < Combines; i++)
                 {   // Combines parameters
@@ -425,7 +456,7 @@ namespace Kaixo
                     filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
                     filterp[i].RecalculateParameters();
 
-                    if (modulated[Params::Volume1 + i]) // Generate oscillator sound
+                    if (modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5) // Generate oscillator sound
                         osc[i].sample = osc[i].OffsetOnce(modulated[Params::Phase1 + i]) * (1 - (1 - velocity) * modulated[Params::OscVel]);
                 }
 
@@ -439,19 +470,20 @@ namespace Kaixo
                 }
             }
 
-            double _cs[Combines * 2]{ 0, 0, 0, 0, 0, 0 };
+            double _cs[Combines * 2 + 1]{ 0, 0, 0, 0, 0, 0, 0 };
             for (int i = 0; i < Oscillators; i++)
             {
                 double _vs = osc[i].sample;
                 if (modulated[Params::Noise1 + i])
                     _vs += modulated[Params::Noise1 + i] * random(); // Add noise
+                _vs = std::max(std::min(_vs, 1.), -1.);
                 if (!filterp[i].off) _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
                 _vs *= modulated[Params::Volume1 + i]; // Adjust for volume
                 if (modulated[Params::Pan1 + i] != 0.5)
                     _vs *= std::min((channel == 1 ? 2 * modulated[Params::Pan1 + i] : 2 - 2 * modulated[Params::Pan1 + i]), 1.); // Panning
 
-                size_t _dests = params[Params::DestA + i] * 64.;
-                for (int j = 0; j < Combines * 2; j++)
+                size_t _dests = params[Params::DestA + i] * 128.;
+                for (int j = 0; j < Combines * 2 + 1; j++)
                     if ((_dests >> j) & 1U) _cs[j] += _vs;
             }
 
@@ -459,10 +491,10 @@ namespace Kaixo
 
             for (int i = 0; i < Combines; i++)
             {
-                constexpr static size_t _offsets[]{ 4, 2, 0 };
-                constexpr static size_t _mult[]{ 16, 4, 0 };
+                constexpr static size_t _offsets[]{ 5, 3, 0 };
+                constexpr static size_t _mult[]{ 32, 8, 0 };
                 double _v = Combine(_cs[i * 2], _cs[i * 2 + 1], modulated[Params::ModeX + i]);
-                _v = std::max(std::min(_v * modulated[Params::GainX + i], 8.), -8.);
+                _v = std::max(std::min(_v * modulated[Params::GainX + i], 1.), -1.);
                 if (!cfilterp[i].off) _v = cfilter[i].Apply(_v, channel);
                 _v = params[Params::DCX + i] > 0.5 ? dcoff[i].Apply(_v, channel) : _v;
 
@@ -476,6 +508,8 @@ namespace Kaixo
                 for (int j = 0; j < _offsets[i]; j++)
                     if ((_dests >> j) & 1U) _cs[j + (i + 1) * 2] += _v;
             }
+
+            _res += _cs[Combines * 2];
 
             _res *= std::min((channel == 1 ? 2 * modulated[Params::Panning] : 2 - 2 * modulated[Params::Panning]), 1.); // Panning
 
@@ -532,7 +566,7 @@ namespace Kaixo
             case 0: a = std::tanh(a) * 1.312; break;
             case 1: a = (1.99 * a) / (1 + std::abs(a)); break;
             }
-            return constrain(a, -1, 1);
+            return constrain(a, -1., 1.);
         }
 
         inline double Combine(double a, double b, double mode)

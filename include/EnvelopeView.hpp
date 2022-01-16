@@ -16,6 +16,8 @@ namespace Kaixo
         ADSR env;
 
         bool pressed = false;
+
+        CColor color = MainMain;
         
         enum Section { Attack, AttackCurve, Decay, DecayCurve, Sustain, SustainLine, Release, ReleaseCurve, None } section;
         Section editing = None;
@@ -140,13 +142,13 @@ namespace Kaixo
                 switch (editing)
                 {
                 case Attack:       env.settings.attackLevel = pvaluea + _dyr; break;
-                case AttackCurve:  env.settings.attackCurve = pvaluea + _dyr * 5; break;
+                case AttackCurve:  env.settings.attackCurve = pvaluea + _dyr * 2; break;
                 case Decay:        env.settings.attack = pvalueb + _dxr, env.settings.decayLevel = pvaluea + _dyr; break;
-                case DecayCurve:   env.settings.decayCurve = pvaluea + _dyr * 5; break;
+                case DecayCurve:   env.settings.decayCurve = pvaluea + _dyr * 2; break;
                 case Sustain:      env.settings.decay = pvalueb + _dxr, env.settings.sustain = pvaluea + _dyr; break;
                 case SustainLine:  env.settings.sustain = pvaluea + _dyr; break;
                 case Release:      env.settings.release = pvalueb + _dxr; break;
-                case ReleaseCurve: env.settings.releaseCurve = pvaluea + _dyr * 5; break;
+                case ReleaseCurve: env.settings.releaseCurve = pvaluea + _dyr * 2; break;
                 }
 
                 return kMouseEventHandled;
@@ -173,8 +175,8 @@ namespace Kaixo
         void draw(CDrawContext* pContext) override
         {
             constexpr CColor back{ 15, 15, 15, 255 };
-            constexpr CColor main{ 0, 179, 98, 255 };
-            constexpr CColor brgt{ 0, 179, 98, 255 };
+            CColor main = color;
+            CColor brgt = color;
             constexpr CColor crnr{ 128, 128, 128, 255 };
             pContext->setLineWidth(1);
             pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
@@ -182,9 +184,9 @@ namespace Kaixo
 
             auto _s = getViewSize();
 
-            constexpr auto padding = 8;
+            constexpr auto padding = 5;
             auto _w = _s.getWidth() - padding * 2;
-            auto _h = _s.getHeight() - padding * 2;
+            auto _h = _s.getHeight() - padding * 2 + 1;
 
             double _px = _s.left + padding;
             double _py = _h - env.settings.attackLevel * _h + _s.top + padding;
@@ -225,9 +227,9 @@ namespace Kaixo
                 decayPoint = { _px - _rsize / 2, _py - _rsize / 2, _px + _rsize / 2, _py + _rsize / 2 };
                 _lines.push_back({ { _px, _py }, { _x, _y } });
             }
-            pContext->setFrameColor(section == AttackCurve ? brgt : main);
-            pContext->drawLines(_lines);
-            _lines.clear();
+            //pContext->setFrameColor(section == AttackCurve ? brgt : main);
+            //pContext->drawLines(_lines);
+            //_lines.clear();
             // Decay curve
             for (double i = env.settings.attack; i < env.settings.attack + env.settings.decay; i += _space)
             {
@@ -242,9 +244,9 @@ namespace Kaixo
                 _py = _y;
                 _x++;
             }
-            pContext->setFrameColor(section == DecayCurve ? brgt : main);
-            pContext->drawLines(_lines);
-            _lines.clear();
+            //pContext->setFrameColor(section == DecayCurve ? brgt : main);
+            //pContext->drawLines(_lines);
+            //_lines.clear();
             { // Sustain
                 double _y = _h - env.settings.sustain * _h + _s.top + padding;
                 _lines.push_back({ { _px, _py }, { _x, _y } });
@@ -256,9 +258,9 @@ namespace Kaixo
                 _px = _x;
                 sustainPoint1 = { _px - _rsize / 2, _py - _rsize / 2, _px + _rsize / 2, _py + _rsize / 2 };
             }
-            pContext->setFrameColor(section == Sustain ? brgt : main);
-            pContext->drawLines(_lines);
-            _lines.clear();
+            //pContext->setFrameColor(section == Sustain ? brgt : main);
+            //pContext->drawLines(_lines);
+            //_lines.clear();
             // Release curve
             for (double i = env.settings.attack + env.settings.decay; i < env.settings.attack + env.settings.decay + env.settings.release; i += _space)
             {
@@ -280,8 +282,16 @@ namespace Kaixo
                 _py = _y;
             }
             releasePoint = { _px - _rsize / 2, _py - _rsize / 2, _px + _rsize / 2, _py + _rsize / 2 };
-            pContext->setFrameColor(section == ReleaseCurve ? brgt : main);
+            CDrawContext::PointList _points;
+            _points.push_back({_s.left + padding, _s.bottom });
+            for (auto& i : _lines)
+                _points.push_back(i.first);
+            _points.push_back({ _points.back().x, _s.bottom });
+            pContext->setFrameColor(main);
             pContext->drawLines(_lines);
+            pContext->setFillColor({ main.red, main.green, main.blue, 40 });
+            pContext->drawPolygon(_points, kDrawFilled);
+
             _lines.clear();
 
 
@@ -322,6 +332,8 @@ namespace Kaixo
     public:
         int index = 0;
 
+        int dragIndex;
+
         EnvelopeCurve* curve;
         Knob* attk;
         Knob* atkc;
@@ -336,17 +348,12 @@ namespace Kaixo
         Label* time;
         Label* slpe;
         Label* vlue;
-        Label* modu;
 
         Label* env1;
         Label* env2;
         Label* env3;
         Label* env4;
         Label* env5;
-
-        OptionMenu* mod[5];
-        Knob* modt[5];
-        Knob* moda[5];
 
         void valueChanged(CControl* pControl)
         {
@@ -361,16 +368,6 @@ namespace Kaixo
             else if (pControl == rels) curve->env.settings.release = 0.01 + rels->getValue() * 5, _f = true;
             else if (pControl == rlsc) curve->env.settings.releaseCurve = rlsc->getValue() * 2 - 1, _f = true;
 
-            for (int i = 0; i < 5; i++)
-            if (pControl == mod[i])
-            {
-                _f = true;
-                if (mod[i]->getValue() == 0)
-                    mod[i]->setFontColor({ 128, 128, 128, 255 });
-                else
-                    mod[i]->setFontColor({ 200, 200, 200, 255 });
-            }
-
             if (_f)
                 curve->setDirty(true);
         }
@@ -378,6 +375,15 @@ namespace Kaixo
         CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
         {
             auto _r = CViewContainer::onMouseMoved(where, buttons);
+
+            if (dragIndex != -1)
+            {
+                int* _data = new int[1];
+                _data[0] = (int)ModSources::Env1 + dragIndex;
+                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
+                dragIndex = -1;
+                return kMouseEventHandled;
+            }
 
             if (curve->pressed)
             {
@@ -433,7 +439,7 @@ namespace Kaixo
             if (where.y - getViewSize().top > 0 && where.y - getViewSize().top < 30 && where.x - getViewSize().left < 335 && where.x - getViewSize().left > 0)
             {
                 index = std::floor((where.x - getViewSize().left) / 65);
-
+                dragIndex = index;
                 env1->color = env2->color = env3->color = env4->color = env5->color = { 128, 128, 128, 255 };
                 if (index == 0) env1->color = { 200, 200, 200, 255 };
                 if (index == 1) env2->color = { 200, 200, 200, 255 };
@@ -451,8 +457,8 @@ namespace Kaixo
                 rels->setTag(Params::Env1R + index);
                 rlsc->setTag(Params::Env1RC + index);
                 
-                for (int i = 0; i < 5; i++)
-                    mod[i]->setTag(Params::Env1M1 + index + (i * 10)), moda[i]->setTag(Params::Env1M1A + index + (i * 10));
+                //for (int i = 0; i < 5; i++)
+                //    mod[i]->setTag(Params::Env1M1 + index + (i * 10)), moda[i]->setTag(Params::Env1M1A + index + (i * 10));
                 
                 setDirty(true);
 
@@ -461,9 +467,9 @@ namespace Kaixo
 
             if (where.y - getViewSize().top > 125 && where.y - getViewSize().top < 150)
             {
-                int _page = std::floor((where.x - getViewSize().left) / 85);
+                int _page = std::floor((where.x - getViewSize().left) / 112);
 
-                time->color = vlue->color = slpe->color = modu->color = { 128, 128, 128, 255 };
+                time->color = vlue->color = slpe->color = { 128, 128, 128, 255 };
                 switch (_page)
                 {
                 case 0:
@@ -479,9 +485,6 @@ namespace Kaixo
 
                     attl->setVisible(false);
                     decl->setVisible(false);
-
-                    for (int i = 0; i < 5; i++)
-                        mod[i]->setVisible(false), moda[i]->setVisible(false);
 
                     time->color = { 200, 200, 200, 255 };
                     break;
@@ -500,9 +503,6 @@ namespace Kaixo
                     attl->setVisible(false);
                     decl->setVisible(false);
 
-                    for (int i = 0; i < 5; i++)
-                        mod[i]->setVisible(false), moda[i]->setVisible(false);
-
                     slpe->color = { 200, 200, 200, 255 };
                     break;
                 }
@@ -520,30 +520,7 @@ namespace Kaixo
                     attl->setVisible(true);
                     decl->setVisible(true);
 
-                    for (int i = 0; i < 5; i++)
-                        mod[i]->setVisible(false), moda[i]->setVisible(false);
-
                     vlue->color = { 200, 200, 200, 255 };
-                    break;
-                }               
-                case 3:
-                {              
-                    attk->setVisible(false);
-                    decy->setVisible(false);
-                    rels->setVisible(false);
-                    sust->setVisible(false);
-
-                    atkc->setVisible(false);
-                    dcyc->setVisible(false);
-                    rlsc->setVisible(false);
-
-                    attl->setVisible(false);
-                    decl->setVisible(false);
-
-                    for (int i = 0; i < 5; i++)
-                        mod[i]->setVisible(true), moda[i]->setVisible(true);
-
-                    modu->color = { 200, 200, 200, 255 };
                     break;
                 }
                 }
@@ -557,75 +534,43 @@ namespace Kaixo
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
-            attk = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
-            atkc = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
-            attl = new Knob{ {   5, 155,   5 + 65, 155 + 40 }, editor };
-            decy = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
-            dcyc = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
-            decl = new Knob{ {  70, 155,  70 + 65, 155 + 40 }, editor };
-            sust = new Knob{ { 135, 155, 135 + 65, 155 + 40 }, editor };
-            rels = new Knob{ { 200, 155, 200 + 65, 155 + 40 }, editor };
-            rlsc = new Knob{ { 200, 155, 200 + 65, 155 + 40 }, editor };
+            attk = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
+            atkc = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
+            attl = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
+            decy = new Knob{ {  70, 150,  70 + 65, 155 + 50 }, editor };
+            dcyc = new Knob{ {  70, 150,  70 + 65, 155 + 50 }, editor };
+            decl = new Knob{ {  70, 150,  70 + 65, 155 + 50 }, editor };
+            sust = new Knob{ { 135, 150, 135 + 65, 155 + 50 }, editor };
+            rels = new Knob{ { 200, 150, 200 + 65, 155 + 50 }, editor };
+            rlsc = new Knob{ { 200, 150, 200 + 65, 155 + 50 }, editor };
             curve = new EnvelopeCurve{ {  5,  30, 5 + 325, 30 + 95 } };
 
-            for (int i = 0; i < 5; i++)
-            {
-                modt[i] = new Knob{ { 0, 0, 1, 1 }, editor };
-                modt[i]->setListener(listener);
-                modt[i]->setTag(Params::Env1M1 + index + (i * 10));
+            attk->color =  MainEnv;
+            atkc->color =  MainEnv;
+            attl->color =  MainEnv;
+            decy->color =  MainEnv;
+            dcyc->color =  MainEnv;
+            decl->color =  MainEnv;
+            sust->color =  MainEnv;
+            rels->color =  MainEnv;
+            rlsc->color =  MainEnv;
+            curve->color = MainEnv;
 
-                moda[i] = new Knob{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 40 }, editor };
-                moda[i]->setListener(listener);
-                moda[i]->setTag(Params::Env1M1A + index + (i * 10));
-                moda[i]->name = "";
-                moda[i]->min = -100;
-                moda[i]->max = 100;
-                moda[i]->reset = 0;
-                moda[i]->decimals = 1;
-                moda[i]->unit = " %";
-                moda[i]->type = 2;
-                moda[i]->setVisible(false);
-                moda[i]->setListener(listener);
-
-                mod[i] = new OptionMenu{ { 5. + i * 65, 155,   5. + i * 65 + 65, 155 + 20 }, listener, Params::Env1M1 + index + (i * 10), nullptr, nullptr, OptionMenu::kCheckStyle };
-                mod[i]->setNbItemsPerColumn(32);
-                mod[i]->setFrameColor({ 0, 0, 0, 0 });
-                mod[i]->setBackColor({ 0, 0, 0, 0 });
-                mod[i]->setFontColor({ 128, 128, 128, 255 });
-                mod[i]->center = false;
-                mod[i]->addEntry("None");
-                mod[i]->setVisible(false);
-                mod[i]->registerControlListener(this);
-                int _offset = 0;
-                for (int j = 0; j < Params::ModCount; j++)
-                {
-                    int _index = ParamOrder[j + _offset];
-                    if (_index == -1)
-                        mod[i]->addSeparator(), ++_offset, _index = ParamOrder[j + _offset];
-                    mod[i]->addEntry(ParamNames[_index].name);
-                }
-            }
-
-            time = new Label{ {   5, 130,   5 + 80, 130 + 20 } };
+            time = new Label{ {   5, 130,   5 + 110, 130 + 20 } };
             time->fontsize = 14;
             time->center = true;
             time->color = { 200, 200, 200, 255 };
             time->value = "Time";
-            slpe = new Label{ {  85, 130,  85 + 80, 130 + 20 } };
+            slpe = new Label{ { 115, 130, 115 + 110, 130 + 20 } };
             slpe->fontsize = 14;
             slpe->center = true;
             slpe->color = { 128, 128, 128, 255 };
             slpe->value = "Slope";
-            vlue = new Label{ { 165, 130, 165 + 80, 130 + 20 } };
+            vlue = new Label{ { 225, 130, 225 + 110, 130 + 20 } };
             vlue->fontsize = 14;
             vlue->center = true;
             vlue->color = { 128, 128, 128, 255 };
             vlue->value = "Value";
-            modu = new Label{ { 245, 130, 245 + 80, 130 + 20 } };
-            modu->fontsize = 14;
-            modu->center = true;
-            modu->color = { 128, 128, 128, 255 };
-            modu->value = "Mod";
 
             env1 = new Label{ {   5,   5,   5 + 65,   5 + 20 } };
             env1->fontsize = 14;
@@ -636,22 +581,22 @@ namespace Kaixo
             env2->fontsize = 14;
             env2->center = true;
             env2->color = { 128, 128, 128, 255 };
-            env2->value = "Env 1";
+            env2->value = "Env 2";
             env3 = new Label{ { 135,   5, 135 + 65,   5 + 20 } };
             env3->fontsize = 14;
             env3->center = true;
             env3->color = { 128, 128, 128, 255 };
-            env3->value = "Env 2";
+            env3->value = "Env 3";
             env4 = new Label{ { 200,   5, 200 + 65,   5 + 20 } };
             env4->fontsize = 14;
             env4->center = true;
             env4->color = { 128, 128, 128, 255 };
-            env4->value = "Env 3";
+            env4->value = "Env 4";
             env5 = new Label{ { 265,   5, 265 + 65,   5 + 20 } };
             env5->fontsize = 14;
             env5->center = true;
             env5->color = { 128, 128, 128, 255 };
-            env5->value = "Env 4";
+            env5->value = "Env 5";
 
             attk->setListener(listener);
             atkc->setListener(listener);
@@ -682,9 +627,6 @@ namespace Kaixo
             sust->setTag(Params::Env1S + index);
             rels->setTag(Params::Env1R + index);
             rlsc->setTag(Params::Env1RC + index);
-
-            for (int i = 0; i < 5; i++)
-                mod[i]->setTag(Params::Env1M1 + index + (i * 10)), moda[i]->setTag(Params::Env1M1A + index + (i * 10));
 
             atkc->setVisible(false);
             attl->setVisible(false);
@@ -739,16 +681,12 @@ namespace Kaixo
             addView(time);
             addView(slpe);
             addView(vlue);
-            addView(modu);
 
             addView(env1);
             addView(env2);
             addView(env3);
             addView(env4);
             addView(env5);
-
-            for (int i = 0; i < 5; i++)
-                addView(moda[i]), addView(mod[i]);
         }
 
         EnvelopeView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)

@@ -1,5 +1,19 @@
 #pragma once
 
+constexpr CColor MainMain =  CColor{ 0, 179, 98, 255 };
+constexpr CColor MainOsc =   CColor{ 0, 179, 98, 255 };
+constexpr CColor MainEnv = CColor{ 0, 179, 98, 255 };
+constexpr CColor MainMacro = CColor{ 0, 179, 98, 255 };
+constexpr CColor MainLFO = CColor{ 0, 179, 98, 255 };
+//constexpr CColor MainMain = CColor{ 0, 179, 98, 255 };
+//constexpr CColor MainOsc = CColor{ 212, 72, 72, 255 };
+//constexpr CColor MainEnv = CColor{ 255, 216, 43, 255 };
+//constexpr CColor MainMacro = CColor{ 212, 72, 72, 255 };
+//constexpr CColor MainLFO = CColor{ 72, 77, 212, 255 };
+constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
+constexpr CColor OffText = CColor{ 128, 128, 128, 255 };
+
+
 struct ParamInfo
 {
     const char* name;
@@ -13,6 +27,7 @@ struct ParamInfo
 
 enum Params
 {
+    Enable1,      Enable2,      Enable3,      Enable4,
     Volume1,      Volume2,      Volume3,      Volume4,
     Pitch1,       Pitch2,       Pitch3,       Pitch4,
     Detune1,      Detune2,      Detune3,      Detune4,
@@ -67,31 +82,19 @@ enum Params
 
     LFOSync1,   LFOSync2,   LFOSync3,   LFOSync4,   LFOSync5,
 
-    LFO1M1,  LFO2M1,  LFO3M1,  LFO4M1,  LFO5M1,
-    LFO1M1A, LFO2M1A, LFO3M1A, LFO4M1A, LFO5M1A,
-    LFO1M2,  LFO2M2,  LFO3M2,  LFO4M2,  LFO5M2,
-    LFO1M2A, LFO2M2A, LFO3M2A, LFO4M2A, LFO5M2A,
-    LFO1M3,  LFO2M3,  LFO3M3,  LFO4M3,  LFO5M3,
-    LFO1M3A, LFO2M3A, LFO3M3A, LFO4M3A, LFO5M3A,
-    LFO1M4,  LFO2M4,  LFO3M4,  LFO4M4,  LFO5M4,
-    LFO1M4A, LFO2M4A, LFO3M4A, LFO4M4A, LFO5M4A,
-    LFO1M5,  LFO2M5,  LFO3M5,  LFO4M5,  LFO5M5,
-    LFO1M5A, LFO2M5A, LFO3M5A, LFO4M5A, LFO5M5A,
-
-    Env1M1,  Env2M1,  Env3M1,  Env4M1,  Env5M1,
-    Env1M1A, Env2M1A, Env3M1A, Env4M1A, Env5M1A,
-    Env1M2,  Env2M2,  Env3M2,  Env4M2,  Env5M2,
-    Env1M2A, Env2M2A, Env3M2A, Env4M2A, Env5M2A,
-    Env1M3,  Env2M3,  Env3M3,  Env4M3,  Env5M3,
-    Env1M3A, Env2M3A, Env3M3A, Env4M3A, Env5M3A,
-    Env1M4,  Env2M4,  Env3M4,  Env4M4,  Env5M4,
-    Env1M4A, Env2M4A, Env3M4A, Env4M4A, Env5M4A,
-    Env1M5,  Env2M5,  Env3M5,  Env4M5,  Env5M5,
-    Env1M5A, Env2M5A, Env3M5A, Env4M5A, Env5M5A,
-
     PitchBend,
 
     Size
+};
+
+constexpr size_t ModAmt = 4;
+
+enum class ModSources 
+{
+    None, 
+    LFO1, LFO2, LFO3, LFO4, LFO5, 
+    Env1, Env2, Env3, Env4, Env5, 
+    Amount
 };
 
 constexpr bool Divider(int x)
@@ -142,6 +145,7 @@ constexpr auto ParamOrderSize = std::size(ParamOrder);
 
 constexpr ParamInfo ParamNames[]
 { 
+    { "A Enable", 1 },         { "B Enable", 1 },         { "C Enable", 1 },         { "D Enable", 1 },
     { "A Gain", 1 },           { "B Gain", 0 },           { "C Gain", 0 },           { "D Gain", 0 },
     { "A Pitch", 0.5, 1, 0 },  { "B Pitch", 0.5, 1, 0 },  { "C Pitch", 0.5, 1, 0 },  { "D Pitch", 0.5, 1, 0 },
     { "A Detune", 0.5, 1, 0 }, { "B Detune", 0.5, 1, 0 }, { "C Detune", 0.5, 1, 0 }, { "D Detune", 0.5, 1, 0 },
@@ -189,35 +193,13 @@ constexpr ParamInfo ParamNames[]
     { "Filter X", 0 }, { "Filter Y", 0 }, { "Filter Z", 0 },
     { "DC X", 0 },     { "DC Y", 0 },     { "DC Z", 0 }, 
     
-    { "Destination A", 1. / 64., 0, 1, 0 }, { "Destination B",  2. / 64., 0, 1, 0 }, { "Destination C",  4. / 64., 0, 1, 0 },
-    { "Destination D",  8. / 64., 0, 1, 0 }, { "Destination X",  16. / 64., 0, 1, 0 }, { "Destination Y",  32. / 64., 0, 1, 0 },
+    { "Destination A", 1. / 128., 0, 1, 0 }, { "Destination B",  2. / 128., 0, 1, 0 }, { "Destination C",  4. / 128., 0, 1, 0 },
+    { "Destination D",  8. / 128., 0, 1, 0 }, { "Destination X",  16. / 128., 0, 1, 0 }, { "Destination Y",  32. / 128., 0, 1, 0 },
 
     { "Filter A", 0 },      { "Filter B", 0 },      { "Filter C", 0 },      { "Filter D", 0 },
     { "Random A", 0 },      { "Random B", 0 },      { "Random C", 0 },      { "Random D", 0 },
     
     { "LFO 1 Sync", 0 }, { "LFO 2 Sync", 0 }, { "LFO 3 Sync", 0 }, { "LFO 4 Sync", 0 }, { "LFO 5 Sync", 0 },
-
-    { "LM1M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "LM1M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "LM2M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM3M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM4M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "LM5M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    
-    { "EM1M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M1",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M1L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M2",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M2L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M3",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M3L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M4",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M4L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M5",  0, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
-    { "EM1M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly }, { "EM2M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM3M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM4M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly}, { "EM5M5L", 0.5, false, true, false, 0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly},
 
     { "Pitch Bend", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
 };

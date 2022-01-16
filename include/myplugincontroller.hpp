@@ -8,17 +8,14 @@ namespace Kaixo
     {
     public:
 
-        MyEditor(EditController* controller)
-            : VST3Editor(controller, "view", "myplugineditor.uidesc"),
-            controller(controller)
-        {}
-    
-        EditController* controller;
+        MyEditor(TestController* controller);
 
-        bool isModulated(int32_t param) {
-            //controller->getParamNormalized(Params::);
-            
-        }
+        TestController* controller;
+
+        ModSources modSource(int32_t param, int index);
+        void modSource(int32_t param, int index, ModSources set);
+        double modAmount(int32_t param, int index);
+        void modAmount(int32_t param, int index, double val);
     };
 
     class TestController : public EditControllerEx1, public IMidiMapping
@@ -51,8 +48,29 @@ namespace Kaixo
                 for (;c < std::strlen(ParamNames[i].name); c++)
                     name[c] = ParamNames[i].name[c];
                 name[c] = '\0';
-                parameters.addParameter(name, nullptr, ParamNames[i].step, ParamNames[i].reset, ParameterInfo::kCanAutomate, i);
+                parameters.addParameter(name, nullptr, ParamNames[i].step, ParamNames[i].reset, ParamNames[i].flags, i);
             }
+
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                int index = i % ModAmt;
+                std::string s1 = "Mod" + std::to_string(index) + ParamNames[i / ModAmt].name;
+                std::string s2 = "ModAmt" + std::to_string(index) + ParamNames[i / ModAmt].name;
+                wchar_t name1[64];
+                int c1 = 0;
+                for (;c1 < s1.size(); c1++)
+                    name1[c1] = s1[c1];
+                name1[c1] = '\0';     
+                wchar_t name2[64];
+                int c2 = 0;
+                for (;c2 < s2.size(); c2++)
+                    name2[c2] = s2[c2];
+                name2[c2] = '\0';
+
+                parameters.addParameter(name1, nullptr, 0, 0.0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly, Params::Size + i * 2 + 0); // source
+                parameters.addParameter(name2, nullptr, 0, 0.5, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly, Params::Size + i * 2 + 1); // amount
+            }
+
             return result;
         }
 
@@ -71,6 +89,16 @@ namespace Kaixo
                 setParamNormalized(i, value);
             }
 
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                double value = 0.f;
+                if (streamer.readDouble(value) == kResultFalse) return kResultFalse;
+                setParamNormalized(i * 2 + Params::Size, value);
+                double value2 = 0.f;
+                if (streamer.readDouble(value2) == kResultFalse) return kResultFalse;
+                setParamNormalized(i * 2 + Params::Size + 1, value2);
+            }
+
             return kResultOk;
         }
 
@@ -87,6 +115,23 @@ namespace Kaixo
                 performEdit(i, val);
                 endEdit(i);
             }
+
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                int index = i * 2 + Params::Size;
+                double val;
+                streamer.readDouble(val);
+                beginEdit(index);
+                setParamNormalized(index, val);
+                performEdit(index, val);
+                endEdit(index);
+                streamer.readDouble(val);
+                beginEdit(index + 1);
+                setParamNormalized(index + 1, val);
+                performEdit(index + 1, val);
+                endEdit(index + 1);
+            }
+
             return kResultOk;
         }
 
@@ -96,6 +141,13 @@ namespace Kaixo
 
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.writeDouble(getParamNormalized(i));
+            
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                int index = i * 2 + Params::Size;
+                streamer.writeDouble(getParamNormalized(index));
+                streamer.writeDouble(getParamNormalized(index + 1));
+            }
 
             return kResultOk;
         }

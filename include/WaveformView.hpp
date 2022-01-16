@@ -15,6 +15,8 @@ namespace Kaixo
         double index = 0;
         double repeat = 1;
 
+        CColor color = MainMain;
+
         double level = 1;
         double sync = 0;
         double shaper = 0;
@@ -57,7 +59,7 @@ namespace Kaixo
         void draw(CDrawContext* pContext) override
         {
             constexpr CColor back{ 15, 15, 15, 255 };
-            CColor main = CColor{ 0, 179, 98, 255 };
+            CColor main = color;
 
             constexpr CColor crnr{ 128, 128, 128, 255 };
             pContext->setLineWidth(1);
@@ -77,7 +79,9 @@ namespace Kaixo
             double _py = (0.5 + ValueAt(0, _step) * 0.5) * _h + _s.top + padding;
 
             CDrawContext::LineList _lines;
+            CDrawContext::PointList _points;
 
+            _points.push_back({ _s.left, _s.top + _h / 2 + padding });
             for (double i = 0; i < _w; i += 0.25)
             {
                 double _p = repeat * i / _w;
@@ -85,12 +89,17 @@ namespace Kaixo
                 double _y = (0.5 + ValueAt(_p, _step) * 0.5) * _h + _s.top + padding;
 
                 _lines.push_back({ { _px, _py }, { _x, _y } });
+                _points.push_back({ _px, _py });
 
                 _px = _x;
                 _py = _y;
             }
+            _points.push_back({ _s.right, _s.top + _h / 2 + padding});
+
             pContext->setFrameColor(main);
             pContext->drawLines(_lines);
+            pContext->setFillColor({ main.red, main.green, main.blue, 40 });
+            pContext->drawPolygon(_points, kDrawFilled);
 
             double _bsize = 8;
             pContext->setLineWidth(1);

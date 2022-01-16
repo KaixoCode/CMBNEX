@@ -7,7 +7,7 @@
 
 namespace Kaixo
 {
-    class Knob : public CControl
+    class Knob : public CControl, public IDropTarget
     {
     public:
         enum Type
@@ -17,13 +17,91 @@ namespace Kaixo
 
         static inline Knob* selected = nullptr;
 
+        int dragIndex = -1;
+
+        int ModIndexPos(CPoint pos) 
+        {
+            if (!modable) return -1;
+            auto a = getViewSize();
+            if (type == KNOB)
+            {
+                if (pos.y > a.bottom - 16 && pos.y < a.bottom)
+                {
+                    int _index = std::floor((pos.x - (a.getCenter().x - 13 * ModAmt * 0.5)) / 13.);
+                    if (_index >= 0 && _index < ModAmt)
+                        return _index;
+                    return -1;
+                }
+                return -1;
+            }
+            else if (type == NUMBER)
+            {
+                if (pos.y > a.bottom - 16 && pos.y < a.bottom)
+                {
+                    int modded = 0;
+                    for (int i = 0; i < ModAmt; i++)
+                        if (editor->modSource(getTag(), i) != ModSources::None) modded++;
+
+                    int _index = std::floor((pos.x - (a.left + 2 * modded)) / 13.);
+                    if (_index >= 0 && _index < ModAmt)
+                        return _index;
+                    return -1;
+                }
+                return -1;
+
+            }
+
+            return -1;
+        }
+
+        DragOperation onDragEnter(DragEventData data) 
+        {
+            dragIndex = ModIndexPos(data.pos);
+            setDirty(true);
+            return dragIndex == -1 ? DragOperation::None : DragOperation::Copy;
+        };
+
+        DragOperation onDragMove(DragEventData data) 
+        {
+            dragIndex = ModIndexPos(data.pos);
+            setDirty(true);
+            return dragIndex == -1 ? DragOperation::None : DragOperation::Copy;
+        };
+
+        void onDragLeave(DragEventData data) 
+        {
+            dragIndex = -1;
+            setDirty(true);
+        };
+
+        bool onDrop(DragEventData data)
+        {
+            int* _data;
+            IDataPackage::Type type;
+            data.drag->getData(0, (const void*&)_data, type);
+
+            ModSources _value = (ModSources) _data[0];
+
+            editor->modSource(getTag(), dragIndex, _value);
+            editor->modAmount(getTag(), dragIndex, 0.5);
+            setDirty(true);
+            dragIndex = -1;
+            return true;
+        };
+
         double min = 0;
         double max = 0;
         double reset = 0;
         int decimals = 1;
         int type = 1;
 
+        bool modable = true;
+
         double index = 4;
+
+        int editIndex = -1;
+
+        CColor color = MainMain;
 
         String name;
         String unit;
@@ -32,7 +110,9 @@ namespace Kaixo
 
         Knob(const CRect& size, MyEditor* editor)
             : editor(editor), CControl(size)
-        {}
+        {
+            setDropTarget(this);
+        }
 
         CMouseEventResult onMouseCancel() override
         {
@@ -43,6 +123,8 @@ namespace Kaixo
 
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
         {
+            editIndex = ModIndexPos(where);
+
             if (getViewSize().pointInside(where))
             {
                 switch (type) 
@@ -53,21 +135,37 @@ namespace Kaixo
                 case INTERPOLATE:
                     if (buttons.isDoubleClick())
                     {
-                        beginEdit();
-                        if (unit == " s")
-                            setValue(std::pow((reset - min) / std::max(max - min, 0.0001), 1./3.));
-                        else if (unit == " Hz")
-                            setValue(std::sqrt((reset - min) / std::max(max - min, 0.0001)));
+                        if (editIndex == -1)
+                        {
+                            beginEdit();
+                            if (unit == " s")
+                                setValue(std::pow((reset - min) / std::max(max - min, 0.0001), 1. / 3.));
+                            else if (unit == " Hz")
+                                setValue(std::sqrt((reset - min) / std::max(max - min, 0.0001)));
+                            else
+                                setValue((reset - min) / std::max(max - min, 0.0001));
+                            valueChanged();
+                            endEdit();
+                            setDirty(true);
+                        }
                         else
-                            setValue((reset - min) / std::max(max - min, 0.0001));
-                        valueChanged();
-                        endEdit();
-                        setDirty(true);
+                        {
+                            editor->modAmount(getTag(), editIndex, 0.5);
+                            setDirty(true);
+                        }
+                    }
+                    else
+                    {
+                        if (buttons.isControlSet() && editIndex != -1)
+                        {
+                            editor->modSource(getTag(), editIndex, ModSources::None);
+                            setDirty(true);
+                        }
                     }
                     break;
                 case BUTTON:
                     beginEdit();
-                    setValue(getValue() == 0 ? 1 : 0);
+                    setValue(getValue() > 0.5 ? 0 : 1);
                     valueChanged();
                     endEdit();
                     setDirty(true);
@@ -132,17 +230,27 @@ namespace Kaixo
                 case NUMBER:
                 case INTERPOLATE:
                 {
-                    beginEdit();
                     double mult = buttons.isShiftSet() ? 0.25 : 1;
                     double diff = 0;
                     if (type == SLIDER) diff = (where.x - pwhere.x) / getViewSize().getWidth();
                     if (type == INTERPOLATE) diff = (where.x - pwhere.x) / (parts.size() * getViewSize().getWidth());
                     else diff = (pwhere.y - where.y) * 0.005;
-                    setValue(getValue() + mult * diff);
                     pwhere = where;
-                    valueChanged();
-                    endEdit();
-                    setDirty(true);
+
+                    if (editIndex == -1)
+                    {
+                        beginEdit();
+                        setValue(getValue() + mult * diff);
+                        valueChanged();
+                        endEdit();
+                        setDirty(true);
+                    }
+                    else 
+                    {
+                        double value = editor->modAmount(getTag(), editIndex);
+                        editor->modAmount(getTag(), editIndex, value + mult * diff);
+                        setDirty(true);
+                    }
                     return kMouseEventHandled;
                 }
                 }
@@ -151,13 +259,13 @@ namespace Kaixo
         }
 
         void draw(CDrawContext* pContext) override
-        {
+        { 
             double _v = getValue();
             double val = _v * (max - min) + min;
             if (unit == " dB")
             {
                 val = lin2db(val);
-                std::string _format = std::format("{:." + std::to_string((int)decimals) + "f}", val);
+                std::string _format = std::format("{:." + std::to_string((int)decimals + (val < -10 ? -1 : 0)) + "f}", val);
                 str = _format.c_str() + unit;
             }
             else if (unit == " Hz")
@@ -184,9 +292,9 @@ namespace Kaixo
                     std::string _format = std::format("{:." + std::to_string((int)decimals + (val > 10 ? 0 : 1)) + "f}", val);
                     str = _format.c_str() + String{ " s" };
                 }
-                else
+                else 
                 {
-                    std::string _format = std::format("{:." + std::to_string((int)decimals + (val > 10 ? 0 : 1)) + "f}", val);
+                    std::string _format = std::format("{:." + std::to_string((int)decimals + (val > 10 ? val > 100 ? -1 : 0 : 1)) + "f}", val);
                     str = _format.c_str() + String{ " ms" };
                 }
             }
@@ -203,6 +311,12 @@ namespace Kaixo
                 else if (_iv < 0) str = _nmr.c_str() + String{ "L" };
                 else if (_iv > 0) str = _nmr.c_str() + String{ "R" };
             }
+            else if (unit == " %")
+            {
+                if (decimals == 0 && std::round(val) == 0) val = 0;
+                std::string _format = std::format("{:." + std::to_string((int)decimals + (val >= 100 || val <= -100 ? -1 : 0)) + "f}", val);
+                str = _format.c_str() + unit;
+            }
             else
             {
                 if (decimals == 0 && std::round(val) == 0) val = 0;
@@ -216,8 +330,9 @@ namespace Kaixo
             auto w1 = pContext->getStringWidth(str);
             auto w2 = pContext->getStringWidth(name);
 
+            int modded = 0;
 
-            CColor main = CColor{ 0, 179, 98, 255 };
+            CColor main = color;;
             //    index == 0 ? CColor{ 179, 0, 0, 255 } 
             //: index == 1 ? CColor{ 0, 119, 179, 255 } 
             //: index == 2 ? CColor{ 179, 116, 0, 255 } 
@@ -233,6 +348,7 @@ namespace Kaixo
             case KNOB:
             {
                 auto v = getValueNormalized() * 270;
+                a.bottom -= 10;
 
                 auto start = 135;
                 auto end = 135 + v;
@@ -245,14 +361,58 @@ namespace Kaixo
 
                 a.inset({ 10, 22 });
 
+                pContext->setFontColor(text);
+                pContext->drawString(str, { a.getCenter().x - w1 / 2, a.getBottomCenter().y + 12 }, true);
+                pContext->drawString(name, { a.getCenter().x - w2 / 2, a.getTopCenter().y - 8 }, true);
+
+                if (modable)
+                {
+                    a.inset({ -2, -2 });
+                    v = getValueNormalized() * 270;
+                    for (int i = 0; i < ModAmt; i++)
+                    {
+                        auto source = editor->modSource(getTag(), i);
+                        if (source == ModSources::None)
+                            continue;
+
+                        pContext->setLineWidth(2);
+                        pContext->setFrameColor(brdr);
+                        pContext->drawArc(a, 135, 135 + 270, kDrawStroked);
+
+                        bool two = false;
+                        if (source >= ModSources::Env1)
+                            pContext->setFrameColor(main);
+                        else if (source >= ModSources::LFO1)
+                            pContext->setFrameColor(main), two = true;
+
+                        double amount = editor->modAmount(getTag(), i) * 2 - 1;
+                        double start = std::max(135 + v + ((amount < 0) ? amount * 270 : 0), 135.);
+                        double end = std::min(135 + v + ((amount > 0) ? amount * 270 : 0), 135 + 270.);
+
+                        pContext->setLineWidth(2);
+                        pContext->drawArc(a, start, end, kDrawStroked);
+
+                        if (two)
+                        {
+                            double start = std::max(135 + v - ((amount > 0) ? amount * 270 : 0), 135.);
+                            double end = std::min(135 + v - ((amount < 0) ? amount * 270 : 0), 135 + 270.);
+                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->drawArc(a, start, end, kDrawStroked);
+                        }
+
+                        a.inset({ 3, 3 });
+                    }
+
+                    a.inset({ 2, 2 });
+                }
+
                 pContext->setLineWidth(6);
                 pContext->setFrameColor(back);
                 pContext->drawArc(a, 135, 135 + 270, kDrawStroked);
                 pContext->setFrameColor(main);
                 pContext->drawArc(a, start, end, kDrawStroked);
-                pContext->setFontColor(text);
-                pContext->drawString(str, { a.getCenter().x - w1 / 2, a.getBottomCenter().y + 14 }, true);
-                pContext->drawString(name, { a.getCenter().x - w2 / 2, a.getTopCenter().y - 8 }, true);
+
+
                 break;
             }
             case SLIDER: // Slider horizontal
@@ -302,23 +462,67 @@ namespace Kaixo
             case NUMBER: // Slider vertical
             {
                 a = getViewSize();
+                a.left += 1;
+                if (modable)
+                {
+                    auto _w = a.getHeight();
+                    auto v = getValueNormalized() * _w;
+                    for (int i = 0; i < ModAmt; i++)
+                    {
+                        auto source = editor->modSource(getTag(), i);
+                        if (source == ModSources::None)
+                            continue;
+                        modded++;
+                        pContext->setLineWidth(2);
+                        pContext->setFrameColor(brdr);
+                        pContext->drawLine({ a.left, a.bottom }, { a.left, a.top });
+
+                        bool two = false;
+                        if (source >= ModSources::Env1)
+                            pContext->setFrameColor(main);
+                        else if (source >= ModSources::LFO1)
+                            pContext->setFrameColor(main), two = true;
+
+                        double amount = editor->modAmount(getTag(), i) * 2 - 1;
+                        double start = std::max(v + ((amount < 0) ? amount * _w : 0), 0.);
+                        double end = std::min(v + ((amount > 0) ? amount * _w : 0), _w);
+
+                        pContext->setLineWidth(2);
+                        pContext->drawLine({ a.left, a.top + start }, { a.left, a.top + end });
+
+                        if (two)
+                        {
+                            double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
+                            double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
+                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->drawLine({ a.left, a.top + start }, { a.left, a.top + end });
+                        }
+
+                        a.left += 3;
+                    }
+                }
+
+                a.bottom -= 10;
                 a.top += 20;
                 a.inset({ 2, 2 });
+
                 pContext->setFontColor(main);
-                pContext->drawString(str, { a.left, a.getCenter().y + 6 }, true);
+                pContext->drawString(str, { a.left, a.getCenter().y + 1 }, true);
                 pContext->setFontColor(text);
                 pContext->drawString(name, { a.left, a.getTopCenter().y - 8 }, true);
+
+
                 break;
             }
             case BUTTON:
             {
                 pContext->setLineWidth(1);
                 pContext->setFrameColor(brdr);
-                pContext->setFillColor(getValue() ? main : back);
+                pContext->setFillColor(getValue() > 0.5 ? main : back);
                 a.top += 1;
                 a.left += 1;
                 pContext->drawRect(a, kDrawFilledAndStroked);
-                pContext->setFontColor(getValue() ? text : offt);
+                pContext->setFontColor(getValue() > 0.5 ? text : offt);
                 pContext->drawString(name, { a.getCenter().x - w2 / 2, a.getCenter().y + 6 }, true);
                 break;
             }
@@ -459,6 +663,59 @@ namespace Kaixo
                     pContext->drawRect({ a.getCenter().x, a.top, a.getCenter().x + (d - 0.5) * a.getWidth(), a.bottom }, kDrawFilled);
                 break;
             }
+            }
+
+            if (type == NUMBER || type == KNOB)
+            {
+                pContext->setLineWidth(1);
+                a = getViewSize();
+                a.top = a.bottom - 15;
+                auto _p = 5.;
+                auto _w = 13;
+                if (type == KNOB)
+                    a.left = std::floor(a.getCenter().x - _w * (ModAmt * 0.5));
+                else
+                    a.left = a.left + modded * 3;
+
+                for (int i = 0; i < ModAmt; i++)
+                {
+                    if (dragIndex == i)
+                    {
+                        pContext->setFrameColor({ 70, 70, 70, 255 });
+                        pContext->setFillColor({ 18, 18, 18, 255 });
+                    }
+                    else
+                    {
+                        pContext->setFrameColor({ 30, 30, 30, 255 });
+                        pContext->setFillColor({ 18, 18, 18, 255 });
+                    }
+
+                    std::string _v = std::to_string((int)editor->modSource(getTag(), i));
+                    if (editor->modSource(getTag(), i) >= ModSources::Env1)
+                    {
+                        pContext->setFontColor(main);
+                        _v = std::to_string((int)editor->modSource(getTag(), i) - (int)ModSources::Env1 + 1);
+                    }
+                    else if (editor->modSource(getTag(), i) >= ModSources::LFO1)
+                    {
+                        pContext->setFontColor(main);
+                        _v = std::to_string((int)editor->modSource(getTag(), i) - (int)ModSources::LFO1 + 1);
+                    }
+                    else
+                    {
+                        pContext->setFontColor({ 128, 128, 128, 255 });
+                    }
+                    pContext->drawRect({ a.left, a.top, a.left + _w, a.bottom }, kDrawFilledAndStroked);
+
+                    if (editor->modSource(getTag(), i) != ModSources::None)
+                    {
+                        String _s = _v.c_str();
+                        auto _sw = pContext->getStringWidth(_s);
+                        pContext->drawString(_s, { a.left + _w / 2 - _sw / 2, a.bottom - 3 });
+                    }
+
+                    a.left += _w;
+                }
             }
 
             setDirty(false);
