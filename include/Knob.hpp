@@ -488,14 +488,14 @@ namespace Kaixo
                         double end = std::min(v + ((amount > 0) ? amount * _w : 0), _w);
 
                         pContext->setLineWidth(2);
-                        pContext->drawLine({ a.left, a.top + start }, { a.left, a.top + end });
+                        pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
 
                         if (two)
                         {
                             double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                             double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
                             pContext->setFrameColor({ 128, 128, 128, 255 });
-                            pContext->drawLine({ a.left, a.top + start }, { a.left, a.top + end });
+                            pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                         }
 
                         a.left += 3;
@@ -691,7 +691,11 @@ namespace Kaixo
                     }
 
                     std::string _v = std::to_string((int)editor->modSource(getTag(), i));
-                    if (editor->modSource(getTag(), i) >= ModSources::Env1)
+                    if (editor->modSource(getTag(), i) >= ModSources::Osc1)
+                    {
+                        pContext->setFontColor(main);
+                        _v = (char)('A' + (int)editor->modSource(getTag(), i) - (int)ModSources::Osc1);
+                    } else if (editor->modSource(getTag(), i) >= ModSources::Env1)
                     {
                         pContext->setFontColor(main);
                         _v = std::to_string((int)editor->modSource(getTag(), i) - (int)ModSources::Env1 + 1);

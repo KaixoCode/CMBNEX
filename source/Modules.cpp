@@ -297,7 +297,7 @@ namespace Kaixo
             const double _d = std::max(0.000001, 1 - _pw);
             const double _p1 = _ph / _d;
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(
-                Shapers::shaper24(settings.wavetable(std::fmod((_ph + phaseoffset) * settings.sync / _d, 1.), settings.wtpos)
+                Shapers::shaper24(settings.wavetable(std::fmod((_ph + phaseoffset) * settings.sync / _d + 100, 1.), settings.wtpos)
                     , settings.shaper2), settings.shaper3);
         }
         else
@@ -306,7 +306,7 @@ namespace Kaixo
             const double _d = std::max(0.000001, 1 + _pw);
             const double _p1 = (1 - _ph) / _d;
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(
-                Shapers::shaper24(settings.wavetable(std::fmod((_ph + _pw + phaseoffset) * settings.sync / _d, 1.), settings.wtpos)
+                Shapers::shaper24(settings.wavetable(std::fmod((_ph + _pw + phaseoffset) * settings.sync / _d + 100, 1.), settings.wtpos)
                     , settings.shaper2), settings.shaper3);
         }
 

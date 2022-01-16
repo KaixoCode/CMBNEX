@@ -400,25 +400,35 @@ namespace Kaixo
                 // Move params to modulated so we can adjust their values
                 std::memcpy(modulated, params, Params::ModCount * sizeof(double));
 
-                for (int i = 0; i < ModAmt; i++)
+  
+                for (int m = 0; m < Params::ModCount; m++)
                 {
-                    for (int m = 0; m < Params::ModCount; m++)
+                    for (int i = 0; i < ModAmt; i++)
                     {
                         int index = m * ModAmt + i;
                         int source = (modgoals[index] * (int)ModSources::Amount);
                         if (source == 0) continue;
                         double amount = modamount[index] * 2 - 1;
 
-                        int mindex = ((int)source - 1) % 5;
-                        bool a = ((int)source - 1) / 5;
-                        if (a)
+                        if (source >= (int)ModSources::Osc1)
+                        {
+                            int mindex = (source - (int)ModSources::Osc1);
+                            modulated[m] += (osc[mindex].sample * amount);
+                        }
+                        else if (source >= (int)ModSources::Env1)
+                        {
+                            int mindex = (source - (int)ModSources::Env1);
                             modulated[m] += (env[mindex].sample * amount);
-                        else 
+                        }
+                        else
+                        {
+                            int mindex = (source - (int)ModSources::LFO1);
                             modulated[m] += ((params[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
-
-                        if (ParamNames[m].constrain)
-                            modulated[m] = constrain(modulated[i], -1., 1.);
+                        }
                     }
+
+                    if (ParamNames[m].constrain)
+                        modulated[m] = constrain(modulated[m], 0., 1.);
                 }
 
                 for (int i = 0; i < Combines; i++)

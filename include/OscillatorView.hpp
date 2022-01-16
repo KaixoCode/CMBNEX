@@ -33,6 +33,20 @@ namespace Kaixo
 
         int index = 0;
 
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+        {
+            auto _r = CViewContainer::onMouseDown(where, buttons);
+            if (_r != kMouseEventHandled)
+            {
+                int* _data = new int[1];
+                _data[0] = (int)ModSources::Osc1 + index;
+                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
+                return kMouseEventHandled;
+            }
+
+            return _r;
+        }
+
         void valueChanged(CControl* pControl)
         {
             bool _f = false;

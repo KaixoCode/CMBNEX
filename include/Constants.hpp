@@ -94,6 +94,7 @@ enum class ModSources
     None, 
     LFO1, LFO2, LFO3, LFO4, LFO5, 
     Env1, Env2, Env3, Env4, Env5, 
+    Osc1, Osc2, Osc3, Osc4,
     Amount
 };
 
@@ -152,7 +153,7 @@ constexpr ParamInfo ParamNames[]
     { "A Pos", 0 },            { "B Pos", 0 },            { "C Pos", 0 },            { "D Pos", 0 },
     { "A Sync", 0 },           { "B Sync", 0 },           { "C Sync", 0 },           { "D Sync", 0 },
     { "A PW", 0.5, 1 },        { "B PW", 0.5, 1 },        { "C PW", 0.5, 1 },        { "D PW", 0.5, 1 },
-    { "A Phase", 0 },          { "B Phase", 0 },          { "C Phase", 0 },          { "D Phase", 0 },
+    { "A Phase", 0, 0, 0 },    { "B Phase", 0, 0, 0  },   { "C Phase", 0, 0, 0  },   { "D Phase", 0, 0, 0 },
     { "A SHP-X", 0 },          { "B SHP-X", 0 },          { "C SHP-X", 0 },          { "D SHP-X", 0 },
     { "A SHP-Y", 0 },          { "B SHP-Y", 0 },          { "C SHP-Y", 0 },          { "D SHP-Y", 0 },
     { "A Pan", 0.5, 1 },       { "B Pan", 0.5, 1 },       { "C Pan", 0.5, 1 },       { "D Pan", 0.5, 1 },
