@@ -82,7 +82,10 @@
  * 
  * 
  * 
- * Master gain
+ * 
+ * LFO Sync not synced
+ * 
+ * 
  * 
  */
 namespace Kaixo
@@ -256,7 +259,6 @@ namespace Kaixo
         double modamount[Params::ModCount * ModAmt];
     };
 
-
     class TestProcessor : public Instrument
     {
     public:
@@ -267,7 +269,7 @@ namespace Kaixo
         constexpr static auto Combines = 3;
 
         static FUnknown* createInstance(void*) { return static_cast<IAudioProcessor*>(new TestProcessor); }
-
+        
         double modulated[Params::ModCount];
 
         bool notesPressed[128] { 
@@ -276,6 +278,7 @@ namespace Kaixo
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
         };
+
 
         void Event(Vst::Event& event) override
         {
@@ -351,136 +354,13 @@ namespace Kaixo
             if (data.processContext->state & ProcessContext::kTempoValid)
                 bpm = data.processContext->tempo;
 
-            if (channel == 0) // Only do all parameter generating on channel 0
+            if (channel == 0) // Only do all generating on channel 0
             {
                 const double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
                 const double _timeMult = modulated[Params::Time] < 0.5 ? (modulated[Params::Time] + 0.5) : ((modulated[Params::Time] - 0.5) * 2 + 1);
 
-                deltaf = _timeMult * std::abs((pressed - pressedOld) / (0.001 + modulated[Params::Glide] * modulated[Params::Glide] * modulated[Params::Glide] * 10 * samplerate));
-                if (frequency > pressed)
-                    if (frequency - deltaf < pressed) frequency = pressed;
-                    else frequency -= deltaf;
-
-                if (frequency < pressed)
-                    if (frequency + deltaf > pressed) frequency = pressed;
-                    else frequency += deltaf;
-
-                for (int i = 0; i < Envelopes; i++)
-                {   // Adjust Envelope parameters and generate
-                    env[i].SAMPLE_RATE = samplerate;
-                    env[i].settings.attack = modulated[Params::Env1A + i] * modulated[Params::Env1A + i] * modulated[Params::Env1A + i] * 5;
-                    env[i].settings.attackCurve = modulated[Params::Env1AC + i] * 2 - 1;
-                    env[i].settings.attackLevel = modulated[Params::Env1AL + i];
-                    env[i].settings.decay = modulated[Params::Env1D + i] * modulated[Params::Env1D + i] * modulated[Params::Env1D + i] * 5;
-                    env[i].settings.decayCurve = modulated[Params::Env1DC + i] * 2 - 1;
-                    env[i].settings.decayLevel = modulated[Params::Env1DL + i];
-                    env[i].settings.sustain = modulated[Params::Env1S + i];
-                    env[i].settings.release = modulated[Params::Env1R + i] * modulated[Params::Env1R + i] * modulated[Params::Env1R + i] * 5;
-                    env[i].settings.releaseCurve = modulated[Params::Env1RC + i] * 2 - 1;
-                    env[i].settings.timeMult = _timeMult;
-                    env[i].Generate(channel);
-                }
-
-                for (int i = 0; i < LFOs; i++)
-                {   // Adjust lfo parameters 
-                    //lfo[i].settings.oversample = 1;
-                    lfo[i].SAMPLE_RATE = samplerate;
-
-                    if (params[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
-                    {
-                        size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
-                        double _ps = (bpm / 60.) / (TimesValue[_type] * 4); // (beats per phase / bpm) / 60 = seconds per phase
-                        lfo[i].settings.frequency = _ps;
-                    }
-                    else
-                        lfo[i].settings.frequency = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1;
-                    lfo[i].settings.wtpos = modulated[Params::LFOPos1 + i];
-                    lfo[i].settings.shaper3 = modulated[Params::LFOShaper1 + i];
-                    lfo[i].sample = lfo[i].OffsetOnce(modulated[Params::LFOPhase1 + i]);
-                }
-
-                // Move params to modulated so we can adjust their values
-                std::memcpy(modulated, params, Params::ModCount * sizeof(double));
-
-  
-                for (int m = 0; m < Params::ModCount; m++)
-                {
-                    for (int i = 0; i < ModAmt; i++)
-                    {
-                        int index = m * ModAmt + i;
-                        int source = (modgoals[index] * (int)ModSources::Amount);
-                        if (source == 0) continue;
-                        double amount = modamount[index] * 2 - 1;
-
-                        if (source == (int)ModSources::Vel)
-                        {
-                            modulated[m] += (velocity * amount);
-                        }
-                        else if (source == (int)ModSources::Key)
-                        {
-                            modulated[m] += (key * amount);
-                        }
-                        else if (source >= (int)ModSources::Osc1)
-                        {
-                            int mindex = (source - (int)ModSources::Osc1);
-                            modulated[m] += (osc[mindex].sample * amount);
-                        }
-                        else if (source >= (int)ModSources::Mac1)
-                        {
-                            int mindex = (source - (int)ModSources::Mac1);
-                            modulated[m] += (params[Params::Macro1 + mindex] * amount);
-                        }
-                        else if (source >= (int)ModSources::Env1)
-                        {
-                            int mindex = (source - (int)ModSources::Env1);
-                            modulated[m] += (env[mindex].sample * amount);
-                        }
-                        else
-                        {
-                            int mindex = (source - (int)ModSources::LFO1);
-                            modulated[m] += ((params[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
-                        }
-                    }
-
-                    if (ParamNames[m].constrain)
-                        modulated[m] = constrain(modulated[m], 0., 1.);
-                }
-
-                for (int i = 0; i < Combines; i++)
-                {   // Combines parameters
-                    dcoffp[i].f0 = 35;
-                    dcoffp[i].type = FilterType::HighPass;
-                    dcoffp[i].Q = 1;
-                    dcoffp[i].sampleRate = samplerate;
-                    dcoffp[i].RecalculateParameters();
-
-                    auto _ft = std::floor(params[Params::FilterX + i] * 3); // Filter parameters
-                    cfilterp[i].sampleRate = samplerate;
-                    cfilterp[i].f0 = modulated[Params::FreqX + i] * modulated[Params::FreqX + i] * (22000 - 20) + 20;
-                    cfilterp[i].Q = modulated[Params::ResoX + i] * 16 + 1;
-                    cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-                    cfilterp[i].RecalculateParameters();
-                }
-
                 for (int i = 0; i < Oscillators; i++)
-                {   // Oscillator parameters
-                    osc[i].SAMPLE_RATE = samplerate;
-                    osc[i].settings.frequency = noteToFreq(frequency + _bendOffset
-                        + modulated[Params::Detune1 + i] * 4 - 2 + modulated[Params::Pitch1 + i] * 48 - 24);
-                    osc[i].settings.wtpos = modulated[Params::WTPos1 + i];
-                    osc[i].settings.sync = modulated[Params::Sync1 + i] * 7 + 1;
-                    osc[i].settings.pw = modulated[Params::PulseW1 + i];
-                    osc[i].settings.shaper = modulated[Params::Shaper1 + i];
-                    osc[i].settings.shaper2 = modulated[Params::Shaper21 + i];
-                    //osc[i].settings.oversample = 1;
-
-                    auto _ft = std::floor(params[Params::Filter1 + i] * 3); // Filter parameters
-                    filterp[i].sampleRate = samplerate;
-                    filterp[i].f0 = modulated[Params::Freq1 + i] * modulated[Params::Freq1 + i] * (22000 - 20) + 20;
-                    filterp[i].Q = modulated[Params::Reso1 + i] * 16 + 1;
-                    filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-                    filterp[i].RecalculateParameters();
-
+                {   // Oscillator generate
                     if (modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5) // Generate oscillator sound
                         osc[i].sample = osc[i].OffsetOnce(std::fmod(modulated[Params::Phase1 + i] + 5, 1.));
                 }
@@ -548,8 +428,138 @@ namespace Kaixo
 
             const size_t _index = std::floor(params[Params::Oversample] * 4);
             const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
-            
+
             const double samplerate = data.processContext->sampleRate * _osa;
+
+            // Move params to modulated so we can adjust their values
+            std::memcpy(modulated, params, Params::ModCount * sizeof(double));
+
+            for (int m = 0; m < Params::ModCount; m++)
+            {
+                for (int i = 0; i < ModAmt; i++)
+                {
+                    int index = m * ModAmt + i;
+                    int source = (modgoals[index] * (int)ModSources::Amount);
+                    if (source == 0) continue;
+                    double amount = modamount[index] * 2 - 1;
+
+                    if (source == (int)ModSources::Vel)
+                    {
+                        modulated[m] += (velocity * amount);
+                    }
+                    else if (source == (int)ModSources::Key)
+                    {
+                        modulated[m] += (key * amount);
+                    }
+                    else if (source >= (int)ModSources::Osc1)
+                    {
+                        int mindex = (source - (int)ModSources::Osc1);
+                        modulated[m] += (osc[mindex].sample * amount);
+                    }
+                    else if (source >= (int)ModSources::Mac1)
+                    {
+                        int mindex = (source - (int)ModSources::Mac1);
+                        modulated[m] += (params[Params::Macro1 + mindex] * amount);
+                    }
+                    else if (source >= (int)ModSources::Env1)
+                    {
+                        int mindex = (source - (int)ModSources::Env1);
+                        modulated[m] += (env[mindex].sample * amount);
+                    }
+                    else
+                    {
+                        int mindex = (source - (int)ModSources::LFO1);
+                        modulated[m] += ((params[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
+                    }
+                }
+
+                if (ParamNames[m].constrain)
+                    modulated[m] = constrain(modulated[m], 0., 1.);
+            }
+
+            double bpm = 128;
+            if (data.processContext->state & ProcessContext::kTempoValid)
+                bpm = data.processContext->tempo;
+
+            const double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
+            const double _timeMult = modulated[Params::Time] < 0.5 ? (modulated[Params::Time] + 0.5) : ((modulated[Params::Time] - 0.5) * 2 + 1);
+            
+            deltaf = _timeMult * std::abs((pressed - pressedOld) / (0.001 + modulated[Params::Glide] * modulated[Params::Glide] * modulated[Params::Glide] * 10 * data.processContext->sampleRate));
+            if (frequency > pressed)
+                if (frequency - deltaf < pressed) frequency = pressed;
+                else frequency -= deltaf;
+
+            if (frequency < pressed)
+                if (frequency + deltaf > pressed) frequency = pressed;
+                else frequency += deltaf;
+
+            for (int i = 0; i < Envelopes; i++)
+            {   // Adjust Envelope parameters and generate
+                env[i].SAMPLE_RATE = data.processContext->sampleRate;
+                env[i].settings.attack = modulated[Params::Env1A + i] * modulated[Params::Env1A + i] * modulated[Params::Env1A + i] * 5;
+                env[i].settings.attackCurve = modulated[Params::Env1AC + i] * 2 - 1;
+                env[i].settings.attackLevel = modulated[Params::Env1AL + i];
+                env[i].settings.decay = modulated[Params::Env1D + i] * modulated[Params::Env1D + i] * modulated[Params::Env1D + i] * 5;
+                env[i].settings.decayCurve = modulated[Params::Env1DC + i] * 2 - 1;
+                env[i].settings.decayLevel = modulated[Params::Env1DL + i];
+                env[i].settings.sustain = modulated[Params::Env1S + i];
+                env[i].settings.release = modulated[Params::Env1R + i] * modulated[Params::Env1R + i] * modulated[Params::Env1R + i] * 5;
+                env[i].settings.releaseCurve = modulated[Params::Env1RC + i] * 2 - 1;
+                env[i].settings.timeMult = _timeMult;
+                env[i].Generate(0);
+            }
+
+            for (int i = 0; i < LFOs; i++)
+            {   // Adjust lfo parameters 
+                lfo[i].SAMPLE_RATE = data.processContext->sampleRate;
+
+                if (params[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
+                {
+                    size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
+                    double _ps = (bpm / 60.) / (TimesValue[_type] * 4); // (beats per phase / bpm) / 60 = seconds per phase
+                    lfo[i].settings.frequency = _ps;
+                }
+                else
+                    lfo[i].settings.frequency = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1;
+                lfo[i].settings.wtpos = modulated[Params::LFOPos1 + i];
+                lfo[i].settings.shaper3 = modulated[Params::LFOShaper1 + i];
+                lfo[i].sample = lfo[i].OffsetOnce(modulated[Params::LFOPhase1 + i]);
+            }
+
+            for (int i = 0; i < Combines; i++)
+            {   // Combines parameters
+                dcoffp[i].f0 = 35;
+                dcoffp[i].type = FilterType::HighPass;
+                dcoffp[i].Q = 1;
+                dcoffp[i].sampleRate = samplerate;
+                dcoffp[i].RecalculateParameters();
+
+                auto _ft = std::floor(params[Params::FilterX + i] * 3); // Filter parameters
+                cfilterp[i].sampleRate = samplerate;
+                cfilterp[i].f0 = modulated[Params::FreqX + i] * modulated[Params::FreqX + i] * (22000 - 20) + 20;
+                cfilterp[i].Q = modulated[Params::ResoX + i] * 16 + 1;
+                cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
+                cfilterp[i].RecalculateParameters();
+            }
+
+            for (int i = 0; i < Oscillators; i++)
+            {
+                osc[i].SAMPLE_RATE = samplerate;
+                osc[i].settings.frequency = noteToFreq(frequency + _bendOffset
+                    + modulated[Params::Detune1 + i] * 4 - 2 + modulated[Params::Pitch1 + i] * 48 - 24);
+                osc[i].settings.wtpos = modulated[Params::WTPos1 + i];
+                osc[i].settings.sync = modulated[Params::Sync1 + i] * 7 + 1;
+                osc[i].settings.pw = modulated[Params::PulseW1 + i];
+                osc[i].settings.shaper = modulated[Params::Shaper1 + i];
+                osc[i].settings.shaper2 = modulated[Params::Shaper21 + i];
+
+                auto _ft = std::floor(params[Params::Filter1 + i] * 3); // Filter parameters
+                filterp[i].sampleRate = samplerate;
+                filterp[i].f0 = modulated[Params::Freq1 + i] * modulated[Params::Freq1 + i] * (22000 - 20) + 20;
+                filterp[i].Q = modulated[Params::Reso1 + i] * 16 + 1;
+                filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
+                filterp[i].RecalculateParameters();
+            }
 
             if (_osa == 1)
             {
