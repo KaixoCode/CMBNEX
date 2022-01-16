@@ -31,10 +31,10 @@ namespace Kaixo
             constexpr CColor brdr{ 30, 30, 30, 255 };
             constexpr CColor offt{ 128, 128, 128, 255 };
 
-            gain = new Knob{ {   5,  35,   5 +  65,  35 + 100 }, editor };
-            freq = new Knob{ {  70,  35,  70 +  65,  35 + 100 }, editor };
+            gain = new Knob{ {   5,  30,   5 +  65,  30 + 100 }, editor };
+            freq = new Knob{ {  70,  30,  70 +  65,  30 + 100 }, editor };
             dcfr = new Knob{ { 105, 140, 105 +  30, 140 +  20 }, editor };
-            mode = new Knob{ {   5, 140,   5 +  95, 140 +  20 }, editor };
+            mode = new Knob{ {   5, 135,   5 +  95, 135 +  37 }, editor };
             fltr = new Knob{ {  69, 195,  69 +  70, 195 +  20 }, editor };
             reso = new Knob{ {   5, 175,   5 +  65, 175 +  50 }, editor };
 

@@ -206,7 +206,7 @@
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "700, 330",
-							"size": "335, 210",
+							"size": "335, 190",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -233,8 +233,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 550",
-							"size": "335, 170",
+							"origin": "700, 530",
+							"size": "335, 190",
 							"transparent": "false",
 							"wants-focus": "false"
 						}

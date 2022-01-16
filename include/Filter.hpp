@@ -61,8 +61,8 @@ namespace Kaixo
                 return;
 
             Qb = Q;
-            if (f0 - f0b > 1) f0b++;
-            else if (f0 - f0b < 1) f0b--;
+            if (f0 - f0b > 5) f0b += 5;
+            else if (f0 - f0b < 5) f0b -= 5;
             else f0b = f0;
             sb = sampleRate;
             tb = type;

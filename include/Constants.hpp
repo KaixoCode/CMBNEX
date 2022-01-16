@@ -47,7 +47,7 @@ enum Params
     FreqX, FreqY, FreqZ,
     ResoX, ResoY, ResoZ,
 
-    SubOct, SubGain, SubOvertone,
+    SubGain, SubOvertone,
 
     LFORate1,   LFORate2,   LFORate3,   LFORate4,   LFORate5,
     LFOLvl1,    LFOLvl2,    LFOLvl3,    LFOLvl4,    LFOLvl5,
@@ -66,9 +66,13 @@ enum Params
     Env1RC,  Env2RC,  Env3RC,  Env4RC,  Env5RC,
 
     Transpose, Bend, Glide,
-    Panning, Time, OscVel,
+    Panning, Time,
     
     ModCount,
+
+    SubOct,
+
+    Macro1, Macro2, Macro3, Macro4, Macro5,
 
     Clipping, Oversample, Retrigger,
 
@@ -94,7 +98,9 @@ enum class ModSources
     None, 
     LFO1, LFO2, LFO3, LFO4, LFO5, 
     Env1, Env2, Env3, Env4, Env5, 
+    Mac1, Mac2, Mac3, Mac4, Mac5,
     Osc1, Osc2, Osc3, Osc4,
+    Key, Vel,
     Amount
 };
 
@@ -166,7 +172,7 @@ constexpr ParamInfo ParamNames[]
     { "X Freq", 1 }, { "Y Freq", 1 }, { "Z Freq", 1 },
     { "X Reso", 0 }, { "Y Reso", 0 }, { "Z Reso", 0 },
 
-    { "Octave", 0.5, false, true, true, 4 }, { "Sub Gain", 0 }, { "Overtone", 0 },
+    { "Sub Gain", 0 }, { "Overtone", 0 },
 
     { "LFO 1 Rate", 0, 0, 0, 1, 0 },   { "LFO 2 Rate", 0, 0, 0, 1, 0 },    { "LFO 3 Rate", 0, 0, 0, 1, 0 },   { "LFO 4 Rate", 0, 0, 0, 1, 0 },   { "LFO 5 Rate", 0, 0, 0, 1, 0 },
     { "LFO 1 Amount", 1 },  { "LFO 2 Amount", 1 },  { "LFO 3 Amount", 1 },  { "LFO 4 Amount", 1 },  { "LFO 5 Amount", 1 },
@@ -185,9 +191,13 @@ constexpr ParamInfo ParamNames[]
     { "Gain R Slope", 0 },     { "Env 1 R Slope", 0 },      { "Env 2 R Slope", 0 },      { "Env 3 R Slope", 0 },      { "Env 4 R Slope", 0 },
 
     { "Transpose", 0.5, true, false, true }, { "Bend", 0.0416666 }, { "Glide", 0, false, true, false },
-    { "Pan", 0.5 }, { "Time", 0.5 }, { "Osc<Vel", 0 },
+    { "Pan", 0.5 }, { "Time", 0.5 },
 
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
+
+    { "Octave", 0.5, false, true, true, 4 },
+
+    { "Macro 1", 0 }, { "Macro 2", 0 }, { "Macro 3", 0 }, { "Macro 4", 0 }, { "Macro 5", 0 }, 
 
     { "Clipping", 1 }, { "Oversample", 1 }, { "Retrigger", 1 },
 

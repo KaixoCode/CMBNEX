@@ -14,8 +14,6 @@ namespace Kaixo
     public:
         int index = 0;
 
-        int dragIndex = -1;
-
         WaveformView* curve;
         Knob* rate;
         Knob* amnt;
@@ -29,6 +27,44 @@ namespace Kaixo
         Label* lfo3;
         Label* lfo4;
         Label* lfo5;
+
+        DragThing* nvd1;
+        DragThing* nvd2;
+        DragThing* nvd3;
+        DragThing* nvd4;
+        DragThing* nvd5;
+
+        SwitchThing* swtc;
+
+        bool pressed = false;
+
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+        {
+            auto _r = CViewContainer::onMouseDown(where, buttons);
+            pressed = true;
+            return kMouseEventHandled;
+        }
+
+        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
+        {
+            auto _r = CViewContainer::onMouseMoved(where, buttons);
+
+            CPoint where2(where);
+            where2.offset(-getViewSize().left, -getViewSize().top);
+            getTransform().inverse().transform(where2);
+
+            if (pressed)
+            {
+                pressed = false;
+                nvd1->onMouseMoved(where2, buttons);
+                nvd2->onMouseMoved(where2, buttons);
+                nvd3->onMouseMoved(where2, buttons);
+                nvd4->onMouseMoved(where2, buttons);
+                nvd5->onMouseMoved(where2, buttons);
+            }
+
+            return kMouseEventHandled;
+        }
 
         void valueChanged(CControl* pControl)
         {
@@ -62,65 +98,54 @@ namespace Kaixo
             if (_f)
                 curve->setDirty(true);
         }
-        CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons) override
+
+        void UpdateIndex()
         {
-            auto _r = CViewContainer::onMouseUp(where, buttons);
-            dragIndex = -1;
-            return kMouseEventHandled;
-        }
+            lfo1->color = lfo2->color = lfo3->color = lfo4->color = lfo5->color = { 128, 128, 128, 255 };
+            if (index == 0) lfo1->color = { 200, 200, 200, 255 };
+            if (index == 1) lfo2->color = { 200, 200, 200, 255 };
+            if (index == 2) lfo3->color = { 200, 200, 200, 255 };
+            if (index == 3) lfo4->color = { 200, 200, 200, 255 };
+            if (index == 4) lfo5->color = { 200, 200, 200, 255 };
 
-        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
-        {
-            auto _r = CViewContainer::onMouseDown(where, buttons);
-            if (where.y - getViewSize().top > 0 && where.y - getViewSize().top < 30 && where.x - getViewSize().left < 335 && where.x - getViewSize().left > 0)
-            {
-                index = std::floor((where.x - getViewSize().left) / 65);
-                dragIndex = index;
-                lfo1->color = lfo2->color = lfo3->color = lfo4->color = lfo5->color = { 128, 128, 128, 255 };
-                if (index == 0) lfo1->color = { 200, 200, 200, 255 };
-                if (index == 1) lfo2->color = { 200, 200, 200, 255 };
-                if (index == 2) lfo3->color = { 200, 200, 200, 255 };
-                if (index == 3) lfo4->color = { 200, 200, 200, 255 };
-                if (index == 4) lfo5->color = { 200, 200, 200, 255 };
+            rate->setTag(Params::LFORate1 + index);
+            amnt->setTag(Params::LFOLvl1 + index);
+            posi->setTag(Params::LFOPos1 + index);
+            offs->setTag(Params::LFOPhase1 + index);
+            shpr->setTag(Params::LFOShaper1 + index);
+            sync->setTag(Params::LFOSync1 + index);
 
-                rate->setTag(Params::LFORate1 + index);
-                amnt->setTag(Params::LFOLvl1 + index);
-                posi->setTag(Params::LFOPos1 + index);
-                offs->setTag(Params::LFOPhase1 + index);
-                sync->setTag(Params::LFOSync1 + index);
-
-                setDirty(true);
-
-                return kMouseEventHandled;
-            }
-
-            return _r;
-        }
-
-        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
-        {
-            auto _r = CViewContainer::onMouseMoved(where, buttons);
-            if (dragIndex != -1)
-            { 
-                int* _data = new int[1];
-                _data[0] = (int)ModSources::LFO1 + dragIndex;
-                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
-                dragIndex = -1;
-                return kMouseEventHandled;
-            }
-
-            return _r;
+            setDirty(true);
         }
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
-            rate = new Knob{ {   5, 150,   5 + 65, 150 + 55 }, editor };
-            amnt = new Knob{ {  70, 150,  70 + 65, 150 + 55 }, editor };
-            posi = new Knob{ { 135, 150, 135 + 65, 150 + 55 }, editor };
-            offs = new Knob{ { 200, 150, 200 + 65, 150 + 55 }, editor };
-            shpr = new Knob{ { 265, 150, 265 + 65, 150 + 55 }, editor };
-            sync = new Knob{ { 285, 128, 285 + 45, 128 + 20 }, editor };
+            swtc = new SwitchThing{ { 0, 0, 335, 30 } };
+            swtc->setIndex = [&](int i) {
+                if (i < 0 || i > 4) return;
+                index = i;
+                UpdateIndex();
+            };
+
+            rate = new Knob{ {   5, 130,   5 + 65, 130 + 55 }, editor };
+            amnt = new Knob{ {  70, 130,  70 + 65, 130 + 55 }, editor };
+            posi = new Knob{ { 135, 130, 135 + 65, 130 + 55 }, editor };
+            offs = new Knob{ { 200, 130, 200 + 65, 130 + 55 }, editor };
+            shpr = new Knob{ { 265, 130, 265 + 65, 130 + 55 }, editor };
+            sync = new Knob{ { 282,  32, 282 + 45,  32 + 20 }, editor };
             curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
+
+            nvd1 = new DragThing{ {   5,   5,   5 + 60,   5 + 18 } };
+            nvd2 = new DragThing{ {  71,   5,  71 + 60,   5 + 18 } };
+            nvd3 = new DragThing{ { 137,   5, 137 + 60,   5 + 18 } };
+            nvd4 = new DragThing{ { 203,   5, 203 + 60,   5 + 18 } };
+            nvd5 = new DragThing{ { 269,   5, 269 + 60,   5 + 18 } };
+
+            nvd1->source = ModSources::LFO1;
+            nvd2->source = ModSources::LFO2;
+            nvd3->source = ModSources::LFO3;
+            nvd4->source = ModSources::LFO4;
+            nvd5->source = ModSources::LFO5;
 
             rate->color = MainLFO;
             amnt->color = MainLFO;
@@ -135,22 +160,22 @@ namespace Kaixo
             lfo1->center = true;
             lfo1->color = { 200, 200, 200, 255 };
             lfo1->value = "LFO 1";
-            lfo2 = new Label{ {  70,   5,  70 + 65,   5 + 20 } };
+            lfo2 = new Label{ {  71,   5,  71 + 65,   5 + 20 } };
             lfo2->fontsize = 14;
             lfo2->center = true;
             lfo2->color = { 128, 128, 128, 255 };
             lfo2->value = "LFO 2";
-            lfo3 = new Label{ { 135,   5, 135 + 65,   5 + 20 } };
+            lfo3 = new Label{ { 137,   5, 137 + 65,   5 + 20 } };
             lfo3->fontsize = 14;
             lfo3->center = true;
             lfo3->color = { 128, 128, 128, 255 };
             lfo3->value = "LFO 3";
-            lfo4 = new Label{ { 200,   5, 200 + 65,   5 + 20 } };
+            lfo4 = new Label{ { 203,   5, 203 + 65,   5 + 20 } };
             lfo4->fontsize = 14;
             lfo4->center = true;
             lfo4->color = { 128, 128, 128, 255 };
             lfo4->value = "LFO 4";
-            lfo5 = new Label{ { 265,   5, 265 + 65,   5 + 20 } };
+            lfo5 = new Label{ { 269,   5, 269 + 65,   5 + 20 } };
             lfo5->fontsize = 14;
             lfo5->center = true;
             lfo5->color = { 128, 128, 128, 255 };
@@ -193,6 +218,8 @@ namespace Kaixo
             offs->unit = " %";     shpr->unit = " %";     sync->unit = "";
             offs->type = 2;        shpr->type = 2;        sync->type = 3;
 
+            addView(curve);
+
             addView(rate);
             addView(amnt);
             addView(posi);
@@ -200,13 +227,19 @@ namespace Kaixo
             addView(shpr);
             addView(sync);
 
-            addView(curve);
-
             addView(lfo1);
             addView(lfo2);
             addView(lfo3);
             addView(lfo4);
             addView(lfo5);
+
+            addView(nvd1);
+            addView(nvd2);
+            addView(nvd3);
+            addView(nvd4);
+            addView(nvd5);
+
+            addView(swtc);
         }
 
         LFOView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)

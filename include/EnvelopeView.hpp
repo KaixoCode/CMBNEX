@@ -332,8 +332,6 @@ namespace Kaixo
     public:
         int index = 0;
 
-        int dragIndex;
-
         EnvelopeCurve* curve;
         Knob* attk;
         Knob* atkc;
@@ -345,6 +343,12 @@ namespace Kaixo
         Knob* rels;
         Knob* rlsc;
 
+        DragThing* nvd1;
+        DragThing* nvd2;
+        DragThing* nvd3;
+        DragThing* nvd4;
+        DragThing* nvd5;
+
         Label* time;
         Label* slpe;
         Label* vlue;
@@ -354,6 +358,8 @@ namespace Kaixo
         Label* env3;
         Label* env4;
         Label* env5;
+
+        SwitchThing* swtc;
 
         void valueChanged(CControl* pControl)
         {
@@ -371,18 +377,25 @@ namespace Kaixo
             if (_f)
                 curve->setDirty(true);
         }
+        
+        bool pressed = false;
 
         CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
         {
             auto _r = CViewContainer::onMouseMoved(where, buttons);
 
-            if (dragIndex != -1)
+            CPoint where2(where);
+            where2.offset(-getViewSize().left, -getViewSize().top);
+            getTransform().inverse().transform(where2);
+
+            if (pressed)
             {
-                int* _data = new int[1];
-                _data[0] = (int)ModSources::Env1 + dragIndex;
-                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
-                dragIndex = -1;
-                return kMouseEventHandled;
+                pressed = false;
+                nvd1->onMouseMoved(where2, buttons);
+                nvd2->onMouseMoved(where2, buttons);
+                nvd3->onMouseMoved(where2, buttons);
+                nvd4->onMouseMoved(where2, buttons);
+                nvd5->onMouseMoved(where2, buttons);
             }
 
             if (curve->pressed)
@@ -430,40 +443,36 @@ namespace Kaixo
                 curve->setDirty(true);
             }
 
-            return _r;
+            return kMouseEventHandled;
+        }
+
+        void UpdateIndex()
+        {
+            env1->color = env2->color = env3->color = env4->color = env5->color = { 128, 128, 128, 255 };
+            if (index == 0) env1->color = { 200, 200, 200, 255 };
+            if (index == 1) env2->color = { 200, 200, 200, 255 };
+            if (index == 2) env3->color = { 200, 200, 200, 255 };
+            if (index == 3) env4->color = { 200, 200, 200, 255 };
+            if (index == 4) env5->color = { 200, 200, 200, 255 };
+
+            attk->setTag(Params::Env1A + index);
+            atkc->setTag(Params::Env1AC + index);
+            attl->setTag(Params::Env1AL + index);
+            decy->setTag(Params::Env1D + index);
+            dcyc->setTag(Params::Env1DC + index);
+            decl->setTag(Params::Env1DL + index);
+            sust->setTag(Params::Env1S + index);
+            rels->setTag(Params::Env1R + index);
+            rlsc->setTag(Params::Env1RC + index);
+
+            setDirty(true);
         }
 
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
         {
             auto _r = CViewContainer::onMouseDown(where, buttons);
-            if (where.y - getViewSize().top > 0 && where.y - getViewSize().top < 30 && where.x - getViewSize().left < 335 && where.x - getViewSize().left > 0)
-            {
-                index = std::floor((where.x - getViewSize().left) / 65);
-                dragIndex = index;
-                env1->color = env2->color = env3->color = env4->color = env5->color = { 128, 128, 128, 255 };
-                if (index == 0) env1->color = { 200, 200, 200, 255 };
-                if (index == 1) env2->color = { 200, 200, 200, 255 };
-                if (index == 2) env3->color = { 200, 200, 200, 255 };
-                if (index == 3) env4->color = { 200, 200, 200, 255 };
-                if (index == 4) env5->color = { 200, 200, 200, 255 };
 
-                attk->setTag(Params::Env1A + index);
-                atkc->setTag(Params::Env1AC + index);
-                attl->setTag(Params::Env1AL + index);
-                decy->setTag(Params::Env1D + index);
-                dcyc->setTag(Params::Env1DC + index);
-                decl->setTag(Params::Env1DL + index);
-                sust->setTag(Params::Env1S + index);
-                rels->setTag(Params::Env1R + index);
-                rlsc->setTag(Params::Env1RC + index);
-                
-                //for (int i = 0; i < 5; i++)
-                //    mod[i]->setTag(Params::Env1M1 + index + (i * 10)), moda[i]->setTag(Params::Env1M1A + index + (i * 10));
-                
-                setDirty(true);
-
-                return kMouseEventHandled;
-            }
+            pressed = true;
 
             if (where.y - getViewSize().top > 125 && where.y - getViewSize().top < 150)
             {
@@ -529,11 +538,18 @@ namespace Kaixo
                 
                 return kMouseEventHandled;
             }
-            return _r;
+            return kMouseEventHandled;
         }
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
+            swtc = new SwitchThing{ { 0, 0, 335, 30 } };
+            swtc->setIndex = [&](int i) {
+                if (i < 0 || i > 4) return;
+                index = i;
+                UpdateIndex();
+            };
+
             attk = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
             atkc = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
             attl = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
@@ -544,6 +560,18 @@ namespace Kaixo
             rels = new Knob{ { 200, 150, 200 + 65, 155 + 50 }, editor };
             rlsc = new Knob{ { 200, 150, 200 + 65, 155 + 50 }, editor };
             curve = new EnvelopeCurve{ {  5,  30, 5 + 325, 30 + 95 } };
+
+            nvd1 = new DragThing{ {   5,   5,   5 + 60,   5 + 18 } };
+            nvd2 = new DragThing{ {  71,   5,  71 + 60,   5 + 18 } };
+            nvd3 = new DragThing{ { 137,   5, 137 + 60,   5 + 18 } };
+            nvd4 = new DragThing{ { 203,   5, 203 + 60,   5 + 18 } };
+            nvd5 = new DragThing{ { 269,   5, 269 + 60,   5 + 18 } };
+
+            nvd1->source = ModSources::Env1;
+            nvd2->source = ModSources::Env2;
+            nvd3->source = ModSources::Env3;
+            nvd4->source = ModSources::Env4;
+            nvd5->source = ModSources::Env5;
 
             attk->color =  MainEnv;
             atkc->color =  MainEnv;
@@ -577,22 +605,22 @@ namespace Kaixo
             env1->center = true;
             env1->color = { 200, 200, 200, 255 };
             env1->value = "Gain";
-            env2 = new Label{ {  70,   5,  70 + 65,   5 + 20 } };
+            env2 = new Label{ {  71,   5,  71 + 65,   5 + 20 } };
             env2->fontsize = 14;
             env2->center = true;
             env2->color = { 128, 128, 128, 255 };
             env2->value = "Env 2";
-            env3 = new Label{ { 135,   5, 135 + 65,   5 + 20 } };
+            env3 = new Label{ { 137,   5, 137 + 65,   5 + 20 } };
             env3->fontsize = 14;
             env3->center = true;
             env3->color = { 128, 128, 128, 255 };
             env3->value = "Env 3";
-            env4 = new Label{ { 200,   5, 200 + 65,   5 + 20 } };
+            env4 = new Label{ { 203,   5, 203 + 65,   5 + 20 } };
             env4->fontsize = 14;
             env4->center = true;
             env4->color = { 128, 128, 128, 255 };
             env4->value = "Env 4";
-            env5 = new Label{ { 265,   5, 265 + 65,   5 + 20 } };
+            env5 = new Label{ { 269,   5, 269 + 65,   5 + 20 } };
             env5->fontsize = 14;
             env5->center = true;
             env5->color = { 128, 128, 128, 255 };
@@ -686,7 +714,15 @@ namespace Kaixo
             addView(env2);
             addView(env3);
             addView(env4);
-            addView(env5);
+            addView(env5);    
+
+            addView(nvd1);
+            addView(nvd2);
+            addView(nvd3);
+            addView(nvd4);
+            addView(nvd5);
+
+            addView(swtc);
         }
 
         EnvelopeView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)

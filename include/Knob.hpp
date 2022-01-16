@@ -7,6 +7,104 @@
 
 namespace Kaixo
 {
+    class SwitchThing : public CView, public IDropTarget
+    {
+    public:
+        SwitchThing(const CRect& r)
+            : CView(r)
+        {
+            setDropTarget(this);
+        }
+
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+        {
+            if (where.y - getViewSize().top > 0 && where.y - getViewSize().top < 30 && where.x - getViewSize().left < 335 && where.x - getViewSize().left > 0)
+            {
+                setIndex(std::floor((where.x - getViewSize().left) / 65));
+            }
+
+            return kMouseEventNotHandled;
+        }
+
+        std::function<void(int)> setIndex;
+
+        DragOperation onDragEnter(DragEventData data)
+        {
+            if (data.pos.y - getViewSize().top > 0 && data.pos.y - getViewSize().top < 30
+                && data.pos.x - getViewSize().left < 335 && data.pos.x - getViewSize().left > 0)
+            {
+                setIndex(std::floor((data.pos.x - getViewSize().left) / 65));
+            }
+            return DragOperation::None;
+        };
+
+        DragOperation onDragMove(DragEventData data)
+        {
+            if (data.pos.y - getViewSize().top > 0 && data.pos.y - getViewSize().top < 30
+                && data.pos.x - getViewSize().left < 335 && data.pos.x - getViewSize().left > 0)
+            {
+                setIndex(std::floor((data.pos.x - getViewSize().left) / 65));
+            }
+            return DragOperation::None;
+        };
+
+        void onDragLeave(DragEventData data) {};
+
+        bool onDrop(DragEventData data)
+        {
+            return false;
+        };
+    };
+
+    class DragThing : public CView, public IDragCallback
+    {
+    public:
+        using CView::CView;
+
+        ModSources source;
+
+        bool dragging = false;
+        void dragWillBegin(IDraggingSession* session, CPoint pos) {};
+        void dragMoved(IDraggingSession* session, CPoint pos) {};
+        void dragEnded(IDraggingSession* session, CPoint pos, DragOperation result) { dragging = false; };
+
+
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+        {
+            return kMouseEventHandled;
+        }
+
+        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
+        {
+            if (!dragging && getViewSize().pointInside(where))
+            {
+                dragging = true;
+                int* _data = new int[1];
+                _data[0] = (int)source;
+                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) }, this);
+                return kMouseEventHandled;
+            }
+
+            return kMouseEventNotHandled;
+        }
+
+        void draw(CDrawContext* pContext) override
+        {
+            constexpr CColor back{ 40, 40, 40, 255 };
+            constexpr CColor brdr{ 30, 30, 30, 255 };
+            auto a = getViewSize();
+            pContext->setLineWidth(1);
+            a.top += 1;
+            a.left += 1;
+            pContext->setFillColor({ 255, 255, 255, 16 });
+            pContext->drawRect(a, kDrawFilled);
+            a.right = a.left + 3;
+            pContext->setFillColor(MainOsc);
+            pContext->drawRect(a, kDrawFilled);
+        }
+    };
+
+
     class Knob : public CControl, public IDropTarget
     {
     public:
@@ -34,7 +132,7 @@ namespace Kaixo
                 }
                 return -1;
             }
-            else if (type == NUMBER)
+            else if (type == NUMBER || type == INTERPOLATE)
             {
                 if (pos.y > a.bottom - 16 && pos.y < a.bottom)
                 {
@@ -232,8 +330,8 @@ namespace Kaixo
                 {
                     double mult = buttons.isShiftSet() ? 0.25 : 1;
                     double diff = 0;
-                    if (type == SLIDER) diff = (where.x - pwhere.x) / getViewSize().getWidth();
-                    if (type == INTERPOLATE) diff = (where.x - pwhere.x) / (parts.size() * getViewSize().getWidth());
+                    if (type == SLIDER && editIndex == -1) diff = (where.x - pwhere.x) / getViewSize().getWidth();
+                    else if (type == INTERPOLATE && editIndex == -1) diff = (where.x - pwhere.x) / (parts.size() * getViewSize().getWidth());
                     else diff = (pwhere.y - where.y) * 0.005;
                     pwhere = where;
 
@@ -348,7 +446,8 @@ namespace Kaixo
             case KNOB:
             {
                 auto v = getValueNormalized() * 270;
-                a.bottom -= 10;
+                if (modable)
+                    a.bottom -= 10;
 
                 auto start = 135;
                 auto end = 135 + v;
@@ -649,23 +748,64 @@ namespace Kaixo
                 double d = (getValue() * (parts.size() - 1) + 0.5) - v;
                 String _n = parts[v].c_str();
                 a = getViewSize();
-                a.top += 20;
-                a.inset({ 2, 2 });
+                a.left += 1;
+
+                if (modable)
+                {
+                    auto _w = a.getHeight();
+                    auto v = getValueNormalized() * _w;
+                    for (int i = 0; i < ModAmt; i++)
+                    {
+                        auto source = editor->modSource(getTag(), i);
+                        if (source == ModSources::None)
+                            continue;
+                        modded++;
+                        pContext->setLineWidth(2);
+                        pContext->setFrameColor(brdr);
+                        pContext->drawLine({ a.left, a.bottom }, { a.left, a.top });
+
+                        bool two = false;
+                        if (source >= ModSources::Env1)
+                            pContext->setFrameColor(main);
+                        else if (source >= ModSources::LFO1)
+                            pContext->setFrameColor(main), two = true;
+
+                        double amount = editor->modAmount(getTag(), i) * 2 - 1;
+                        double start = std::max(v + ((amount < 0) ? amount * _w : 0), 0.);
+                        double end = std::min(v + ((amount > 0) ? amount * _w : 0), _w);
+
+                        pContext->setLineWidth(2);
+                        pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
+
+                        if (two)
+                        {
+                            double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
+                            double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
+                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
+                        }
+
+                        a.left += 3;
+                    }
+                }
+
+                a.bottom -= 10;
+                a.inset({ 0, 2 });
                 auto w2 = pContext->getStringWidth(_n);
                 pContext->setFontColor(text);
-                pContext->drawString(_n, { a.getCenter().x - w2 / 2, a.getCenter().y - 6 }, true);
+                pContext->drawString(_n, { a.getCenter().x - w2 / 2, a.top + 10 }, true);
                 pContext->setFillColor(back);
-                pContext->drawRect(a, kDrawFilled);
+                pContext->drawRect({ a.left, a.top + 13, a.right, a.top + 15 }, kDrawFilled);
                 pContext->setFillColor(main);
                 if (d < 0.5)
-                    pContext->drawRect({ a.getCenter().x - (0.5 - d) * a.getWidth(), a.top, a.getCenter().x, a.bottom }, kDrawFilled);
+                    pContext->drawRect({ a.getCenter().x - (0.5 - d) * a.getWidth(), a.top + 13, a.getCenter().x, a.top + 15 }, kDrawFilled);
                 else
-                    pContext->drawRect({ a.getCenter().x, a.top, a.getCenter().x + (d - 0.5) * a.getWidth(), a.bottom }, kDrawFilled);
+                    pContext->drawRect({ a.getCenter().x, a.top + 13, a.getCenter().x + (d - 0.5) * a.getWidth(), a.top + 15 }, kDrawFilled);
                 break;
             }
             }
 
-            if (type == NUMBER || type == KNOB)
+            if (modable && (type == NUMBER || type == KNOB || type == INTERPOLATE))
             {
                 pContext->setLineWidth(1);
                 a = getViewSize();
@@ -691,11 +831,27 @@ namespace Kaixo
                     }
 
                     std::string _v = std::to_string((int)editor->modSource(getTag(), i));
-                    if (editor->modSource(getTag(), i) >= ModSources::Osc1)
+                    if (editor->modSource(getTag(), i) == ModSources::Vel)
+                    {
+                        pContext->setFontColor(main);
+                        _v = (char)('V');
+                    }
+                    else if (editor->modSource(getTag(), i) == ModSources::Key)
+                    {
+                        pContext->setFontColor(main);
+                        _v = (char)('K');
+                    }
+                    else if (editor->modSource(getTag(), i) >= ModSources::Osc1)
                     {
                         pContext->setFontColor(main);
                         _v = (char)('A' + (int)editor->modSource(getTag(), i) - (int)ModSources::Osc1);
-                    } else if (editor->modSource(getTag(), i) >= ModSources::Env1)
+                    } 
+                    else if (editor->modSource(getTag(), i) >= ModSources::Mac1)
+                    {
+                        pContext->setFontColor(main);
+                        _v = (char)('P' + (int)editor->modSource(getTag(), i) - (int)ModSources::Mac1);
+                    } 
+                    else if (editor->modSource(getTag(), i) >= ModSources::Env1)
                     {
                         pContext->setFontColor(main);
                         _v = std::to_string((int)editor->modSource(getTag(), i) - (int)ModSources::Env1 + 1);

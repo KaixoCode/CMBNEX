@@ -19,10 +19,12 @@ namespace Kaixo
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
-            gain = new Knob{ {  10,  35,  10 + 50,  30 + 90 }, editor };
-            octv = new Knob{ {   5, 122,   6 + 60, 122 + 50 }, editor };
+            gain = new Knob{ {   5,  30,   5 + 60,  30 + 95 }, editor };
+            octv = new Knob{ {   5, 133,   6 + 60, 133 + 50 }, editor };
             ovrt = new Knob{ {   5, 175,   5 + 60, 175 + 50 }, editor };
             
+            octv->modable = false;
+
             titl = new Label{ { 0,   3, 0 + 70,   3 + 30 } };
             titl->fontsize = 24;
             titl->center = true;

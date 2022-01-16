@@ -287,6 +287,7 @@ namespace Kaixo
                 velocity = event.noteOn.velocity;
                 pressedOld = frequency;
                 pressed = event.noteOn.pitch + event.noteOn.tuning * 0.01;
+                key = event.noteOn.pitch / 127.;
                 notesPressed[event.noteOn.pitch] = true;
                 if (params[Params::Retrigger] > 0.5 || !env[0].Gate())
                 { 
@@ -317,6 +318,7 @@ namespace Kaixo
                         _p = true;
                         pressedOld = frequency;
                         pressed = i;
+                        key = i / 127.;
 
                         if (params[Params::Retrigger] > 0.5)
                         {
@@ -410,10 +412,23 @@ namespace Kaixo
                         if (source == 0) continue;
                         double amount = modamount[index] * 2 - 1;
 
-                        if (source >= (int)ModSources::Osc1)
+                        if (source == (int)ModSources::Vel)
+                        {
+                            modulated[m] += (velocity * amount);
+                        }
+                        else if (source == (int)ModSources::Key)
+                        {
+                            modulated[m] += (key * amount);
+                        }
+                        else if (source >= (int)ModSources::Osc1)
                         {
                             int mindex = (source - (int)ModSources::Osc1);
                             modulated[m] += (osc[mindex].sample * amount);
+                        }
+                        else if (source >= (int)ModSources::Mac1)
+                        {
+                            int mindex = (source - (int)ModSources::Mac1);
+                            modulated[m] += (params[Params::Macro1 + mindex] * amount);
                         }
                         else if (source >= (int)ModSources::Env1)
                         {
@@ -467,11 +482,11 @@ namespace Kaixo
                     filterp[i].RecalculateParameters();
 
                     if (modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                        osc[i].sample = osc[i].OffsetOnce(modulated[Params::Phase1 + i]) * (1 - (1 - velocity) * modulated[Params::OscVel]);
+                        osc[i].sample = osc[i].OffsetOnce(std::fmod(modulated[Params::Phase1 + i] + 5, 1.));
                 }
 
                 { // Sub oscillator
-                    int _octave = std::round(modulated[Params::SubOct] * 4 - 2);
+                    int _octave = std::round(params[Params::SubOct] * 4 - 2);
                     sub.SAMPLE_RATE = samplerate;
                     sub.settings.frequency = noteToFreq(frequency + _octave * 12 + +_bendOffset);
                     //sub.settings.oversample = 1;
@@ -612,6 +627,7 @@ namespace Kaixo
         
         double envelope = 0;
         double frequency = 40;
+        double key = 0;
         double pressed = 0;
         double pressedOld = 0;
         double deltaf = 0;
