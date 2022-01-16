@@ -88,6 +88,7 @@
  * 
  * 
  */
+
 namespace Kaixo
 {
     class Instrument : public AudioEffect
@@ -369,7 +370,6 @@ namespace Kaixo
                     int _octave = std::round(params[Params::SubOct] * 4 - 2);
                     sub.SAMPLE_RATE = samplerate;
                     sub.settings.frequency = noteToFreq(frequency + _octave * 12 + +_bendOffset);
-                    //sub.settings.oversample = 1;
                     sub.settings.wtpos = modulated[Params::SubOvertone];
                     sub.sample = sub.OffsetOnce(0);
                 }
