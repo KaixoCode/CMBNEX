@@ -209,7 +209,7 @@ namespace Kaixo
 
         if (m_Phase > settings.attack + settings.decay + settings.release) m_Phase = -1;
 
-        sample = Offset(m_Phase);
+        sample = sample * 0.99 + 0.01 * Offset(m_Phase);
     }
 
     inline double fastPow(double a, double b) {
