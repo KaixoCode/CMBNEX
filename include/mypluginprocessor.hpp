@@ -544,7 +544,7 @@ namespace Kaixo
 
             for (int i = 0; i < Oscillators; i++)
             {
-                osc[i].SAMPLE_RATE = samplerate;
+                osc[i].SAMPLE_RATE = samplerate; 
                 osc[i].settings.frequency = noteToFreq(frequency + _bendOffset
                     + modulated[Params::Detune1 + i] * 4 - 2 + modulated[Params::Pitch1 + i] * 48 - 24);
                 osc[i].settings.wtpos = modulated[Params::WTPos1 + i];
