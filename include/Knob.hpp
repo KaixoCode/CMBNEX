@@ -4,107 +4,11 @@
 #include "Modules.hpp"
 #include "ViewFactoryBase.hpp"
 #include "myplugincontroller.hpp"
+#include "DragThing.hpp"
+#include "SwitchThing.hpp"
 
 namespace Kaixo
 {
-    class SwitchThing : public CView, public IDropTarget
-    {
-    public:
-        SwitchThing(const CRect& r)
-            : CView(r)
-        {
-            setDropTarget(this);
-        }
-
-        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
-        {
-            if (where.y - getViewSize().top > 0 && where.y - getViewSize().top < 30 && where.x - getViewSize().left < 335 && where.x - getViewSize().left > 0)
-            {
-                setIndex(std::floor((where.x - getViewSize().left) / 65));
-            }
-
-            return kMouseEventNotHandled;
-        }
-
-        std::function<void(int)> setIndex;
-
-        DragOperation onDragEnter(DragEventData data)
-        {
-            if (data.pos.y - getViewSize().top > 0 && data.pos.y - getViewSize().top < 30
-                && data.pos.x - getViewSize().left < 335 && data.pos.x - getViewSize().left > 0)
-            {
-                setIndex(std::floor((data.pos.x - getViewSize().left) / 65));
-            }
-            return DragOperation::None;
-        };
-
-        DragOperation onDragMove(DragEventData data)
-        {
-            if (data.pos.y - getViewSize().top > 0 && data.pos.y - getViewSize().top < 30
-                && data.pos.x - getViewSize().left < 335 && data.pos.x - getViewSize().left > 0)
-            {
-                setIndex(std::floor((data.pos.x - getViewSize().left) / 65));
-            }
-            return DragOperation::None;
-        };
-
-        void onDragLeave(DragEventData data) {};
-
-        bool onDrop(DragEventData data)
-        {
-            return false;
-        };
-    };
-
-    class DragThing : public CView, public IDragCallback
-    {
-    public:
-        using CView::CView;
-
-        ModSources source;
-
-        bool dragging = false;
-        void dragWillBegin(IDraggingSession* session, CPoint pos) {};
-        void dragMoved(IDraggingSession* session, CPoint pos) {};
-        void dragEnded(IDraggingSession* session, CPoint pos, DragOperation result) { dragging = false; };
-
-
-        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
-        {
-            return kMouseEventHandled;
-        }
-
-        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
-        {
-            if (!dragging && getViewSize().pointInside(where))
-            {
-                dragging = true;
-                int* _data = new int[1];
-                _data[0] = (int)source;
-                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) }, this);
-                return kMouseEventHandled;
-            }
-
-            return kMouseEventNotHandled;
-        }
-
-        void draw(CDrawContext* pContext) override
-        {
-            constexpr CColor back{ 40, 40, 40, 255 };
-            constexpr CColor brdr{ 30, 30, 30, 255 };
-            auto a = getViewSize();
-            pContext->setLineWidth(1);
-            a.top += 1;
-            a.left += 1;
-            pContext->setFillColor({ 255, 255, 255, 16 });
-            pContext->drawRect(a, kDrawFilled);
-            a.right = a.left + 3;
-            pContext->setFillColor(MainOsc);
-            pContext->drawRect(a, kDrawFilled);
-        }
-    };
-
-
     class Knob : public CControl, public IDropTarget
     {
     public:
@@ -116,6 +20,10 @@ namespace Kaixo
         static inline Knob* selected = nullptr;
 
         int dragIndex = -1;
+
+        double modulation = 0;
+
+        double getModValue() { return modulation; }
 
         int ModIndexPos(CPoint pos) 
         {

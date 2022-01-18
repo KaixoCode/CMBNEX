@@ -9,6 +9,7 @@ namespace Kaixo
     public:
 
         MyEditor(TestController* controller);
+        ~MyEditor();
 
         TestController* controller;
 
@@ -24,6 +25,17 @@ namespace Kaixo
         TestController() = default;
 
         ~TestController () override = default;
+
+        std::vector<std::tuple<int, std::reference_wrapper<double>, std::reference_wrapper<bool>>> wakeupCalls;
+        void updateModulation(Params param, double val)
+        {
+            for (auto& i : wakeupCalls)
+                if (param == std::get<0>(i) && std::get<1>(i) != val)
+                {
+                    std::get<1>(i).get() = val;
+                    std::get<2>(i).get() = true;
+                }
+        }
 
         IPlugView* PLUGIN_API createView(FIDString name) override
         {

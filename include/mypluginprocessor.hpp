@@ -10,6 +10,8 @@
 #include "LFOView.hpp"
 #include "SubOscView.hpp"
 #include "MidiView.hpp"
+#include "TopBarView.hpp"
+#include "myplugincontroller.hpp"
 
 /**
  * 
@@ -97,9 +99,12 @@ namespace Kaixo
         Instrument() { setControllerClass(kCMBNEXControllerUID); }
         ~Instrument() override {};
 
+        TestController* controller;
+
         tresult PLUGIN_API initialize(FUnknown* context) override
         {
             tresult result = AudioEffect::initialize(context);
+
             if (result != kResultOk) return result;
             for (int i = 0; i < Params::Size; i++)
                 params[i] = paramgoals[i] = ParamNames[i].reset;
@@ -117,7 +122,8 @@ namespace Kaixo
         tresult PLUGIN_API terminate() override { return AudioEffect::terminate(); }
         tresult PLUGIN_API setActive(TBool state) override { return AudioEffect::setActive(state); }
         tresult PLUGIN_API setupProcessing(ProcessSetup& newSetup) override 
-        { 
+        {
+            controller = dynamic_cast<TestController*>(getPeer());
             return AudioEffect::setupProcessing(newSetup); 
         }
     
@@ -378,6 +384,8 @@ namespace Kaixo
             double _cs[Combines * 2 + 1]{ 0, 0, 0, 0, 0, 0, 0 };
             for (int i = 0; i < Oscillators; i++)
             {
+                if (!(modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5)) continue;
+                 
                 double _vs = osc[i].sample;
                 if (modulated[Params::Noise1 + i])
                     _vs += modulated[Params::Noise1 + i] * random(); // Add noise
@@ -421,10 +429,9 @@ namespace Kaixo
             return env[0].Apply(_res, channel); // Envelope 0 is gain
         }
 
+        int count = 0;
         std::pair<Sample64, Sample64> Generate(ProcessData& data) override
-        {   
-            // If envelope is done, no sound so return 0
-            if (env[0].Done()) return { 0, 0 };
+        {               
 
             const size_t _index = std::floor(params[Params::Oversample] * 4);
             const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
@@ -433,14 +440,16 @@ namespace Kaixo
 
             // Move params to modulated so we can adjust their values
             std::memcpy(modulated, params, Params::ModCount * sizeof(double));
-
+            bool _editNow = count >= data.processContext->sampleRate / 240;
             for (int m = 0; m < Params::ModCount; m++)
             {
+                bool edited = false;
                 for (int i = 0; i < ModAmt; i++)
                 {
                     int index = m * ModAmt + i;
                     int source = (modgoals[index] * (int)ModSources::Amount);
                     if (source == 0) continue;
+                    edited = true;
                     double amount = modamount[index] * 2 - 1;
 
                     if (source == (int)ModSources::Vel)
@@ -473,9 +482,18 @@ namespace Kaixo
                     }
                 }
 
-                if (ParamNames[m].constrain)
+                if (edited && ParamNames[m].constrain)
                     modulated[m] = constrain(modulated[m], 0., 1.);
+
+                if (_editNow && controller) {
+                    count = 0;
+                    controller->updateModulation((Params)m, modulated[m]);
+                }
             }
+            count++;
+
+            // If envelope is done, no sound so return 0
+            if (env[0].Done()) return { 0, 0 };
 
             double bpm = 128;
             if (data.processContext->state & ProcessContext::kTempoValid)

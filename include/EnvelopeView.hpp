@@ -663,7 +663,7 @@ namespace Kaixo
             rlsc->setVisible(false);
 
             attk->name = "Attack";   atkc->name = "Attack";   attl->name = "Attack";
-            attk->min = 1;           atkc->min = -100;        attl->min = 0;
+            attk->min = 0;           atkc->min = -100;        attl->min = 0;
             attk->max = 5000;        atkc->max = 100;         attl->max = 1;
             attk->reset = 1;         atkc->reset = 0;         attl->reset = 0;
             attk->decimals = 1;      atkc->decimals = 1;      attl->decimals = 1;

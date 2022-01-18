@@ -31,18 +31,18 @@
 				"EditViewScale": "1",
 				"EditorSize": "0, 0, 1850, 896",
 				"EncodeBitmaps": "true",
-				"SplitViewSize_0_0": "0.8758620689655172153464945949963293969631",
-				"SplitViewSize_0_1": "0.1011494252873563204353501987498020753264",
+				"SplitViewSize_0_0": "0.9597701149425287292515918124991003423929",
+				"SplitViewSize_0_1": "0.01724137931034482734693469296871626283973",
 				"SplitViewSize_1_0": "0.4873563218390804530066873212490463629365",
 				"SplitViewSize_1_1": "0.5103448275862069172248425275029148906469",
 				"SplitViewSize_2_0": "0.809729729729729674758686996938195079565",
 				"SplitViewSize_2_1": "0.1875675675675675668774289306384162046015",
-				"TabSwitchValue": "4",
+				"TabSwitchValue": "0",
 				"Version": "1"
 			},
 			"UIAttributesController": {},
 			"UIViewCreatorDataSource": {
-				"SelectedRow": "38"
+				"SelectedRow": "36"
 			},
 			"UIColorsDataSource": {
 				"SelectedRow": "0"
@@ -66,7 +66,7 @@
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "1045, 730",
+					"size": "1025, 770",
 					"transparent": "false",
 					"wants-focus": "false"
 				},
@@ -79,7 +79,7 @@
 							"index": "2",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 250",
+							"origin": "5, 300",
 							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -93,7 +93,7 @@
 							"index": "1",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "355, 10",
+							"origin": "345, 65",
 							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -107,7 +107,7 @@
 							"index": "3",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "355, 250",
+							"origin": "345, 300",
 							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -121,7 +121,7 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 10",
+							"origin": "5, 65",
 							"size": "335, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -135,7 +135,7 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "170, 490",
+							"origin": "160, 535",
 							"size": "140, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -149,7 +149,7 @@
 							"index": "1",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "320, 490",
+							"origin": "305, 535",
 							"size": "140, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -163,7 +163,7 @@
 							"index": "2",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "470, 490",
+							"origin": "450, 535",
 							"size": "140, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -177,7 +177,7 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 110",
+							"origin": "685, 160",
 							"size": "335, 210",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -191,7 +191,7 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 490",
+							"origin": "5, 535",
 							"size": "150, 230",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -205,7 +205,7 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 330",
+							"origin": "685, 375",
 							"size": "335, 190",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -219,8 +219,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "620, 490",
-							"size": "70, 230",
+							"origin": "595, 535",
+							"size": "85, 230",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -233,8 +233,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 530",
-							"size": "335, 190",
+							"origin": "685, 570",
+							"size": "335, 195",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -245,8 +245,22 @@
 							"class": "CView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "700, 10",
+							"origin": "685, 65",
 							"size": "335, 90",
+							"transparent": "false",
+							"wants-focus": "false"
+						}
+					},
+					"TopBar": {
+						"attributes": {
+							"background-color": "bgd",
+							"background-color-draw-style": "filled and stroked",
+							"class": "TopBar",
+							"index": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "5, 5",
+							"size": "1015, 55",
 							"transparent": "false",
 							"wants-focus": "false"
 						}

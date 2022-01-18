@@ -8,7 +8,14 @@ namespace Kaixo
     MyEditor::MyEditor(TestController* controller)
         : VST3Editor(dynamic_cast<EditController*>(controller), "view", "myplugineditor.uidesc"),
         controller(controller)
-    {}
+    {
+        CView::idleRate = 60;
+    }
+
+    MyEditor::~MyEditor() 
+    {
+        controller->wakeupCalls.clear();
+    }
 
     ModSources MyEditor::modSource(int32_t param, int index) {
         if (param >= Params::ModCount) return ModSources::None;

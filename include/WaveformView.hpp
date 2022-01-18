@@ -40,7 +40,7 @@ namespace Kaixo
                     double _d = std::max(0.000001, 1 - _pw);
                     double _p1 = ph / _d;
                     _val += _p1 > 1 ? 0 : Shapers::simpleshaper(
-                        Shapers::shaper24(Wavetables::basic(std::fmod((ph * (sync * 7 + 1) / _d + phase), 1.), pos)
+                        Shapers::shaper24(Wavetables::basic(std::fmod((ph * (sync * 7 + 1) / _d + phase) + 100, 1.), pos)
                             , shaper2), shaper3);
                 }
                 else
@@ -49,7 +49,7 @@ namespace Kaixo
                     double _d = std::max(0.000001, 1 + _pw);
                     double _p1 = (1 - ph) / _d;
                     _val += _p1 > 1 ? 0 : Shapers::simpleshaper(
-                        Shapers::shaper24(Wavetables::basic(std::fmod(((ph + _pw) * (sync * 7 + 1) / _d + phase), 1.), pos)
+                        Shapers::shaper24(Wavetables::basic(std::fmod(((ph + _pw) * (sync * 7 + 1) / _d + phase) + 100, 1.), pos)
                             , shaper2), shaper3);
                 }
             }

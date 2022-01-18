@@ -31,3 +31,4 @@ using namespace VSTGUI;
 #include <string>
 #include <iostream>
 #include <array>
+#include <mutex>

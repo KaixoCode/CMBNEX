@@ -11,31 +11,61 @@ namespace Kaixo
     class OscillatorView : public CViewContainer, public IControlListener
     {
     public:
-        Knob* enbl = nullptr; // Enable
-        Knob* tune = nullptr; // Tune
-        Knob* wtps = nullptr; // Pos
-        Knob* sync = nullptr; // Sync
-        Knob* detn = nullptr; // Detune
-        Knob* volm = nullptr; // Gain
-        Knob* phse = nullptr; // Phase
-        Knob* plsw = nullptr; // Pulse Width
-        Knob* pann = nullptr; // Pan
-        Knob* nois = nullptr; // Noise
-        Knob* fltr = nullptr; // Filter type
-        Knob* freq = nullptr; // Filter Frequency
-        Knob* reso = nullptr; // Filter Resonance
-        Knob* rphs = nullptr; // Random Phase
-        Knob* shpr = nullptr; // Shaper
-        Knob* shp2 = nullptr; // Shaper
+        Knob* enbl = nullptr; // Enable            
+        Knob* tune = nullptr; // Tune              
+        Knob* wtps = nullptr; // Pos               
+        Knob* sync = nullptr; // Sync              
+        Knob* detn = nullptr; // Detune            
+        Knob* volm = nullptr; // Gain              
+        Knob* phse = nullptr; // Phase             
+        Knob* plsw = nullptr; // Pulse Width       
+        Knob* pann = nullptr; // Pan               
+        Knob* nois = nullptr; // Noise             
+        Knob* fltr = nullptr; // Filter type       
+        Knob* freq = nullptr; // Filter Frequency  
+        Knob* reso = nullptr; // Filter Resonance  
+        Knob* rphs = nullptr; // Random Phase      
+        Knob* shpr = nullptr; // Shaper            
+        Knob* shp2 = nullptr; // Shaper            
         Label* titl = nullptr; // Oscillator title
         Label* ftrl = nullptr; // Filter title
         WaveformView* wfrm = nullptr; // Waveform view
 
         int index = 0;
+        bool viewWave = false;
+        
+        bool modulateChange = false;
+
+        void onIdle() 
+        {
+            if (modulateChange)
+            {
+                modulateChange = false;
+
+                wfrm->phase = phse->getModValue();
+                wfrm->pos = wtps->getModValue();
+                wfrm->sync = sync->getModValue();
+                wfrm->shaper = shpr->getModValue();
+                wfrm->shaper2 = shp2->getModValue();
+                wfrm->pw = plsw->getModValue();
+
+                wfrm->setDirty(true);
+            }
+        }
 
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
         {
             auto _r = CViewContainer::onMouseDown(where, buttons);
+            CPoint where2(where);
+            where2.offset(-getViewSize().left, -getViewSize().top);
+            getTransform().inverse().transform(where2);
+            if (wfrm->getViewSize().pointInside(where2))
+            {
+                viewWave ^= true;
+                if (viewWave) wfrm->setViewSize({ 0, 0, getWidth(), getHeight() });
+                else wfrm->setViewSize({ 135, 35, 135 + 65, 35 + 50 });
+            }
+
             if (_r != kMouseEventHandled)
             {
                 int* _data = new int[1];
@@ -50,12 +80,12 @@ namespace Kaixo
         void valueChanged(CControl* pControl)
         {
             bool _f = false;
-            if (pControl == phse) wfrm->phase = phse->getValue(), _f =true;
-            else if (pControl == wtps) wfrm->pos = wtps->getValue(), _f =true;
-            else if (pControl == sync) wfrm->sync = sync->getValue(), _f =true;
-            else if (pControl == shpr) wfrm->shaper = shpr->getValue(), _f =true;
-            else if (pControl == shp2) wfrm->shaper2 = shp2->getValue(), _f =true;
-            else if (pControl == plsw) wfrm->pw = plsw->getValue(), _f =true;
+            if (pControl == phse) wfrm->phase = phse->getModValue(), _f = true;
+            else if (pControl == wtps) wfrm->pos = wtps->getModValue(), _f = true;
+            else if (pControl == sync) wfrm->sync = sync->getModValue(), _f = true;
+            else if (pControl == shpr) wfrm->shaper = shpr->getModValue(), _f = true;
+            else if (pControl == shp2) wfrm->shaper2 = shp2->getModValue(), _f = true;
+            else if (pControl == plsw) wfrm->pw = plsw->getModValue(), _f =true;
 
             else if (pControl == enbl)
             {
@@ -103,6 +133,8 @@ namespace Kaixo
 
         void createControls(IControlListener* listener, MyEditor* editor)
         {
+            setWantsIdle(true);
+
             enbl = new Knob{ { 153,   3     , 153 + 28,   3 + 28  }, editor };
             tune = new Knob{ {  65,   5     ,  65 + 70,   5 + 96 + 10      }, editor };
             volm = new Knob{ { 200,   5     , 200 + 70,   5 + 96 + 10      }, editor };
@@ -262,10 +294,17 @@ namespace Kaixo
             addView(shpr);
             addView(shp2);
 
-            addView(wfrm);
-
             addView(titl);
             addView(ftrl);
+
+            addView(wfrm);
+
+            editor->controller->wakeupCalls.emplace_back(Params::WTPos1 + index, wtps->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::Sync1 + index, sync->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::Phase1 + index, phse->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::PulseW1 + index, plsw->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::Shaper1 + index, shpr->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::Shaper21 + index, shp2->modulation, modulateChange);
         }
 
         OscillatorView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
