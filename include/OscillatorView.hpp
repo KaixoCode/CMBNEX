@@ -8,33 +8,303 @@
 
 namespace Kaixo
 {
+
+    class SelectOverlay : public CView
+    {
+    public:
+        SelectOverlay(CRect size)
+            : CView(size)
+        {
+            setMouseEnabled(false);
+        }
+
+        CColor color{ 128, 128, 128, 255 };
+        int size = 8;
+
+        void draw(CDrawContext* pContext) override
+        {
+            return;
+            auto _s = getViewSize();
+            double _bsize = size;
+            pContext->setLineWidth(1);
+            pContext->setFrameColor(color);
+            pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });
+            pContext->drawLine({ _s.left, _s.top }, { _s.left + _bsize, _s.top });
+
+            pContext->drawLine({ _s.right - 1, _s.top }, { _s.right - 1,  _s.top + _bsize });
+            pContext->drawLine({ _s.right - 1, _s.top }, { _s.right - _bsize - 1, _s.top });
+
+            pContext->drawLine({ _s.right - 1, _s.bottom - 1 }, { _s.right - 1,  _s.bottom - _bsize - 1 });
+            pContext->drawLine({ _s.right - 1, _s.bottom - 1 }, { _s.right - _bsize - 1, _s.bottom - 1 });
+
+            pContext->drawLine({ _s.left, _s.bottom - 1 }, { _s.left,  _s.bottom - _bsize - 1 });
+            pContext->drawLine({ _s.left, _s.bottom - 1 }, { _s.left + _bsize, _s.bottom - 1 });
+
+        }
+    };
+
+    class OscillatorToggle : public CViewContainer
+    {
+    public:
+
+        Knob* phse = nullptr; // Phase
+        Knob* sync = nullptr; // Sync
+        Knob* plsw = nullptr; // Pulse Width
+        Knob* wtps = nullptr; // WTP
+        Knob* bend = nullptr; // Bend
+
+        Label* shpl = nullptr; // Shaper title
+        Knob* enbs = nullptr; // Enable Shaper
+        Knob* shpr = nullptr; // Shaper 1       
+        Knob* shpm = nullptr; // Shaper 1 Mix
+        Knob* shp2 = nullptr; // Shaper 2
+        Knob* sh2m = nullptr; // Shaper 2 Mix
+
+        Label* nsel = nullptr; // Noise title
+        Knob* enbn = nullptr; // Enable Noise
+        Knob* nois = nullptr; // Noise
+        Knob* nscl = nullptr; // Noise Color
+
+        Label* fldl = nullptr; // Fold title
+        Knob* enbf = nullptr; // Enable fold
+        Knob* flda = nullptr; // Fold Amount
+        Knob* bias = nullptr; // Fold Bias
+
+        Label* drvl = nullptr; // Drive title
+        Knob* enbd = nullptr; // Enable Drive
+        Knob* drvg = nullptr; // Drive Gain
+        Knob* drve = nullptr; // Drive amount
+
+        Label* ftrl = nullptr; // Filter title
+        Knob* enbr = nullptr; // Enable Filter
+        Knob* fltr = nullptr; // Filter type
+        Knob* freq = nullptr; // Filter Frequency  
+        Knob* reso = nullptr; // Filter Resonance  
+
+        int index;
+        OscillatorToggle(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
+            : CViewContainer(size), index(index)
+        {
+            setBackgroundColor({ 23, 23, 23, 0 });
+
+            auto* v = new CViewContainer{ { 0, 5, getWidth(), getHeight() - 5 } };
+            v->setBackgroundColor({ 23, 23, 23, 255 });
+            addView(v);
+
+            if (index == 0)
+            {
+                auto* v = new CViewContainer{ { 0, 0, getWidth() / 2 - 2, 5 } };
+                v->setBackgroundColor({ 23, 23, 23, 255 });
+                addView(v);
+            } else if (index == 1)
+            {
+                auto* v = new CViewContainer{ { getWidth() / 2 + 3, 0, getWidth(), 5 } };
+                v->setBackgroundColor({ 23, 23, 23, 255 });
+                addView(v);
+            } else if (index == 2)
+            {
+                auto* v = new CViewContainer{ { 0, getHeight() - 5, getWidth() / 2 - 2, getHeight() } };
+                v->setBackgroundColor({ 23, 23, 23, 255 });
+                addView(v);
+            } else if (index == 3)
+            {
+                auto* v = new CViewContainer{ { getWidth() / 2 + 3, getHeight() - 5, getWidth(), getHeight() } };
+                v->setBackgroundColor({ 23, 23, 23, 255 });
+                addView(v);
+            }
+
+            CColor dkrclr{ 17, 17, 17, 255 };
+
+            auto* v1 = new CViewContainer{ {   5, 10,   5 + 179, 10 + 200 } };
+            v1->setBackgroundColor(dkrclr);
+            addView(v1);
+
+            auto* v2 = new CViewContainer{ { 189, 10, 189 + 181, 10 + 200 } };
+            v2->setBackgroundColor(dkrclr);
+            addView(v2);
+
+            auto* v3 = new CViewContainer{ { 375, 10, 375 +  70, 10 + 200 } };
+            v3->setBackgroundColor(dkrclr);
+            addView(v3);
+
+            auto* v4 = new CViewContainer{ { 450, 10, 450 +  70, 10 + 200 } };
+            v4->setBackgroundColor(dkrclr);
+            addView(v4);
+
+            auto* v5 = new CViewContainer{ { 525, 10, 525 +  70, 10 + 200 } };
+            v5->setBackgroundColor(dkrclr);
+            addView(v5);
+
+            auto* v6 = new CViewContainer{ { 600, 10, 600 +  70, 10 + 200 } };
+            v6->setBackgroundColor(dkrclr);
+            addView(v6);
+
+            phse = new Knob{ {  10,  15,  10 +  55,  15 +  90 }, editor }; phse->setListener(listener); phse->setTag(Params::Phase1 + index);
+            plsw = new Knob{ {  67,  15,  67 +  55,  15 +  90 }, editor }; plsw->setListener(listener); plsw->setTag(Params::PulseW1 + index);
+            bend = new Knob{ { 124,  15, 124 +  55,  15 +  90 }, editor }; bend->setListener(listener); bend->setTag(Params::Bend1 + index);
+            wtps = new Knob{ {  10, 115,  10 +  55, 115 +  90 }, editor }; wtps->setListener(listener); wtps->setTag(Params::WTPos1 + index);
+            sync = new Knob{ {  67, 115,  67 +  55, 115 +  90 }, editor }; sync->setListener(listener); sync->setTag(Params::Sync1 + index);
+
+            shpl = new Label{ { 209,  13, 209 + 90,  13 + 18 } };
+            shpl->fontsize = 14, shpl->center = false, shpl->value = "Waveshaper";
+            enbs = new Knob{ { 193,  14, 193 +  14,  14 +  14 }, editor }; enbs->setListener(listener); enbs->setTag(Params::ENBShaper1 + index);
+            shpr = new Knob{ { 194,  40, 194 +  65,  40 +  53 }, editor }; shpr->setListener(listener); shpr->setTag(Params::Shaper1 + index);
+            shpm = new Knob{ { 259,  40, 259 +  65,  40 +  53 }, editor }; shpm->setListener(listener); shpm->setTag(Params::ShaperMix1 + index);
+            shp2 = new Knob{ { 305,  95, 305 +  65,  95 +  53 }, editor }; shp2->setListener(listener); shp2->setTag(Params::Shaper21 + index);
+            sh2m = new Knob{ { 305, 152, 305 +  65, 152 +  53 }, editor }; sh2m->setListener(listener); sh2m->setTag(Params::Shaper2Mix1 + index);
+
+            nsel = new Label{ { 395,  13, 395 + 40,  13 + 18 } };
+            nsel->fontsize = 14, nsel->center = false, nsel->value = "Noise";
+            enbn = new Knob{ { 379,  14, 379 +  14,  14 +  14 }, editor }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
+            nois = new Knob{ { 380,  52, 380 +  60,  52 +  95 }, editor }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
+            nscl = new Knob{ { 380, 152, 380 +  65, 152 +  53 }, editor }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
+
+            fldl = new Label{ { 470,  13, 470 + 40,  13 + 18 } };
+            fldl->fontsize = 14, fldl->center = false, fldl->value = "Fold";
+            enbf = new Knob{ { 454,  14, 454 + 14,  14 + 14 }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
+            flda = new Knob{ { 455,  52, 455 + 60,  52 + 95 }, editor }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
+            bias = new Knob{ { 455, 152, 455 + 65, 152 + 53 }, editor }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
+
+            drvl = new Label{ { 545,  13, 545 + 40,  13 + 18 } };
+            drvl->fontsize = 14, drvl->center = false, drvl->value = "Drive";
+            enbd = new Knob{ { 529,  14, 529 + 14,  14 + 14 }, editor }; enbd->setListener(listener); enbd->setTag(Params::ENBDrive1 + index);
+            drvg = new Knob{ { 530,  52, 530 + 60,  52 + 95 }, editor }; drvg->setListener(listener); drvg->setTag(Params::DriveGain1 + index);
+            drve = new Knob{ { 530, 152, 530 + 65, 152 + 53 }, editor }; drve->setListener(listener); drve->setTag(Params::DriveAmt1 + index);
+
+            ftrl = new Label{ { 620,  13, 620 + 40,  13 + 18 } };
+            ftrl->fontsize = 14, ftrl->center = false, ftrl->value = "Filter";
+            enbr = new Knob{ { 604,  14, 604 + 14,  14 + 14 }, editor }; enbr->setListener(listener); enbr->setTag(Params::ENBFilter1 + index);
+            fltr = new Knob{ { 604,  32, 604 + 63,  32 + 17 }, editor }; fltr->setListener(listener); fltr->setTag(Params::Filter1 + index);
+            freq = new Knob{ { 605,  52, 605 + 60,  52 + 95 }, editor }; freq->setListener(listener); freq->setTag(Params::Freq1 + index);
+            reso = new Knob{ { 605, 152, 605 + 65, 152 + 53 }, editor }; reso->setListener(listener); reso->setTag(Params::Reso1 + index);
+
+            phse->name = "Phase"; plsw->name = "PW";  bend->name = "Bend"; wtps->name = "WTP"; sync->name = "Sync"; 
+            phse->min = 0;        plsw->min = -100;   bend->min = -100;    wtps->min = 0;      sync->min = 100;
+            phse->max = 100;      plsw->max = 100;    bend->max = 100;     wtps->max = 100;    sync->max = 800;      
+            phse->reset = 0;      plsw->reset = 0;    bend->reset = 0;     wtps->reset = 0;    sync->reset = 100;      
+            phse->decimals = 1;   plsw->decimals = 1; bend->decimals = 1;  wtps->decimals = 1; sync->decimals = 1;   
+            phse->unit = " %";    plsw->unit = " %";  bend->unit = " %";   wtps->unit = " %";  sync->unit = " %";    
+            phse->type = 0;       plsw->type = 0;     bend->type = 0;      wtps->type = 0;     sync->type = 0;       
+
+            enbs->name = "";    shpr->name = "SHP-X"; shpm->name = "Mix-X"; shp2->name = "SHP-Y"; sh2m->name = "Mix-Y";
+            enbs->min = 0;      shpr->min = -100;     shpm->min = 0;        shp2->min = -100;     sh2m->min = 0;
+            enbs->max = 1;      shpr->max = 100;      shpm->max = 100;      shp2->max = 100;      sh2m->max = 100;
+            enbs->reset = 0;    shpr->reset = 0;      shpm->reset = 0;      shp2->reset = 0;      sh2m->reset = 0;
+            enbs->decimals = 1; shpr->decimals = 1;   shpm->decimals = 1;   shp2->decimals = 1;   sh2m->decimals = 1;
+            enbs->unit = "";    shpr->unit = " %";    shpm->unit = " %";    shp2->unit = " %";    sh2m->unit = " %";
+            enbs->type = 3;     shpr->type = 2;       shpm->type = 2;       shp2->type = 2;       sh2m->type = 2;
+
+            enbn->name = "";    nois->name = "Amount"; nscl->name = "Color";
+            enbn->min = 0;      nois->min = 0;         nscl->min = -100;
+            enbn->max = 1;      nois->max = 100;       nscl->max = 100;
+            enbn->reset = 0;    nois->reset = 0;       nscl->reset = 0;
+            enbn->decimals = 1; nois->decimals = 1;    nscl->decimals = 0;
+            enbn->unit = "";    nois->unit = " %";     nscl->unit = "";
+            enbn->type = 3;     nois->type = 0;        nscl->type = 2;
+            
+            enbf->name = "";    flda->name = "Amount"; bias->name = "Bias";
+            enbf->min = 0;      flda->min = 0;         bias->min = -1;
+            enbf->max = 1;      flda->max = 100;       bias->max = 1;
+            enbf->reset = 0;    flda->reset = 0;       bias->reset = 0;
+            enbf->decimals = 1; flda->decimals = 1;    bias->decimals = 2;
+            enbf->unit = "";    flda->unit = "";       bias->unit = "";
+            enbf->type = 3;     flda->type = 0;        bias->type = 2;
+
+            enbd->name = "";    drvg->name = "Gain"; drve->name = "Drive";
+            enbd->min = 0;      drvg->min = 0;     drve->min = 0;
+            enbd->max = 1;      drvg->max = 4;      drve->max = 100;
+            enbd->reset = 0;    drvg->reset = 0;     drve->reset = 0;
+            enbd->decimals = 1; drvg->decimals = 1;  drve->decimals = 1;
+            enbd->unit = "";    drvg->unit = " dB";  drve->unit = " %";
+            enbd->type = 3;     drvg->type = 0;      drve->type = 2;
+
+            enbr->name = "";    fltr->name = "L,H,B"; freq->name = "Freq"; reso->name = "Reso";
+            enbr->min = 0;      fltr->min = 4;        freq->min = 20;      reso->min = 0;
+            enbr->max = 1;      fltr->max = 3;        freq->max = 22000;   reso->max = 125;
+            enbr->reset = 0;    fltr->reset = 1;      freq->reset = 0;     reso->reset = 0;
+            enbr->decimals = 1; fltr->decimals = 0;   freq->decimals = 1;  reso->decimals = 1;
+            enbr->unit = "";    fltr->unit = "";      freq->unit = " Hz";  reso->unit = " %";
+            enbr->type = 3;     fltr->type = 4;       freq->type = 0;      reso->type = 2;
+
+            addView(phse);
+            addView(sync);
+            addView(plsw);
+            addView(wtps);
+            addView(bend);
+
+            addView(shpl);
+            addView(enbs);
+            addView(shpr);
+            addView(shpm);
+            addView(shp2);
+            addView(sh2m);
+
+            addView(nsel);
+            addView(enbn);
+            addView(nois);
+            addView(nscl);
+
+            addView(fldl);
+            addView(enbf);
+            addView(flda);
+            addView(bias);
+
+            addView(drvl);
+            addView(enbd);
+            addView(drvg);
+            addView(drve);
+
+            addView(ftrl);
+            addView(enbr);
+            addView(fltr);
+            addView(freq);
+            addView(reso);
+        }
+    };
+
     class OscillatorView : public CViewContainer, public IControlListener
     {
     public:
+        OscillatorToggle* toggle;
+        bool selected = false;
+
         Knob* enbl = nullptr; // Enable            
         Knob* tune = nullptr; // Tune              
-        Knob* wtps = nullptr; // Pos               
-        Knob* sync = nullptr; // Sync              
+        Knob* pann = nullptr; // Pos               
         Knob* detn = nullptr; // Detune            
-        Knob* volm = nullptr; // Gain              
-        Knob* phse = nullptr; // Phase             
-        Knob* plsw = nullptr; // Pulse Width       
-        Knob* pann = nullptr; // Pan               
-        Knob* nois = nullptr; // Noise             
-        Knob* fltr = nullptr; // Filter type       
-        Knob* freq = nullptr; // Filter Frequency  
-        Knob* reso = nullptr; // Filter Resonance  
         Knob* rphs = nullptr; // Random Phase      
-        Knob* shpr = nullptr; // Shaper            
-        Knob* shp2 = nullptr; // Shaper            
+        Knob* volm = nullptr; // Gain              
         Label* titl = nullptr; // Oscillator title
-        Label* ftrl = nullptr; // Filter title
         WaveformView* wfrm = nullptr; // Waveform view
+
+        SelectOverlay* ovrl;
 
         int index = 0;
         bool viewWave = false;
         
         bool modulateChange = false;
+
+        void Select()
+        {
+            if (!selected)
+            {
+                toggle->setVisible(true);
+                ovrl->color = { 128, 128, 128, 255 };
+                ovrl->setDirty(true);
+            }
+            selected = true;
+        }
+
+        void Unselect()
+        {
+            if (selected)
+            {
+                toggle->setVisible(false);
+                ovrl->color = { 128, 128, 128, 0 };
+                ovrl->setDirty(true);
+            }
+            selected = false;
+        }
 
         void onIdle() 
         {
@@ -42,12 +312,12 @@ namespace Kaixo
             {
                 modulateChange = false;
 
-                wfrm->phase = phse->getModValue();
-                wfrm->pos = wtps->getModValue();
-                wfrm->sync = sync->getModValue();
-                wfrm->shaper = shpr->getModValue();
-                wfrm->shaper2 = shp2->getModValue();
-                wfrm->pw = plsw->getModValue();
+                wfrm->phase = toggle->phse->getModValue();
+                wfrm->pos = pann->getModValue();
+                wfrm->sync = toggle->sync->getModValue();
+                wfrm->shaper = toggle->shpr->getModValue();
+                wfrm->shaper2 = toggle->shp2->getModValue();
+                wfrm->pw = toggle->plsw->getModValue();
 
                 wfrm->setDirty(true);
             }
@@ -61,12 +331,14 @@ namespace Kaixo
             getTransform().inverse().transform(where2);
             if (wfrm->getViewSize().pointInside(where2))
             {
-                viewWave ^= true;
-                if (viewWave) wfrm->setViewSize({ 0, 0, getWidth(), getHeight() });
-                else wfrm->setViewSize({ 135, 35, 135 + 65, 35 + 50 });
+                if (selected)
+                {
+                    viewWave ^= true;
+                    if (viewWave) wfrm->setViewSize({ 0, 0, getWidth(), getHeight() });
+                    else wfrm->setViewSize({ 135, 35, 135 + 65, 35 + 50 });
+                }
             }
-
-            if (_r != kMouseEventHandled)
+            else if (_r != kMouseEventHandled)
             {
                 int* _data = new int[1];
                 _data[0] = (int)ModSources::Osc1 + index;
@@ -79,15 +351,10 @@ namespace Kaixo
 
         void valueChanged(CControl* pControl)
         {
+            modulateChange = true;
+            onIdle();
             bool _f = false;
-            if (pControl == phse) wfrm->phase = phse->getModValue(), _f = true;
-            else if (pControl == wtps) wfrm->pos = wtps->getModValue(), _f = true;
-            else if (pControl == sync) wfrm->sync = sync->getModValue(), _f = true;
-            else if (pControl == shpr) wfrm->shaper = shpr->getModValue(), _f = true;
-            else if (pControl == shp2) wfrm->shaper2 = shp2->getModValue(), _f = true;
-            else if (pControl == plsw) wfrm->pw = plsw->getModValue(), _f =true;
-
-            else if (pControl == enbl)
+            if (pControl == enbl)
             {
                 titl->color = enbl->getValue() > 0.5 ? CColor{ 200, 200, 200, 255 } : CColor{ 128, 128, 128, 255 };
 
@@ -96,34 +363,34 @@ namespace Kaixo
                 tune->color = _clr;
                 volm->color = _clr;
                 detn->color = _clr;
-                freq->color = _clr;
                 rphs->color = _clr;
-                sync->color = _clr;
-                plsw->color = _clr;
-                phse->color = _clr;
                 pann->color = _clr;
-                reso->color = _clr;
-                shpr->color = _clr;
-                shp2->color = _clr;
-                wtps->color = _clr;
-                nois->color = _clr;
-                fltr->color = _clr;
+                toggle->freq->color = _clr;
+                toggle->sync->color = _clr;
+                toggle->plsw->color = _clr;
+                toggle->phse->color = _clr;
+                toggle->wtps->color = _clr;
+                toggle->reso->color = _clr;
+                toggle->shpr->color = _clr;
+                toggle->shp2->color = _clr;
+                toggle->nois->color = _clr;
+                toggle->fltr->color = _clr;
 
                 tune->setDirty(true);
                 volm->setDirty(true);
                 detn->setDirty(true);
-                freq->setDirty(true);
                 rphs->setDirty(true);
-                sync->setDirty(true);
-                plsw->setDirty(true);
-                phse->setDirty(true);
                 pann->setDirty(true);
-                reso->setDirty(true);
-                shpr->setDirty(true);
-                shp2->setDirty(true);
-                wtps->setDirty(true);
-                nois->setDirty(true);
-                fltr->setDirty(true);
+                toggle->freq->setDirty(true);
+                toggle->sync->setDirty(true);
+                toggle->plsw->setDirty(true);
+                toggle->phse->setDirty(true);
+                toggle->wtps->setDirty(true);
+                toggle->reso->setDirty(true);
+                toggle->shpr->setDirty(true);
+                toggle->shp2->setDirty(true);
+                toggle->nois->setDirty(true);
+                toggle->fltr->setDirty(true);
                 wfrm->setDirty(true);
             }
 
@@ -131,43 +398,21 @@ namespace Kaixo
                 wfrm->setDirty(true);
         }
 
-        void createControls(IControlListener* listener, MyEditor* editor)
+        OscillatorView(OscillatorToggle* toggle, const CRect& size, int index, IControlListener* listener, MyEditor* editor)
+            : CViewContainer(size), toggle(toggle), index(index)
         {
+            setBackgroundColor({ 23, 23, 23, 255 });
             setWantsIdle(true);
+
+            ovrl = new SelectOverlay{ { 0, 0, getWidth(), getHeight() } };
+            ovrl->color = { 0, 0, 0, 0 };
 
             enbl = new Knob{ { 153,   3     , 153 + 28,   3 + 28  }, editor };
             tune = new Knob{ {  65,   5     ,  65 + 70,   5 + 96 + 10      }, editor };
             volm = new Knob{ { 200,   5     , 200 + 70,   5 + 96 + 10      }, editor };
             detn = new Knob{ {   5,  16     ,   5 + 60,  21 + 80 + 10      }, editor };
-            freq = new Knob{ { 270,  16     , 270 + 60,  21 + 80 + 10      }, editor };
             rphs = new Knob{ { 134,  80 + 10, 134 + 66,  80 + 10 + 21 }, editor };
-            sync = new Knob{ {   5, 105 + 10,   5 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
-            plsw = new Knob{ {  70, 105 + 10,  70 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
-            phse = new Knob{ { 135, 105 + 10, 135 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
-            pann = new Knob{ { 200, 105 + 10, 200 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
-            reso = new Knob{ { 265, 105 + 10, 265 + 65, 105 + 40 + 10 + 10 + 3 }, editor };
-            shpr = new Knob{ {   5, 152 + 20,   5 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
-            shp2 = new Knob{ {  70, 152 + 20,  70 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
-            wtps = new Knob{ { 135, 152 + 20, 135 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
-            nois = new Knob{ { 200, 152 + 20, 200 + 65, 152 + 40 + 10 + 20 + 3 }, editor };
-            fltr = new Knob{ { 264, 172 + 20, 264 + 70, 172 + 20 + 00 + 20 }, editor };
-
-            enbl->color = MainOsc;
-            tune->color = MainOsc;
-            volm->color = MainOsc;
-            detn->color = MainOsc;
-            freq->color = MainOsc;
-            rphs->color = MainOsc;
-            sync->color = MainOsc;
-            plsw->color = MainOsc;
-            phse->color = MainOsc;
-            pann->color = MainOsc;
-            reso->color = MainOsc;
-            shpr->color = MainOsc;
-            shp2->color = MainOsc;
-            wtps->color = MainOsc;
-            nois->color = MainOsc;
-            fltr->color = MainOsc;
+            pann = new Knob{ { 270,  16     , 270 + 60,  21 + 80 + 10       }, editor };
 
             wfrm = new WaveformView{ { 135, 35, 135 + 65, 35 + 50 } };
             wfrm->index = index;
@@ -181,142 +426,141 @@ namespace Kaixo
             a += (char)('A' + index);
             titl->value = a.c_str();
 
-            ftrl = new Label{ { 265, 152 + 20, 265 + 65, 152 + 20 + 20 } };
-            ftrl->fontsize = 14;
-            ftrl->center = false;
-            ftrl->color = { 200, 200, 200, 255 };            
-            ftrl->value = "Filter";
-
             enbl->setListener(listener);
             tune->setListener(listener);
-            wtps->setListener(listener);
-            sync->setListener(listener);
+            pann->setListener(listener);
             detn->setListener(listener);
             volm->setListener(listener);
-            phse->setListener(listener);
-            plsw->setListener(listener);
-            pann->setListener(listener);
-            nois->setListener(listener);
-            fltr->setListener(listener);
-            freq->setListener(listener);
-            reso->setListener(listener);
             rphs->setListener(listener);
-            shpr->setListener(listener);
-            shp2->setListener(listener);
 
             enbl->registerControlListener(this);
-            phse->registerControlListener(this);
-            wtps->registerControlListener(this);
-            plsw->registerControlListener(this);
-            shpr->registerControlListener(this);
-            shp2->registerControlListener(this);
-            sync->registerControlListener(this);
+            pann->registerControlListener(this);
 
             enbl->setTag(Params::Enable1 + index);
             tune->setTag(Params::Pitch1 + index);
-            wtps->setTag(Params::WTPos1 + index);
-            sync->setTag(Params::Sync1 + index);
+            pann->setTag(Params::Pan1 + index);
             detn->setTag(Params::Detune1 + index);
             volm->setTag(Params::Volume1 + index);
-            phse->setTag(Params::Phase1 + index);
-            plsw->setTag(Params::PulseW1 + index);
-            pann->setTag(Params::Pan1 + index);
-            nois->setTag(Params::Noise1 + index);
-            fltr->setTag(Params::Filter1 + index);
-            freq->setTag(Params::Freq1 + index);
-            reso->setTag(Params::Reso1 + index);
             rphs->setTag(Params::RandomPhase1 + index);
-            shpr->setTag(Params::Shaper1 + index);
-            shp2->setTag(Params::Shaper21 + index);
 
-            tune->name = "Pitch";    wtps->name = "Pos";      sync->name = "Sync";
-            tune->min = -24;         wtps->min = 0;           sync->min = 100;
-            tune->max = 24;          wtps->max = 100;         sync->max = 800;
-            tune->reset = 0;         wtps->reset = 0;         sync->reset = 100;
-            tune->decimals = 1;      wtps->decimals = 1;      sync->decimals = 1;
-            tune->unit = " st";      wtps->unit = " %";       sync->unit = " %";
-            tune->type = 0;          wtps->type = 2;          sync->type = 2;
-                                     
-            detn->name = "Detune";   volm->name = "Gain";     phse->name = "Phase";
-            detn->min = -200;        volm->min = 0;           phse->min = 0;
-            detn->max = 200;         volm->max = 1;           phse->max = 100;
-            detn->reset = 0;         volm->reset = 1;         phse->reset = 0;
-            detn->decimals = 0;      volm->decimals = 1;      phse->decimals = 1;
-            detn->unit = " ct";      volm->unit = " dB";      phse->unit = " %";
-            detn->type = 0;          volm->type = 0;          phse->type = 2;
-                                     
-            plsw->name = "PW";       pann->name = "Pan";      nois->name = "Noise";
-            plsw->min = -100;        pann->min = -50;         nois->min = 0;
-            plsw->max = 100;         pann->max = 50;          nois->max = 100;
-            plsw->reset = 0;         pann->reset = 0;         nois->reset = 0;
-            plsw->decimals = 1;      pann->decimals = 1;      nois->decimals = 1;
-            plsw->unit = " %";       pann->unit = "pan";      nois->unit = " %";
-            plsw->type = 2;          pann->type = 2;          nois->type = 2;
+            tune->name = "Pitch";    pann->name = "Pan";   
+            tune->min = -24;         pann->min = -50;      
+            tune->max = 24;          pann->max = 50;       
+            tune->reset = 0;         pann->reset = 0;      
+            tune->decimals = 1;      pann->decimals = 1;   
+            tune->unit = " st";      pann->unit = "pan";   
+            tune->type = 0;          pann->type = 0;       
 
-            fltr->name = "L,H,B";    freq->name = "Freq";     reso->name = "Reso";
-            fltr->min = 4;           freq->min = 20;          reso->min = 0;
-            fltr->max = 3;           freq->max = 22000;       reso->max = 125;
-            fltr->reset = 1;         freq->reset = 22000;     reso->reset = 0;
-            fltr->decimals = 0;      freq->decimals = 1;      reso->decimals = 1;
-            fltr->unit = "";         freq->unit = " Hz";      reso->unit = " %";
-            fltr->type = 4;          freq->type = 0;          reso->type = 2;
+            detn->name = "Detune";   volm->name = "Gain";
+            detn->min = -200;        volm->min = 0;
+            detn->max = 200;         volm->max = 1;
+            detn->reset = 0;         volm->reset = 1;
+            detn->decimals = 0;      volm->decimals = 1;
+            detn->unit = " ct";      volm->unit = " dB";
+            detn->type = 0;          volm->type = 0;
 
-            rphs->name = "Random";   shpr->name = "SHP-X";    shp2->name = "SHP-Y";
-            rphs->min = 0;           shpr->min = 0;           shp2->min = 0;
-            rphs->max = 1;           shpr->max = 100;         shp2->max = 100;
-            rphs->reset = 0;         shpr->reset = 0;         shp2->reset = 0;
-            rphs->decimals = 0;      shpr->decimals = 1;      shp2->decimals = 1;
-            rphs->unit = "";         shpr->unit = " %";       shp2->unit = " %";
-            rphs->type = 3;          shpr->type = 2;          shp2->type = 2;
-
-            enbl->name = "";
-            enbl->min = 0;
-            enbl->max = 1;
-            enbl->reset = 0;
-            enbl->decimals = 0;
-            enbl->unit = "";
-            enbl->type = 3;
+            enbl->name = "";        rphs->name = "Random";
+            enbl->min = 0;          rphs->min = 0;
+            enbl->max = 1;          rphs->max = 1;
+            enbl->reset = 0;        rphs->reset = 0;
+            enbl->decimals = 0;     rphs->decimals = 0;
+            enbl->unit = "";        rphs->unit = "";
+            enbl->type = 3;         rphs->type = 3;
 
             addView(enbl);
             addView(tune);
-            addView(wtps);
-            addView(sync);
+            addView(pann);
             addView(detn);
             addView(volm);
-            addView(phse);
-            addView(plsw);
-            addView(pann);
-            addView(nois);
-            addView(fltr);
-            addView(freq);
-            addView(reso);
             addView(rphs);
-            addView(shpr);
-            addView(shp2);
 
             addView(titl);
-            addView(ftrl);
 
             addView(wfrm);
 
-            editor->controller->wakeupCalls.emplace_back(Params::WTPos1 + index, wtps->modulation, modulateChange);
-            editor->controller->wakeupCalls.emplace_back(Params::Sync1 + index, sync->modulation, modulateChange);
-            editor->controller->wakeupCalls.emplace_back(Params::Phase1 + index, phse->modulation, modulateChange);
-            editor->controller->wakeupCalls.emplace_back(Params::PulseW1 + index, plsw->modulation, modulateChange);
-            editor->controller->wakeupCalls.emplace_back(Params::Shaper1 + index, shpr->modulation, modulateChange);
-            editor->controller->wakeupCalls.emplace_back(Params::Shaper21 + index, shp2->modulation, modulateChange);
+            addView(ovrl);
+        }
+    };
+
+    class OscillatorPart : public CViewContainer
+    {
+    public:
+        OscillatorView* views[4];
+        OscillatorToggle* toggles[4];
+
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+        {
+            auto _r = CViewContainer::onMouseDown(where, buttons);
+            CPoint where2(where);
+            where2.offset(-getViewSize().left, -getViewSize().top);
+            getTransform().inverse().transform(where2);
+            void* selected = nullptr;
+            for (auto& o : views)
+            {
+                if (o->getViewSize().pointInside(where2))
+                {
+                    o->Select();
+                    selected = o;
+                    break;
+                }
+            }
+
+            if (selected)
+            {
+                for (auto& o : views)
+                    if (o != selected) o->Unselect();
+            }
+
+            return _r;
         }
 
-        OscillatorView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
-            : CViewContainer(size), index(index)
+        OscillatorPart(const CRect& size, IControlListener* listener, MyEditor* editor)
+            : CViewContainer(size)
         {
-            createControls(listener, editor);
-            setBackgroundColor({ 23, 23, 23, 255 });
-        }
+            setBackgroundColor({ 0, 0, 0, 0 });
+            
+            toggles[0] = new OscillatorToggle{ { 5, 170, 5 + 675, 170 + 220 }, 0, listener, editor };
+            toggles[1] = new OscillatorToggle{ { 5, 170, 5 + 675, 170 + 220 }, 1, listener, editor };
+            toggles[2] = new OscillatorToggle{ { 5, 170, 5 + 675, 170 + 220 }, 2, listener, editor };
+            toggles[3] = new OscillatorToggle{ { 5, 170, 5 + 675, 170 + 220 }, 3, listener, editor };
+            
+            toggles[0]->setVisible(false);
+            toggles[1]->setVisible(false);
+            toggles[2]->setVisible(false);
+            toggles[3]->setVisible(false);
 
-        void draw(CDrawContext* pContext) override
-        {
-            CViewContainer::draw(pContext);
+            views[0] = new OscillatorView{ toggles[0], {   5,  55,   5 + 335,  55 + 115 }, 0, listener, editor };
+            views[1] = new OscillatorView{ toggles[1], { 345,  55, 345 + 335,  55 + 115 }, 1, listener, editor };
+            views[2] = new OscillatorView{ toggles[2], {   5, 390,   5 + 335, 390 + 115 }, 2, listener, editor };
+            views[3] = new OscillatorView{ toggles[3], { 345, 390, 345 + 335, 390 + 115 }, 3, listener, editor };
+            
+            for (auto& i : views)
+            {
+                i->toggle->phse->registerControlListener(i);
+                i->toggle->sync->registerControlListener(i);
+                i->toggle->shpr->registerControlListener(i);
+                i->toggle->shp2->registerControlListener(i);
+                i->toggle->plsw->registerControlListener(i);
+
+                editor->controller->wakeupCalls.emplace_back(Params::WTPos1 + i->index, i->pann->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::Sync1 + i->index, i->toggle->sync->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::Phase1 + i->index, i->toggle->phse->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::PulseW1 + i->index, i->toggle->plsw->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::Shaper1 + i->index, i->toggle->shpr->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::Shaper21 + i->index, i->toggle->shp2->modulation, i->modulateChange);
+            }
+
+            views[0]->Select();
+
+            addView(views[0]);
+            addView(views[1]);
+            addView(views[2]);
+            addView(views[3]);
+
+            addView(toggles[0]);
+            addView(toggles[1]);
+            addView(toggles[2]);
+            addView(toggles[3]);
         }
     };
 
@@ -327,22 +571,18 @@ namespace Kaixo
         static inline auto Name = "Oscillator";
         static inline auto BaseView = UIViewCreator::kCViewContainer;
 
-        static inline std::tuple Attributes
-        {
-            Attr{ "index", &OscillatorView::index },
-        };
+        static inline std::tuple Attributes{};
     };
 
-    class OscillatorViewFactory : public ViewFactoryBase<OscillatorView, OscillatorAttributes>
+    class OscillatorViewFactory : public ViewFactoryBase<OscillatorPart, OscillatorAttributes>
     {
     public:
         CView* create(const UIAttributes& attributes, const IUIDescription* description) const override
         {
             CRect _size{ CPoint{ 45, 45 }, OscillatorAttributes::Size };
             int _index = 0;
-            attributes.getIntegerAttribute("index", _index);
             MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
-            auto* _value = new OscillatorView(_size, _index, description->getControlListener(""), _editor);
+            auto* _value = new OscillatorPart(_size, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }

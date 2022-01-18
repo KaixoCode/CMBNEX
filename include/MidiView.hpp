@@ -63,24 +63,24 @@ namespace Kaixo
             pann = new Knob{ { 265,  5, 265 +  65,  5 + 50 }, editor };
             glde = new Knob{ {  70,  5,  70 +  65,  5 + 50 }, editor };
             time = new Knob{ {   5,  5,   5 +  70,  5 + 50 }, editor };
-            clip = new Knob{ {  70, 79 + 85,  70 + 128, 79 + 20 + 85}, editor };
-            retr = new Knob{ { 200, 79 + 85, 200 +  20, 79 + 20 + 85}, editor };
-            ovsm = new Knob{ { 225, 79 + 85, 225 + 108, 79 + 20 + 85}, editor };
+            clip = new Knob{ {  70, 84 + 85,  70 + 128, 84 + 20 + 85}, editor };
+            retr = new Knob{ { 200, 84 + 85, 200 +  20, 84 + 20 + 85}, editor };
+            ovsm = new Knob{ { 225, 84 + 85, 225 + 108, 84 + 20 + 85}, editor };
+             
+            mac1 = new Knob{ {   5, 63,   5 + 65, 63 + 88 }, editor };
+            mac2 = new Knob{ {  70, 63,  70 + 65, 63 + 88 }, editor };
+            mac3 = new Knob{ { 135, 63, 135 + 65, 63 + 88 }, editor };
+            mac4 = new Knob{ { 200, 63, 200 + 65, 63 + 88 }, editor };
+            mac5 = new Knob{ { 265, 63, 265 + 65, 63 + 88 }, editor };
+             
+            mcd1 = new DragThing{ {   5, 64,   5 + 60, 64 + 15 } };
+            mcd2 = new DragThing{ {  70, 64,  70 + 60, 64 + 15 } };
+            mcd3 = new DragThing{ { 135, 64, 135 + 60, 64 + 15 } };
+            mcd4 = new DragThing{ { 200, 64, 200 + 60, 64 + 15 } };
+            mcd5 = new DragThing{ { 265, 64, 265 + 60, 64 + 15 } };
 
-            mac1 = new Knob{ {   5, 60,   5 + 65, 60 + 88 }, editor };
-            mac2 = new Knob{ {  70, 60,  70 + 65, 60 + 88 }, editor };
-            mac3 = new Knob{ { 135, 60, 135 + 65, 60 + 88 }, editor };
-            mac4 = new Knob{ { 200, 60, 200 + 65, 60 + 88 }, editor };
-            mac5 = new Knob{ { 265, 60, 265 + 65, 60 + 88 }, editor };
-
-            mcd1 = new DragThing{ {   5, 61,   5 + 60, 61 + 15 } };
-            mcd2 = new DragThing{ {  70, 61,  70 + 60, 61 + 15 } };
-            mcd3 = new DragThing{ { 135, 61, 135 + 60, 61 + 15 } };
-            mcd4 = new DragThing{ { 200, 61, 200 + 60, 61 + 15 } };
-            mcd5 = new DragThing{ { 265, 61, 265 + 60, 61 + 15 } };
-
-            keym = new DragThing{ {  5, 62 + 85,   5 + 60, 62 + 15 + 85 } };
-            velm = new DragThing{ {  5, 83 + 85,   5 + 60, 83 + 15 + 85 } };
+            keym = new DragThing{ {  5, 67 + 85,   5 + 60, 67 + 15 + 85 } };
+            velm = new DragThing{ {  5, 88 + 85,   5 + 60, 88 + 15 + 85 } };
 
             keym->source = ModSources::Key;
             velm->source = ModSources::Vel;
@@ -91,27 +91,27 @@ namespace Kaixo
             mcd4->source = ModSources::Mac4;
             mcd5->source = ModSources::Mac5;
 
-            keyl = new Label{ { 11, 61 + 85,  11 + 60, 61 + 20 + 85 } };
+            keyl = new Label{ { 11, 66 + 85,  11 + 60, 66 + 20 + 85 } };
             keyl->fontsize = 14;
             keyl->center = false;
             keyl->value = "Key";
 
-            vell = new Label{ { 11, 82 + 85,  11 + 60, 82 + 20 + 85 } };
+            vell = new Label{ { 11, 87 + 85,  11 + 60, 87 + 20 + 85 } };
             vell->fontsize = 14;
             vell->center = false;
             vell->value = "Velocity";
 
-            ovsl = new Label{ { 226, 59 + 85, 226 + 90, 59 + 20 + 85 } };
+            ovsl = new Label{ { 226, 64 + 85, 226 + 90, 64 + 20 + 85 } };
             ovsl->fontsize = 14;
             ovsl->center = false;
             ovsl->value = "Oversample";
 
-            clpl = new Label{ {  71, 59 + 85,  71 + 65, 59 + 20 + 85 } };
+            clpl = new Label{ {  71, 64 + 85,  71 + 65, 64 + 20 + 85 } };
             clpl->fontsize = 14;
             clpl->center = false;
             clpl->value = "Clipping";
 
-            rtrl = new Label{ { 201, 59 + 85, 201 + 20, 59 + 20 + 85 } };
+            rtrl = new Label{ { 201, 64 + 85, 201 + 20, 64 + 20 + 85 } };
             rtrl->fontsize = 14;
             rtrl->center = false;
             rtrl->value = "Rtr";

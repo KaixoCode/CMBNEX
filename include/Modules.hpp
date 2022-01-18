@@ -63,6 +63,8 @@ namespace Kaixo
         double shaper5(double x, double amt);
         double shaper24(double x, double amt);
         double simpleshaper(double x, double amt);
+        double fold(double x, double bias);
+        double drive(double x, double gain, double amt);
     }
 
     namespace Wavetables

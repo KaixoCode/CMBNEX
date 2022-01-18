@@ -141,6 +141,22 @@ namespace Kaixo
                 return p1 * r + x * (1 - r);
             }
         }
+
+        double fold(double x, double bias)
+        {
+            constexpr static double b = 4;
+            x += bias;
+            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        }
+
+        double drive(double x, double gain, double amt)
+        {
+            const double _gain = gain * x;
+            const double _abs = std::abs(_gain);
+            const double _pow = (_gain / _abs) * (1 - std::exp((-_gain * _gain) / _abs));
+            const double _constrained = constrain(_gain, -1., 1.);
+            return _pow * amt + _constrained * (1 - amt);
+        }
     }
 
     namespace Wavetables

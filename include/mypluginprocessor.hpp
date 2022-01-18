@@ -431,7 +431,16 @@ namespace Kaixo
 
         int count = 0;
         std::pair<Sample64, Sample64> Generate(ProcessData& data) override
-        {               
+        {
+            bool _editNow = count >= 512;
+            for (int m = 0; m < Params::ModCount; m++)
+            {
+                if (_editNow && controller) {
+                    count = 0;
+                    controller->updateModulation((Params)m, modulated[m]);
+                }
+            }
+            count++;
 
             const size_t _index = std::floor(params[Params::Oversample] * 4);
             const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
@@ -440,7 +449,6 @@ namespace Kaixo
 
             // Move params to modulated so we can adjust their values
             std::memcpy(modulated, params, Params::ModCount * sizeof(double));
-            bool _editNow = count >= data.processContext->sampleRate / 240;
             for (int m = 0; m < Params::ModCount; m++)
             {
                 bool edited = false;
@@ -484,13 +492,7 @@ namespace Kaixo
 
                 if (edited && ParamNames[m].constrain)
                     modulated[m] = constrain(modulated[m], 0., 1.);
-
-                if (_editNow && controller) {
-                    count = 0;
-                    controller->updateModulation((Params)m, modulated[m]);
-                }
             }
-            count++;
 
             // If envelope is done, no sound so return 0
             if (env[0].Done()) return { 0, 0 };
