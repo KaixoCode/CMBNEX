@@ -37,11 +37,13 @@ enum Params
     PulseW1,      PulseW2,      PulseW3,      PulseW4,
     Phase1,       Phase2,       Phase3,       Phase4,
     Bend1,        Bend2,        Bend3,        Bend4,
+    DCOff1,       DCOff2,       DCOff3,       DCOff4,
 
     Shaper1,      Shaper2,      Shaper3,      Shaper4,
     ShaperMix1,   ShaperMix2,   ShaperMix3,   ShaperMix4,
     Shaper21,     Shaper22,     Shaper23,     Shaper24,
     Shaper2Mix1,  Shaper2Mix2,  Shaper2Mix3,  Shaper2Mix4,
+    ShaperMorph1, ShaperMorph2, ShaperMorph3, ShaperMorph4,
 
     Noise1,       Noise2,       Noise3,       Noise4,
     Color1,       Color2,       Color3,       Color4,
@@ -55,10 +57,25 @@ enum Params
     Freq1,        Freq2,        Freq3,        Freq4,
     Reso1,        Reso2,        Reso3,        Reso4,
 
-    GainX, GainY, GainZ,
-    ModeX, ModeY, ModeZ,
-    FreqX, FreqY, FreqZ,
-    ResoX, ResoY, ResoZ,
+    GainX,    GainY,    GainZ,
+    PreGainX, PreGainY, PreGainZ,
+    FreqX,    FreqY,    FreqZ,
+    ResoX,    ResoY,    ResoZ,
+    MixX,     MixY,     MixZ,
+    FoldX,    FoldY,    FoldZ,
+    BiasX,    BiasY,    BiasZ,
+    DriveGainX, DriveGainY, DriveGainZ,
+    DriveAmtX, DriveAmtY, DriveAmtZ,
+    AddMixX,  AddMixY,  AddMixZ,
+    MinMixX,  MinMixY,  MinMixZ,
+    MultMixX, MultMixY, MultMixZ,
+    PongMixX, PongMixY, PongMixZ,
+    MaxMixX,  MaxMixY,  MaxMixZ,
+    ModMixX,  ModMixY,  ModMixZ,
+    AndMixX,  AndMixY,  AndMixZ,
+    InlvMixX, InlvMixY, InlvMixZ,
+    OrMixX,   OrMixY,   OrMixZ,
+    XOrMixX,  XOrMixY,  XOrMixZ,
 
     SubGain, SubOvertone,
 
@@ -100,6 +117,9 @@ enum Params
 
     FilterX, FilterY, FilterZ,
     DCX,     DCY,     DCZ,
+    ENBFoldX, ENBFoldY, ENBFoldZ,
+    ENBDriveX, ENBDriveY, ENBDriveZ,
+    ENBFilterX, ENBFilterY, ENBFilterZ,
 
     DestA, DestB, DestC, DestD, DestX, DestY,
 
@@ -135,11 +155,13 @@ constexpr ParamInfo ParamNames[]
     { "A PW", 0.5, 1 },        { "B PW", 0.5, 1 },        { "C PW", 0.5, 1 },        { "D PW", 0.5, 1 },
     { "A Phase", 0, 0, 0 },    { "B Phase", 0, 0, 0  },   { "C Phase", 0, 0, 0  },   { "D Phase", 0, 0, 0 },
     { "A Bend", 0.5 },         { "B Bend", 0.5 },         { "C Bend", 0.5 },         { "D Bend", 0.5 },
+    { "A DC Offset", 0.5 },    { "B DC Offset", 0.5 },    { "C DC Offset", 0.5 },    { "D DC Offset", 0.5 },
 
     { "A SHP-X", 0.5 },        { "B SHP-X", 0.5 },        { "C SHP-X", 0.5 },        { "D SHP-X", 0.5 },
     { "A SHP-X Mix", 0.5 },    { "B SHP-X Mix", 0.5 },    { "C SHP-X Mix", 0.5 },    { "D SHP-X Mix", 0.5 },
     { "A SHP-Y", 0.5 },        { "B SHP-Y", 0.5 },        { "C SHP-Y", 0.5 },        { "D SHP-Y", 0.5 },
     { "A SHP-Y Mix", 0.5 },    { "B SHP-Y Mix", 0.5 },    { "C SHP-Y Mix", 0.5 },    { "D SHP-Y Mix", 0.5 },
+    { "A Shaper Morph", 0 },   { "B Shaper Morph", 0 },   { "C Shaper Morph", 0 },   { "D Shaper Morph", 0 },
 
     { "A Noise", 0 },          { "B Noise", 0 },          { "C Noise", 0 },          { "D Noise", 0 },
     { "A Color", 0.5 },        { "B Color", 0.5 },        { "C Color", 0.5 },        { "D Color", 0.5 },
@@ -153,10 +175,25 @@ constexpr ParamInfo ParamNames[]
     { "A Freq", 1 },           { "B Freq", 1 },           { "C Freq", 1 },           { "D Freq", 1 },
     { "A Reso", 0 },           { "B Reso", 0 },           { "C Reso", 0 },           { "D Reso", 0 },
 
-    { "X Gain", 1 }, { "Y Gain", 1 }, { "Z Gain", 1 },
-    { "X Mode", 0 }, { "Y Mode", 0 }, { "Z Mode", 0 },
-    { "X Freq", 1 }, { "Y Freq", 1 }, { "Z Freq", 1 },
-    { "X Reso", 0 }, { "Y Reso", 0 }, { "Z Reso", 0 },
+    { "X Gain", 1 },     { "Y Gain", 1 },     { "Z Gain", 1 },
+    { "X Pre-Gain", 1 }, { "Y Pre-Gain", 1 }, { "Z Pre-Gain", 1 },
+    { "X Freq", 1 },     { "Y Freq", 1 },     { "Z Freq", 1 },
+    { "X Reso", 0 },     { "Y Reso", 0 },     { "Z Reso", 0 },
+    { "X Mix", 1 },      { "Y Mix", 1 },      { "Z Mix", 1 },
+    { "X Fold", 0 },      { "Y Fold", 0 },      { "Z Fold", 0 },
+    { "X Bias", 0.5 },      { "Y Bias", 0.5 },      { "Z Bias", 0.5 },
+    { "X Drive Gain", 0 },      { "Y Drive Gain", 0 },      { "Z Drive Gain", 0 },
+    { "X Drive", 0 },      { "Y Drive", 0 },      { "Z Drive", 0 },
+    { "X Add Mix", 1 },  { "Y Add Mix", 1 },  { "Z Add Mix", 1 },
+    { "X Min Mix", 0 },  { "Y Min Mix", 0 },  { "Z Min Mix", 0 },
+    { "X Mult Mix", 0 }, { "Y Mult Mix", 0 }, { "Z Mult Mix", 0 },
+    { "X Pong Mix", 0 }, { "Y Pong Mix", 0 }, { "Z Pong Mix", 0 },
+    { "X Max Mix", 0 },  { "Y Max Mix", 0 },  { "Z Max Mix", 0 },
+    { "X Mod Mix", 0 },  { "Y Mod Mix", 0 },  { "Z Mod Mix", 0 },
+    { "X And Mix", 0 },  { "Y And Mix", 0 },  { "Z And Mix", 0 },
+    { "X Inlv Mix", 0 }, { "Y Inlv Mix", 0 }, { "Z Inlv Mix", 0 },
+    { "X Or Mix", 0 },   { "Y Or Mix", 0 },   { "Z Or Mix", 0 },
+    { "X XOr Mix", 0 },  { "Y XOr Mix", 0 },  { "Z XOr Mix", 0 },
 
     { "Sub Gain", 0 }, { "Overtone", 0 },
 
@@ -194,10 +231,13 @@ constexpr ParamInfo ParamNames[]
 
     { "Macro 1", 0 }, { "Macro 2", 0 }, { "Macro 3", 0 }, { "Macro 4", 0 }, { "Macro 5", 0 }, 
 
-    { "Clipping", 1 }, { "Oversample", 1 }, { "Retrigger", 1 },
+    { "Clipping", 1 }, { "Oversample", 0.25 }, { "Retrigger", 1 },
 
     { "Filter X", 0 }, { "Filter Y", 0 }, { "Filter Z", 0 },
-    { "DC X", 0 },     { "DC Y", 0 },     { "DC Z", 0 }, 
+    { "DC X", 0 },     { "DC Y", 0 },     { "DC Z", 0 },
+    { "Enable Fold X", 1 },     { "Enable Fold Y", 1 },     { "Enable Fold Z", 1 },
+    { "Enable Drive X", 1 },     { "Enable Drive Y", 1 },     { "Enable Drive Z", 1 },
+    { "Enable Filter X", 1 },     { "Enable Filter Y", 1 },     { "Enable Filter Z", 1 },
     
     { "Destination A", 1. / 128., 0, 1, 0 }, { "Destination B",  2. / 128., 0, 1, 0 }, { "Destination C",  4. / 128., 0, 1, 0 },
     { "Destination D",  8. / 128., 0, 1, 0 }, { "Destination X",  16. / 128., 0, 1, 0 }, { "Destination Y",  32. / 128., 0, 1, 0 },

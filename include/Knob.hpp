@@ -14,7 +14,7 @@ namespace Kaixo
     public:
         enum Type
         {
-            KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP
+            KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP, SMALLSLIDER
         };
 
         static inline Knob* selected = nullptr;
@@ -40,7 +40,7 @@ namespace Kaixo
                 }
                 return -1;
             }
-            else if (type == NUMBER || type == INTERPOLATE)
+            else if (type == NUMBER || type == INTERPOLATE || type == SMALLSLIDER)
             {
                 if (pos.y > a.bottom - 16 && pos.y < a.bottom)
                 {
@@ -48,7 +48,7 @@ namespace Kaixo
                     for (int i = 0; i < ModAmt; i++)
                         if (editor->modSource(getTag(), i) != ModSources::None) modded++;
 
-                    int _index = std::floor((pos.x - (a.left + 2 * modded)) / 13.);
+                    int _index = std::floor((pos.x - (a.left + 3 * modded)) / 13.);
                     if (_index >= 0 && _index < ModAmt)
                         return _index;
                     return -1;
@@ -139,6 +139,7 @@ namespace Kaixo
                 case SLIDER:
                 case NUMBER:
                 case INTERPOLATE:
+                case SMALLSLIDER:
                     if (buttons.isDoubleClick())
                     {
                         if (editIndex == -1)
@@ -220,6 +221,7 @@ namespace Kaixo
             case SLIDER:
             case NUMBER:
             case INTERPOLATE:
+            case SMALLSLIDER:
                 return kMouseEventHandled;
             }
             return kMouseEventNotHandled;
@@ -235,6 +237,7 @@ namespace Kaixo
                 case SLIDER:
                 case NUMBER:
                 case INTERPOLATE:
+                case SMALLSLIDER:
                 {
                     double mult = buttons.isShiftSet() ? 0.25 : 1;
                     double diff = 0;
@@ -711,9 +714,65 @@ namespace Kaixo
                     pContext->drawRect({ a.getCenter().x, a.top + 13, a.getCenter().x + (d - 0.5) * a.getWidth(), a.top + 15 }, kDrawFilled);
                 break;
             }
+            case SMALLSLIDER:
+            {
+                double d = getValue();
+                a = getViewSize();
+                a.left += 1;
+
+                if (modable)
+                {
+                    auto _w = a.getHeight();
+                    auto v = getValueNormalized() * _w;
+                    for (int i = 0; i < ModAmt; i++)
+                    {
+                        auto source = editor->modSource(getTag(), i);
+                        if (source == ModSources::None)
+                            continue;
+                        modded++;
+                        pContext->setLineWidth(2);
+                        pContext->setFrameColor(brdr);
+                        pContext->drawLine({ a.left, a.bottom }, { a.left, a.top });
+
+                        bool two = false;
+                        if (source >= ModSources::Env1)
+                            pContext->setFrameColor(main);
+                        else if (source >= ModSources::LFO1)
+                            pContext->setFrameColor(main), two = true;
+
+                        double amount = editor->modAmount(getTag(), i) * 2 - 1;
+                        double start = std::max(v + ((amount < 0) ? amount * _w : 0), 0.);
+                        double end = std::min(v + ((amount > 0) ? amount * _w : 0), _w);
+
+                        pContext->setLineWidth(2);
+                        pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
+
+                        if (two)
+                        {
+                            double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
+                            double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
+                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
+                        }
+
+                        a.left += 3;
+                    }
+                }
+
+                a.bottom -= 10;
+                a.inset({ 0, 2 });
+                auto w2 = pContext->getStringWidth(name);
+                pContext->setFontColor(text);
+                pContext->drawString(name, { a.getCenter().x - w2 / 2, a.top + 10 }, true);
+                pContext->setFillColor(back);
+                pContext->drawRect({ a.left - 1, a.top + 13, a.right - 1, a.top + 15 }, kDrawFilled);
+                pContext->setFillColor(main);
+                pContext->drawRect({ a.left - 1, a.top + 13, a.left + d * a.getWidth() - 1, a.top + 15 }, kDrawFilled);
+                break;
+            }
             }
 
-            if (modable && (type == NUMBER || type == KNOB || type == INTERPOLATE))
+            if (modable && (type == NUMBER || type == KNOB || type == INTERPOLATE || type == SMALLSLIDER))
             {
                 pContext->setLineWidth(1);
                 a = getViewSize();

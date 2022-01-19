@@ -389,11 +389,11 @@ namespace Kaixo
             {
                 if (!(modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5)) continue;
                  
-                double _vs = osc[i].sample;
+                double _vs = osc[i].sample + modulated[Params::DCOff1 + i] * 2 - 1;
 
                 // Fold
                 if (params[Params::ENBFold1 + i] > 0.5)
-                    _vs = Shapers::fold(_vs * (modulated[Params::Fold1 + i] * 15 + 1), modulated[Params::Bias1 + i] - 0.5);
+                    _vs = Shapers::fold(_vs * (modulated[Params::Fold1 + i] * 15 + 1), modulated[Params::Bias1 + i] * 2 - 1);
 
                 // Noise
                 if (modulated[Params::Noise1 + i])
@@ -427,8 +427,23 @@ namespace Kaixo
             {
                 constexpr static size_t _offsets[]{ 5, 3, 0 };
                 constexpr static size_t _mult[]{ 32, 8, 0 };
-                double _v = Combine(_cs[i * 2], _cs[i * 2 + 1], modulated[Params::ModeX + i]);
-                _v = std::max(std::min(_v * modulated[Params::GainX + i], 1.), -1.);
+                double _v = Combine(
+                    _cs[i * 2] * modulated[Params::PreGainX + i], 
+                    _cs[i * 2 + 1] * modulated[Params::PreGainX + i], 
+                    i);
+
+                // Fold
+                if (params[Params::ENBFoldX + i] > 0.5)
+                    _v = Shapers::fold(_v * (modulated[Params::FoldX + i] * 15 + 1), modulated[Params::BiasX + i] * 2 - 1);
+
+                // Drive
+                if (params[Params::ENBDriveX + i] > 0.5)
+                    _v = Shapers::drive(_v, modulated[Params::DriveGainX + i] * 3 + 1, modulated[Params::DriveAmtX + i]);
+                else
+                    _v = std::max(std::min(_v, 1.), -1.);
+
+                _v = _v * modulated[Params::GainX + i];
+
                 if (!cfilterp[i].off) _v = cfilter[i].Apply(_v, channel);
                 _v = params[Params::DCX + i] > 0.5 ? dcoff[i].Apply(_v, channel) : _v;
 
@@ -596,6 +611,7 @@ namespace Kaixo
                 osc[i].settings.shaperMix = modulated[Params::ShaperMix1 + i] * (params[Params::ENBShaper1 + i] > 0.5);
                 osc[i].settings.shaper2 = modulated[Params::Shaper21 + i];
                 osc[i].settings.shaper2Mix = modulated[Params::Shaper2Mix1 + i] * (params[Params::ENBShaper1 + i] > 0.5);
+                osc[i].settings.shaperMorph = modulated[Params::ShaperMorph1 + i];
 
                 auto _ft = std::floor(params[Params::Filter1 + i] * 3); // Filter parameters
                 filterp[i].sampleRate = samplerate;
@@ -648,12 +664,25 @@ namespace Kaixo
             return constrain(a, -1., 1.);
         }
 
-        inline double Combine(double a, double b, double mode)
+        inline double Combine(double a, double b, int index)
         {
-            const auto f = std::floor(mode * (Size - 1));
-            const auto s = std::ceil(mode * (Size - 1));
-            const auto p = (mode * (Size - 1)) - f;
-            return CombineSingle(a, b, f) * (1 - p) + CombineSingle(a, b, s) * p;
+            const auto mmin = modulated[Params::MinMixX + index] * CombineSingle(a, b, MIN);
+            const auto mult = modulated[Params::MultMixX + index] * CombineSingle(a, b, MULT);
+            const auto pong = modulated[Params::PongMixX + index] * CombineSingle(a, b, PONG);
+            const auto mmax = modulated[Params::MaxMixX + index] * CombineSingle(a, b, MAX);
+            const auto mmod = modulated[Params::ModMixX + index] * CombineSingle(a, b, MOD);
+            const auto mand = modulated[Params::AndMixX + index] * CombineSingle(a, b, AND);
+            const auto inlv = modulated[Params::InlvMixX + index] * CombineSingle(a, b, INLV);
+            const auto mmor = modulated[Params::OrMixX + index] * CombineSingle(a, b, OR);
+            const auto mxor = modulated[Params::XOrMixX + index] * CombineSingle(a, b, XOR);
+            const auto madd = modulated[Params::AddMixX + index] * CombineSingle(a, b, ADD);
+            
+            const auto multiplier = 1 + modulated[Params::MinMixX + index] + modulated[Params::MultMixX + index]
+                + modulated[Params::PongMixX + index] + modulated[Params::MaxMixX + index] + modulated[Params::ModMixX + index]
+                + modulated[Params::AndMixX + index] + modulated[Params::InlvMixX + index] + modulated[Params::OrMixX + index]
+                + modulated[Params::XOrMixX + index] + modulated[Params::AddMixX + index];
+
+            return modulated[Params::MixX + index] * 2 * (1 / multiplier) * (mmin + mult + pong + mmax + mmod + mand + inlv + mmor + mxor + madd) + (1 - modulated[Params::MixX + index]) * (a + b);
         }
 
         inline double CombineSingle(double a, double b, int mode)

@@ -42,7 +42,7 @@
 			},
 			"UIAttributesController": {},
 			"UIViewCreatorDataSource": {
-				"SelectedRow": "40"
+				"SelectedRow": "3"
 			},
 			"UIColorsDataSource": {
 				"SelectedRow": "0"
@@ -66,7 +66,7 @@
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "1025, 735",
+					"size": "1085, 726",
 					"transparent": "false",
 					"wants-focus": "false"
 				},
@@ -79,49 +79,7 @@
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "0, 0",
-							"size": "680, 505",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"Combine": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "Combine",
-							"index": "0",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "160, 510",
-							"size": "180, 70",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"Combine": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "Combine",
-							"index": "1",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "160, 585",
-							"size": "180, 70",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"Combine": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "Combine",
-							"index": "2",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "160, 660",
-							"size": "180, 70",
+							"size": "740, 505",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -134,22 +92,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "685, 100",
+							"origin": "745, 100",
 							"size": "335, 210",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"CombineMode": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "CombineMode",
-							"index": "0",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "5, 510",
-							"size": "150, 220",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -162,7 +106,7 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "685, 315",
+							"origin": "745, 315",
 							"size": "335, 190",
 							"transparent": "false",
 							"wants-focus": "false"
@@ -176,8 +120,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "595, 510",
-							"size": "85, 220",
+							"origin": "655, 510",
+							"size": "85, 211",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -190,8 +134,8 @@
 							"index": "0",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "685, 510",
-							"size": "335, 220",
+							"origin": "745, 510",
+							"size": "335, 211",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -202,21 +146,21 @@
 							"class": "CView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "685, 5",
+							"origin": "745, 5",
 							"size": "335, 90",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
 					},
-					"CViewContainer": {
+					"Combine": {
 						"attributes": {
-							"background-color": "bgd",
+							"background-color": "#00000000",
 							"background-color-draw-style": "filled and stroked",
-							"class": "CViewContainer",
+							"class": "Combine",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "345, 510",
-							"size": "245, 220",
+							"origin": "5, 510",
+							"size": "650, 215",
 							"transparent": "false",
 							"wants-focus": "false"
 						}

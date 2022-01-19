@@ -17,9 +17,13 @@ namespace Kaixo
 
         CColor color = MainMain;
 
+        double offset = 0.5;
         double level = 1;
         double phase = 0;
+        bool enableFold = false;
         double fold = 0;
+        double bias = 0;
+        bool enableDrive = false;
         double drive = 0;
         double drivegain = 0;
         double noise = 0;
@@ -32,8 +36,20 @@ namespace Kaixo
             double _val = 0;
             for (double v = p; v < p + step; v += step / _oversample)
             {
-                osc.phase = v;
-                _val += osc.OffsetOnce(phase);
+                osc.phase = std::fmod(v, 1.0);
+                double _vs = osc.OffsetOnce(phase) + offset * 2 - 1;
+
+                // Fold
+                if (enableFold)
+                    _vs = Shapers::fold(_vs * (fold * 15 + 1), bias * 2 - 1);
+
+                // Drive
+                if (enableDrive)
+                    _vs = Shapers::drive(_vs, drivegain * 3 + 1, drive);
+                else
+                    _vs = std::max(std::min(_vs, 1.), -1.);
+
+                _val += _vs;
             }
             return level * (-_val / _oversample);
         }

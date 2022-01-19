@@ -56,12 +56,17 @@ namespace Kaixo
     namespace Shapers
     {
         double noShaper(double x, double amt);
+        double shaper0(double x, double amt);
         double shaper1(double x, double amt);
         double shaper2(double x, double amt);
         double shaper3(double x, double amt);
-        double shaper4(double x, double amt);
+        double shaper6(double x, double amt);
+        double shaper7(double x, double amt);
+        double shaper8(double x, double amt);
+        double shaper9(double x, double amt);
+        double shaper4(double x, double amt, double morph);
         double shaper5(double x, double amt);
-        double shaper24(double x, double amt);
+        double shaper24(double x, double amt, double morph);
         double simpleshaper(double x, double amt);
         double fold(double x, double bias);
         double drive(double x, double gain, double amt);
@@ -182,6 +187,7 @@ namespace Kaixo
             double shaper2 = 0;
             double shaper2Mix = 0;
             double shaper3 = 0.5;
+            double shaperMorph = 0;
             Wavetable wavetable = Wavetables::basic;
         } settings;
 

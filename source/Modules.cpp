@@ -66,6 +66,66 @@ namespace Kaixo
             return shaper3l.get(x, amt);
         }
 
+        const static Table shaper8l = [](double x, double amt) {
+            const double x1 = x * 8;
+            const double cos1 = std::sin((3 + amt * 2) * x);
+            const double cos2 = std::cos((6 + amt * 9) * x);
+            const double sin1 = std::sin((2 + amt * 2) * x1 * x1 * x1 * x1);
+            const double sin2 = std::cos((4 + 3 * amt) * x);
+            const double res = (0.9 * cos2 + 0.1 * sin1 * sin1 - 0.4
+                * cos1 * cos1 * cos1 + 0.4 * sin2);
+            return constrain(res, -1., 1.);
+        };
+
+        double shaper8(double x, double amt)
+        {
+            return shaper8l.get(x, amt);
+        }
+
+        const static Table shaper9l = [](double x, double amt) {
+            const double cos1 = std::cos((amt * 3 + 22) * x * 129);
+            const double sin1 = std::sin(3 * x * x * x);
+            const double m1 = 0.64 * x;
+            const double fp = 3 * m1 * m1 * m1 * m1;
+            const double sp = x * x * x * x;
+            const double res = (fp * cos1 + sin1 + sp);
+            return constrain(res, -1., 1.);
+        };
+
+        double shaper9(double x, double amt)
+        {
+            return shaper9l.get(x, amt);
+        }
+
+        const static Table shaper7l = [](double x, double amt) {
+            const double cos1 = std::cos(19 * x * x * x);
+            const double sin1 = std::sin(1 + 3 * amt * x * x - 7.8);
+            const double sin2 = std::sin(x * x);
+            const double res = 1.2 * (cos1 * cos1 + sin1 * sin1 * sin1 + cos1 * sin1 * sin2);
+            return constrain(res, -1., 1.);
+        };
+
+        double shaper7(double x, double amt)
+        {
+            return shaper7l.get(x, amt);
+        }
+
+        const static Table shaper6l = [](double x, double amt) {
+            const double cos1 = std::sin((amt * 3 + 22) * x * x);
+            const double sin1 = std::cos(54 * x * x * amt);
+            const double m1 = 0.64 * x;
+            const double m3 = 0.58 * x * cos1;
+            const double fp = 3 * m1 * m1 * m3;
+            const double sp = x * x * x * fp * m1;
+            const double res = (fp * cos1 + sin1 + sp);
+            return constrain(res, -1., 1.);
+        };
+
+        double shaper6(double x, double amt)
+        {
+            return shaper6l.get(x, amt);
+        }
+
         const static Table shaper5l = [](double x, double amt) {
             const double cos1 = std::cos((amt * 5 + 22) * x * x);
             const double sin1 = std::sin(312 * x * x);
@@ -81,32 +141,72 @@ namespace Kaixo
             return shaper5l.get(x, amt);
         }
 
-        double shaper4(double x, double amt)
+        const static Table shaper0l = [](double x, double amt) {
+            const double cos1 = std::cos((amt * 3 + 4) * x * x * x);
+            const double sin1 = std::sin(5 * x * x);
+            const double m1 = 0.1 * x;
+            const double fp = 2 * m1 * m1 * m1;
+            const double sp = x * x * x * x;
+            const double res = (fp * cos1 + sin1 + sp);
+            return constrain(res, -1., 1.);
+        };
+
+        double shaper0(double x, double amt)
         {
-            if (amt == 0) return x;
-            constexpr static double steps = 4;
-            constexpr static double (*funcs[(int)steps + 1])(double, double){
-                noShaper, shaper2, shaper3, shaper5, shaper1
-            };
-
-            for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
-            {
-                double r = (amt - (i - 1) / steps) * steps;
-                const double s1 = funcs[i - 1](x, 1 - r);
-                const double s2 = funcs[i](x, r);
-                const double res = (s2 * r + s1 * (1 - r));
-                return constrain(res, 0., 1.);
-            }
-
-            return 0;
+            return shaper0l.get(x, amt);
         }
 
-        double shaper24(double x, double amt)
+        double shaper4(double x, double amt, double morph)
         {
-            if (amt == 0) return x;
+            if (amt == 0.5) return x;
             constexpr static double steps = 4;
             constexpr static double (*funcs[(int)steps + 1])(double, double){
-                noShaper, shaper2, shaper3, shaper5, shaper1
+                shaper7,   // 4
+                shaper8,   // 3
+                noShaper, 
+                shaper0,   // 4
+                shaper6,   // 20
+            };
+
+            constexpr static double (*funcs2[(int)steps + 1])(double, double){
+                shaper3,   // 7
+                shaper2,   // 5
+                shaper9,   // 1
+                shaper5,   // 10
+                shaper1    // 15
+            };
+
+            double res = 0;
+            for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
+            {
+                double r = (amt - (i - 1) / steps) * steps;
+                const double s1 = funcs[i - 1](x, 1 - r);
+                const double s2 = funcs[i](x, r);
+                const double s3 = funcs2[i - 1](x, 1 - r);
+                const double s4 = funcs2[i](x, r);
+                const double res = (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
+                return constrain(res, 0., 1.);
+            }
+        }
+
+        double shaper24(double x, double amt, double morph)
+        {
+            if (amt == 0.5) return x;
+            constexpr static double steps = 4;
+            constexpr static double (*funcs[(int)steps + 1])(double, double){
+                shaper7,   // 4
+                shaper8,   // 3
+                noShaper, 
+                shaper0,   // 4
+                shaper6,   // 20
+            };
+
+            constexpr static double (*funcs2[(int)steps + 1])(double, double){
+                shaper3,   // 7
+                shaper2,   // 5
+                shaper9,   // 1
+                shaper5,   // 10
+                shaper1    // 15
             };
 
             for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
@@ -114,7 +214,9 @@ namespace Kaixo
                 double r = (amt - (i - 1) / steps) * steps;
                 const double s1 = funcs[i - 1](x, 1 - r);
                 const double s2 = funcs[i](x, r);
-                return (s2 * r + s1 * (1 - r));
+                const double s3 = funcs2[i - 1](x, 1 - r);
+                const double s4 = funcs2[i](x, r);
+                return (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
             }
 
             return 0;
@@ -151,7 +253,7 @@ namespace Kaixo
 
         double drive(double x, double gain, double amt)
         {
-            const double _gain = 6 * gain * x;
+            const double _gain = gain * x;
             const double _abs = std::max(std::abs(_gain), 0.000001);
             const double _pow = (_gain / _abs) * (1 - std::exp((-_gain * _gain) / _abs));
             const double _constrained = constrain(x * gain, -1., 1.);
@@ -310,24 +412,24 @@ namespace Kaixo
         const double _bend = settings.bend > 0.5 ? 16 * (settings.bend * 2 - 1) + 1 : 16 * (settings.bend * 2 - 1) - 1;
         if (_pw > 0)
         {
-            const double _ph = Shapers::shaper4(phase, settings.shaper) * settings.shaperMix + phase * (1 - settings.shaperMix);
+            const double _ph = Shapers::shaper4(phase, settings.shaper, settings.shaperMorph) * settings.shaperMix + phase * (1 - settings.shaperMix);
             const double _d = std::max(0.000001, 1 - _pw);
             const double _p1 = _ph / _d;
-            const double _phase = std::fmod((_ph) / _d + phaseoffset + 100, 1.);
-            const double _dphase = std::fmod(f(_phase, _bend) * (settings.sync * 7 + 1), 1.);
+            const double _phase = std::fmod((_ph) / _d + phaseoffset + 1000000, 1.);
+            const double _dphase = std::fmod(f(_phase, _bend) * (settings.sync * 7 + 1) + 1000000, 1.);
             const double _wt = settings.wavetable(_dphase, settings.wtpos);
-            const double _s1 = Shapers::shaper24(_wt, settings.shaper2) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
+            const double _s1 = Shapers::shaper24(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
         }
         else
         {
-            const double _ph = Shapers::shaper4(phase, settings.shaper) * settings.shaperMix + phase * (1 - settings.shaperMix);
+            const double _ph = Shapers::shaper4(phase, settings.shaper, settings.shaperMorph) * settings.shaperMix + phase * (1 - settings.shaperMix);
             const double _d = std::max(0.000001, 1 + _pw); 
             const double _p1 = (1 - _ph) / _d;
-            const double _phase = std::fmod((_ph + _pw) / _d + phaseoffset + 100, 1.);
-            const double _dphase = std::fmod(f(_phase, _bend) * (settings.sync * 7 + 1), 1.);
+            const double _phase = std::fmod((_ph + _pw) / _d + phaseoffset + 1000000, 1.);
+            const double _dphase = std::fmod(f(_phase, _bend) * (settings.sync * 7 + 1) + 1000000, 1.);
             const double _wt = settings.wavetable(_dphase, settings.wtpos);
-            const double _s1 = Shapers::shaper24(_wt, settings.shaper2) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
+            const double _s1 = Shapers::shaper24(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
         }
 
