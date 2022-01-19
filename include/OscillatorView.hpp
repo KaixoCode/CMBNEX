@@ -19,14 +19,14 @@ namespace Kaixo
         }
 
         CColor color{ 128, 128, 128, 255 };
-        int size = 8;
+        int size = 170;
 
         void draw(CDrawContext* pContext) override
         {
             return;
             auto _s = getViewSize();
             double _bsize = size;
-            pContext->setLineWidth(1);
+            pContext->setLineWidth(5);
             pContext->setFrameColor(color);
             pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });
             pContext->drawLine({ _s.left, _s.top }, { _s.left + _bsize, _s.top });
@@ -91,25 +91,26 @@ namespace Kaixo
             v->setBackgroundColor({ 23, 23, 23, 255 });
             addView(v);
 
+            CColor brdclr{ 70, 70, 70, 255 };
             if (index == 0)
             {
                 auto* v = new CViewContainer{ { 0, 0, getWidth() / 2 - 2, 5 } };
-                v->setBackgroundColor({ 23, 23, 23, 255 });
+                v->setBackgroundColor(brdclr);
                 addView(v);
             } else if (index == 1)
             {
                 auto* v = new CViewContainer{ { getWidth() / 2 + 3, 0, getWidth(), 5 } };
-                v->setBackgroundColor({ 23, 23, 23, 255 });
+                v->setBackgroundColor(brdclr);
                 addView(v);
             } else if (index == 2)
             {
                 auto* v = new CViewContainer{ { 0, getHeight() - 5, getWidth() / 2 - 2, getHeight() } };
-                v->setBackgroundColor({ 23, 23, 23, 255 });
+                v->setBackgroundColor(brdclr);
                 addView(v);
             } else if (index == 3)
             {
                 auto* v = new CViewContainer{ { getWidth() / 2 + 3, getHeight() - 5, getWidth(), getHeight() } };
-                v->setBackgroundColor({ 23, 23, 23, 255 });
+                v->setBackgroundColor(brdclr);
                 addView(v);
             }
 
@@ -153,17 +154,17 @@ namespace Kaixo
             shp2 = new Knob{ { 305,  95, 305 +  65,  95 +  53 }, editor }; shp2->setListener(listener); shp2->setTag(Params::Shaper21 + index);
             sh2m = new Knob{ { 305, 152, 305 +  65, 152 +  53 }, editor }; sh2m->setListener(listener); sh2m->setTag(Params::Shaper2Mix1 + index);
 
-            nsel = new Label{ { 395,  13, 395 + 40,  13 + 18 } };
-            nsel->fontsize = 14, nsel->center = false, nsel->value = "Noise";
-            enbn = new Knob{ { 379,  14, 379 +  14,  14 +  14 }, editor }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
-            nois = new Knob{ { 380,  52, 380 +  60,  52 +  95 }, editor }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
-            nscl = new Knob{ { 380, 152, 380 +  65, 152 +  53 }, editor }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
-
-            fldl = new Label{ { 470,  13, 470 + 40,  13 + 18 } };
+            fldl = new Label{ { 395,  13, 395 + 40,  13 + 18 } };
             fldl->fontsize = 14, fldl->center = false, fldl->value = "Fold";
-            enbf = new Knob{ { 454,  14, 454 + 14,  14 + 14 }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
-            flda = new Knob{ { 455,  52, 455 + 60,  52 + 95 }, editor }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
-            bias = new Knob{ { 455, 152, 455 + 65, 152 + 53 }, editor }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
+            enbf = new Knob{ { 379,  14, 379 + 14,  14 + 14 }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
+            flda = new Knob{ { 380,  52, 380 + 60,  52 + 95 }, editor }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
+            bias = new Knob{ { 380, 152, 380 + 65, 152 + 53 }, editor }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
+
+            nsel = new Label{ { 470,  13, 470 + 40,  13 + 18  } };
+            nsel->fontsize = 14, nsel->center = false, nsel->value = "Noise";
+            enbn = new Knob{ { 454,  14, 454 + 14,  14 + 14 }, editor }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
+            nois = new Knob{ { 455,  52, 455 + 60,  52 + 95 }, editor }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
+            nscl = new Knob{ { 455, 152, 455 + 65, 152 + 53 }, editor }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
 
             drvl = new Label{ { 545,  13, 545 + 40,  13 + 18 } };
             drvl->fontsize = 14, drvl->center = false, drvl->value = "Drive";
@@ -202,17 +203,17 @@ namespace Kaixo
             enbn->unit = "";    nois->unit = " %";     nscl->unit = "";
             enbn->type = 3;     nois->type = 0;        nscl->type = 2;
             
-            enbf->name = "";    flda->name = "Amount"; bias->name = "Bias";
-            enbf->min = 0;      flda->min = 0;         bias->min = -1;
-            enbf->max = 1;      flda->max = 100;       bias->max = 1;
+            enbf->name = "";    flda->name = "Gain";   bias->name = "Bias";
+            enbf->min = 0;      flda->min = 1;         bias->min = -1;
+            enbf->max = 1;      flda->max = 15.9;      bias->max = 1;
             enbf->reset = 0;    flda->reset = 0;       bias->reset = 0;
             enbf->decimals = 1; flda->decimals = 1;    bias->decimals = 2;
-            enbf->unit = "";    flda->unit = "";       bias->unit = "";
+            enbf->unit = "";    flda->unit = " dB";    bias->unit = "";
             enbf->type = 3;     flda->type = 0;        bias->type = 2;
 
             enbd->name = "";    drvg->name = "Gain"; drve->name = "Drive";
-            enbd->min = 0;      drvg->min = 0;     drve->min = 0;
-            enbd->max = 1;      drvg->max = 4;      drve->max = 100;
+            enbd->min = 0;      drvg->min = 1;       drve->min = 0;
+            enbd->max = 1;      drvg->max = 4;       drve->max = 100;
             enbd->reset = 0;    drvg->reset = 0;     drve->reset = 0;
             enbd->decimals = 1; drvg->decimals = 1;  drve->decimals = 1;
             enbd->unit = "";    drvg->unit = " dB";  drve->unit = " %";
@@ -289,7 +290,7 @@ namespace Kaixo
             if (!selected)
             {
                 toggle->setVisible(true);
-                ovrl->color = { 128, 128, 128, 255 };
+                ovrl->color = { 17, 17, 17, 255 };
                 ovrl->setDirty(true);
             }
             selected = true;
@@ -313,11 +314,14 @@ namespace Kaixo
                 modulateChange = false;
 
                 wfrm->phase = toggle->phse->getModValue();
-                wfrm->pos = pann->getModValue();
-                wfrm->sync = toggle->sync->getModValue();
-                wfrm->shaper = toggle->shpr->getModValue();
-                wfrm->shaper2 = toggle->shp2->getModValue();
-                wfrm->pw = toggle->plsw->getModValue();
+                wfrm->osc.settings.wtpos = toggle->wtps->getModValue();
+                wfrm->osc.settings.sync = toggle->sync->getModValue() ;
+                wfrm->osc.settings.bend = toggle->bend->getModValue() ;
+                wfrm->osc.settings.shaper = toggle->shpr->getModValue();
+                wfrm->osc.settings.shaperMix = toggle->shpm->getModValue() * (toggle->enbs->getValue() > 0.5);
+                wfrm->osc.settings.shaper2 = toggle->shp2->getModValue();
+                wfrm->osc.settings.shaper2Mix = toggle->sh2m->getModValue() * (toggle->enbs->getValue() > 0.5);;
+                wfrm->osc.settings.pw = toggle->plsw->getModValue();
 
                 wfrm->setDirty(true);
             }
@@ -434,7 +438,6 @@ namespace Kaixo
             rphs->setListener(listener);
 
             enbl->registerControlListener(this);
-            pann->registerControlListener(this);
 
             enbl->setTag(Params::Enable1 + index);
             tune->setTag(Params::Pitch1 + index);
@@ -537,17 +540,29 @@ namespace Kaixo
             for (auto& i : views)
             {
                 i->toggle->phse->registerControlListener(i);
+                i->toggle->wtps->registerControlListener(i);
                 i->toggle->sync->registerControlListener(i);
+                i->toggle->bend->registerControlListener(i);
                 i->toggle->shpr->registerControlListener(i);
+                i->toggle->shpm->registerControlListener(i);
                 i->toggle->shp2->registerControlListener(i);
+                i->toggle->sh2m->registerControlListener(i);
                 i->toggle->plsw->registerControlListener(i);
+                i->toggle->enbs->registerControlListener(i);
+                i->toggle->enbd->registerControlListener(i);
+                i->toggle->enbf->registerControlListener(i);
+                i->toggle->enbn->registerControlListener(i);
+                i->toggle->enbr->registerControlListener(i);
 
-                editor->controller->wakeupCalls.emplace_back(Params::WTPos1 + i->index, i->pann->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::WTPos1 + i->index, i->toggle->wtps->modulation, i->modulateChange);
                 editor->controller->wakeupCalls.emplace_back(Params::Sync1 + i->index, i->toggle->sync->modulation, i->modulateChange);
                 editor->controller->wakeupCalls.emplace_back(Params::Phase1 + i->index, i->toggle->phse->modulation, i->modulateChange);
                 editor->controller->wakeupCalls.emplace_back(Params::PulseW1 + i->index, i->toggle->plsw->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::Bend1 + i->index, i->toggle->bend->modulation, i->modulateChange);
                 editor->controller->wakeupCalls.emplace_back(Params::Shaper1 + i->index, i->toggle->shpr->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::ShaperMix1 + i->index, i->toggle->shpm->modulation, i->modulateChange);
                 editor->controller->wakeupCalls.emplace_back(Params::Shaper21 + i->index, i->toggle->shp2->modulation, i->modulateChange);
+                editor->controller->wakeupCalls.emplace_back(Params::Shaper2Mix1 + i->index, i->toggle->sh2m->modulation, i->modulateChange);
             }
 
             views[0]->Select();

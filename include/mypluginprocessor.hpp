@@ -84,9 +84,12 @@
  * 
  * 
  * 
+ * TODO:
+ * - LFO Sync not synced
  * 
- * LFO Sync not synced
- * 
+ * - Noise Color
+ * - Waveshaper X-Y Panel Thingy
+ * - Optimize new shapers
  * 
  * 
  */
@@ -387,11 +390,29 @@ namespace Kaixo
                 if (!(modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5)) continue;
                  
                 double _vs = osc[i].sample;
+
+                // Fold
+                if (params[Params::ENBFold1 + i] > 0.5)
+                    _vs = Shapers::fold(_vs * (modulated[Params::Fold1 + i] * 15 + 1), modulated[Params::Bias1 + i] - 0.5);
+
+                // Noise
                 if (modulated[Params::Noise1 + i])
                     _vs += modulated[Params::Noise1 + i] * random(); // Add noise
-                _vs = std::max(std::min(_vs, 1.), -1.);
-                if (!filterp[i].off) _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
+
+                // Drive
+                if (params[Params::ENBDrive1 + i] > 0.5)
+                    _vs = Shapers::drive(_vs, modulated[Params::DriveGain1 + i] * 3 + 1, modulated[Params::DriveAmt1 + i]);
+                else
+                    _vs = std::max(std::min(_vs, 1.), -1.);
+
+                // Filter
+                if (!filterp[i].off && params[Params::ENBFilter1 + i] > 0.5)
+                    _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
+
+                // Gain
                 _vs *= modulated[Params::Volume1 + i]; // Adjust for volume
+
+                // Pan
                 if (modulated[Params::Pan1 + i] != 0.5)
                     _vs *= std::min((channel == 1 ? 2 * modulated[Params::Pan1 + i] : 2 - 2 * modulated[Params::Pan1 + i]), 1.); // Panning
 
@@ -568,14 +589,17 @@ namespace Kaixo
                 osc[i].settings.frequency = noteToFreq(frequency + _bendOffset
                     + modulated[Params::Detune1 + i] * 4 - 2 + modulated[Params::Pitch1 + i] * 48 - 24);
                 osc[i].settings.wtpos = modulated[Params::WTPos1 + i];
-                osc[i].settings.sync = modulated[Params::Sync1 + i] * 7 + 1;
+                osc[i].settings.sync = modulated[Params::Sync1 + i];
                 osc[i].settings.pw = modulated[Params::PulseW1 + i];
+                osc[i].settings.bend = modulated[Params::Bend1 + i];
                 osc[i].settings.shaper = modulated[Params::Shaper1 + i];
+                osc[i].settings.shaperMix = modulated[Params::ShaperMix1 + i] * (params[Params::ENBShaper1 + i] > 0.5);
                 osc[i].settings.shaper2 = modulated[Params::Shaper21 + i];
+                osc[i].settings.shaper2Mix = modulated[Params::Shaper2Mix1 + i] * (params[Params::ENBShaper1 + i] > 0.5);
 
                 auto _ft = std::floor(params[Params::Filter1 + i] * 3); // Filter parameters
                 filterp[i].sampleRate = samplerate;
-                filterp[i].f0 = modulated[Params::Freq1 + i] * modulated[Params::Freq1 + i] * (22000 - 20) + 20;
+                filterp[i].f0 = modulated[Params::Freq1 + i] * modulated[Params::Freq1 + i] * (22000 - 30) + 30;
                 filterp[i].Q = modulated[Params::Reso1 + i] * 16 + 1;
                 filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
                 filterp[i].RecalculateParameters();

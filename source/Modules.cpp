@@ -94,7 +94,7 @@ namespace Kaixo
                 double r = (amt - (i - 1) / steps) * steps;
                 const double s1 = funcs[i - 1](x, 1 - r);
                 const double s2 = funcs[i](x, r);
-                const double res = (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
+                const double res = (s2 * r + s1 * (1 - r));
                 return constrain(res, 0., 1.);
             }
 
@@ -114,7 +114,7 @@ namespace Kaixo
                 double r = (amt - (i - 1) / steps) * steps;
                 const double s1 = funcs[i - 1](x, 1 - r);
                 const double s2 = funcs[i](x, r);
-                return (s2 * r + s1 * (1 - r)) * 0.5 + 0.5 * x;
+                return (s2 * r + s1 * (1 - r));
             }
 
             return 0;
@@ -151,10 +151,10 @@ namespace Kaixo
 
         double drive(double x, double gain, double amt)
         {
-            const double _gain = gain * x;
-            const double _abs = std::abs(_gain);
+            const double _gain = 6 * gain * x;
+            const double _abs = std::max(std::abs(_gain), 0.000001);
             const double _pow = (_gain / _abs) * (1 - std::exp((-_gain * _gain) / _abs));
-            const double _constrained = constrain(_gain, -1., 1.);
+            const double _constrained = constrain(x * gain, -1., 1.);
             return _pow * amt + _constrained * (1 - amt);
         }
     }
@@ -307,23 +307,28 @@ namespace Kaixo
     {
         double _s = 0;
         const double _pw = settings.pw * 2 - 1;
+        const double _bend = settings.bend > 0.5 ? 16 * (settings.bend * 2 - 1) + 1 : 16 * (settings.bend * 2 - 1) - 1;
         if (_pw > 0)
         {
-            const double _ph = Shapers::shaper4(phase, settings.shaper);
+            const double _ph = Shapers::shaper4(phase, settings.shaper) * settings.shaperMix + phase * (1 - settings.shaperMix);
             const double _d = std::max(0.000001, 1 - _pw);
             const double _p1 = _ph / _d;
-            _s = _p1 > 1 ? 0 : Shapers::simpleshaper(
-                Shapers::shaper24(settings.wavetable(std::fmod((_ph + phaseoffset) * settings.sync / _d + 100, 1.), settings.wtpos)
-                    , settings.shaper2), settings.shaper3);
+            const double _phase = std::fmod((_ph) / _d + phaseoffset + 100, 1.);
+            const double _dphase = std::fmod(f(_phase, _bend) * (settings.sync * 7 + 1), 1.);
+            const double _wt = settings.wavetable(_dphase, settings.wtpos);
+            const double _s1 = Shapers::shaper24(_wt, settings.shaper2) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
+            _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
         }
         else
         {
-            const double _ph = Shapers::shaper4(phase, settings.shaper);
-            const double _d = std::max(0.000001, 1 + _pw);
+            const double _ph = Shapers::shaper4(phase, settings.shaper) * settings.shaperMix + phase * (1 - settings.shaperMix);
+            const double _d = std::max(0.000001, 1 + _pw); 
             const double _p1 = (1 - _ph) / _d;
-            _s = _p1 > 1 ? 0 : Shapers::simpleshaper(
-                Shapers::shaper24(settings.wavetable(std::fmod((_ph + _pw + phaseoffset) * settings.sync / _d + 100, 1.), settings.wtpos)
-                    , settings.shaper2), settings.shaper3);
+            const double _phase = std::fmod((_ph + _pw) / _d + phaseoffset + 100, 1.);
+            const double _dphase = std::fmod(f(_phase, _bend) * (settings.sync * 7 + 1), 1.);
+            const double _wt = settings.wavetable(_dphase, settings.wtpos);
+            const double _s1 = Shapers::shaper24(_wt, settings.shaper2) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
+            _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
         }
 
         //const double delta = settings.frequency / (SAMPLE_RATE * settings.oversample);

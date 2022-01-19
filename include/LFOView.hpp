@@ -91,9 +91,9 @@ namespace Kaixo
                 _f = true;
             }
             else if (pControl == amnt) curve->level = amnt->getValue() * 2 - 1, _f = true;
-            else if (pControl == posi) curve->pos = posi->getValue(), _f = true;
+            else if (pControl == posi) curve->osc.settings.wtpos = posi->getValue(), _f = true;
             else if (pControl == offs) curve->phase = offs->getValue(), _f = true;
-            else if (pControl == shpr) curve->shaper3 = shpr->getValue(), _f = true;
+            else if (pControl == shpr) curve->osc.settings.shaper3 = shpr->getValue(), _f = true;
             
             if (_f)
                 curve->setDirty(true);

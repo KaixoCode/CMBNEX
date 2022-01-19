@@ -174,10 +174,13 @@ namespace Kaixo
             double frequency = 440;
             double wtpos = 0;
             //int oversample = 8;
-            double sync = 1;
+            double sync = 0;
             double pw = 0.5;
+            double bend = 0.5;
             double shaper = 0;
+            double shaperMix = 0;
             double shaper2 = 0;
+            double shaper2Mix = 0;
             double shaper3 = 0.5;
             Wavetable wavetable = Wavetables::basic;
         } settings;

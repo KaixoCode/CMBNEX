@@ -18,13 +18,13 @@ namespace Kaixo
         CColor color = MainMain;
 
         double level = 1;
-        double sync = 0;
-        double shaper = 0;
-        double shaper2 = 0;
-        double shaper3 = 0.5;
-        double pos = 0;
         double phase = 0;
-        double pw = 0.5;
+        double fold = 0;
+        double drive = 0;
+        double drivegain = 0;
+        double noise = 0;
+
+        Oscillator osc;
 
         double ValueAt(double p, double step)
         {
@@ -32,26 +32,8 @@ namespace Kaixo
             double _val = 0;
             for (double v = p; v < p + step; v += step / _oversample)
             {
-                double _rp = std::fmod(v, 1.0);
-                double _pw = pw * 2 - 1;
-                if (_pw > 0)
-                {
-                    double ph = Shapers::shaper4(_rp, shaper);
-                    double _d = std::max(0.000001, 1 - _pw);
-                    double _p1 = ph / _d;
-                    _val += _p1 > 1 ? 0 : Shapers::simpleshaper(
-                        Shapers::shaper24(Wavetables::basic(std::fmod((ph * (sync * 7 + 1) / _d + phase) + 100, 1.), pos)
-                            , shaper2), shaper3);
-                }
-                else
-                {
-                    double ph = Shapers::shaper4(std::fmod(_rp, 1.), shaper);
-                    double _d = std::max(0.000001, 1 + _pw);
-                    double _p1 = (1 - ph) / _d;
-                    _val += _p1 > 1 ? 0 : Shapers::simpleshaper(
-                        Shapers::shaper24(Wavetables::basic(std::fmod(((ph + _pw) * (sync * 7 + 1) / _d + phase) + 100, 1.), pos)
-                            , shaper2), shaper3);
-                }
+                osc.phase = v;
+                _val += osc.OffsetOnce(phase);
             }
             return level * (-_val / _oversample);
         }

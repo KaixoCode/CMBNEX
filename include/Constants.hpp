@@ -134,18 +134,18 @@ constexpr ParamInfo ParamNames[]
     { "A Sync", 0 },           { "B Sync", 0 },           { "C Sync", 0 },           { "D Sync", 0 },
     { "A PW", 0.5, 1 },        { "B PW", 0.5, 1 },        { "C PW", 0.5, 1 },        { "D PW", 0.5, 1 },
     { "A Phase", 0, 0, 0 },    { "B Phase", 0, 0, 0  },   { "C Phase", 0, 0, 0  },   { "D Phase", 0, 0, 0 },
-    { "A Bend", 0, 0, 0 },     { "B Bend", 0, 0, 0  },    { "C Bend", 0, 0, 0  },    { "D Bend", 0, 0, 0 },
+    { "A Bend", 0.5 },         { "B Bend", 0.5 },         { "C Bend", 0.5 },         { "D Bend", 0.5 },
 
-    { "A SHP-X", 0 },          { "B SHP-X", 0 },          { "C SHP-X", 0 },          { "D SHP-X", 0 },
-    { "A SHP-X Mix", 0 },      { "B SHP-X Mix", 0 },      { "C SHP-X Mix", 0 },      { "D SHP-X Mix", 0 },
-    { "A SHP-Y", 0 },          { "B SHP-Y", 0 },          { "C SHP-Y", 0 },          { "D SHP-Y", 0 },
-    { "A SHP-Y Mix", 0 },      { "B SHP-Y Mix", 0 },      { "C SHP-Y Mix", 0 },      { "D SHP-Y Mix", 0 },
+    { "A SHP-X", 0.5 },        { "B SHP-X", 0.5 },        { "C SHP-X", 0.5 },        { "D SHP-X", 0.5 },
+    { "A SHP-X Mix", 0.5 },    { "B SHP-X Mix", 0.5 },    { "C SHP-X Mix", 0.5 },    { "D SHP-X Mix", 0.5 },
+    { "A SHP-Y", 0.5 },        { "B SHP-Y", 0.5 },        { "C SHP-Y", 0.5 },        { "D SHP-Y", 0.5 },
+    { "A SHP-Y Mix", 0.5 },    { "B SHP-Y Mix", 0.5 },    { "C SHP-Y Mix", 0.5 },    { "D SHP-Y Mix", 0.5 },
 
     { "A Noise", 0 },          { "B Noise", 0 },          { "C Noise", 0 },          { "D Noise", 0 },
-    { "A Color", 0 },          { "B Color", 0 },          { "C Color", 0 },          { "D Color", 0 },
+    { "A Color", 0.5 },        { "B Color", 0.5 },        { "C Color", 0.5 },        { "D Color", 0.5 },
 
     { "A Fold", 0 },           { "B Fold", 0 },           { "C Fold", 0 },           { "D Fold", 0 },
-    { "A Bias", 0 },           { "B Bias", 0 },           { "C Bias", 0 },           { "D Bias", 0 },
+    { "A Bias", 0.5 },         { "B Bias", 0.5 },         { "C Bias", 0.5 },         { "D Bias", 0.5 },
 
     { "A Drive Gain", 0 },     { "B Drive Gain", 0 },     { "C Drive Gain", 0 },     { "D Drive Gain", 0 },
     { "A Drive", 0 },          { "B Drive", 0 },          { "C Drive", 0 },          { "D Drive", 0 },
