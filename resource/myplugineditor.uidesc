@@ -14,7 +14,7 @@
 		"colors": {
 			"Gray": "#c8c8c8ff",
 			"Lighter": "#414141ff",
-			"bg": "#202020ff",
+			"bg": "#141414ff",
 			"bgd": "#171717ff"
 		},
 		"control-tags": {},
@@ -42,10 +42,10 @@
 			},
 			"UIAttributesController": {},
 			"UIViewCreatorDataSource": {
-				"SelectedRow": "3"
+				"SelectedRow": "15"
 			},
 			"UIColorsDataSource": {
-				"SelectedRow": "0"
+				"SelectedRow": "2"
 			},
 			"UITagsDataSource": {
 				"SelectedRow": "6"
@@ -60,7 +60,7 @@
 		"templates": {
 			"view": {
 				"attributes": {
-					"background-color": "bg",
+					"background-color": "None",
 					"background-color-draw-style": "filled and stroked",
 					"class": "CViewContainer",
 					"mouse-enabled": "true",
@@ -71,71 +71,15 @@
 					"wants-focus": "false"
 				},
 				"children": {
-					"Oscillator": {
+					"MainPanel": {
 						"attributes": {
 							"background-color": "~ TransparentCColor",
 							"background-color-draw-style": "filled and stroked",
-							"class": "Oscillator",
+							"class": "MainPanel",
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "0, 0",
-							"size": "740, 505",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"Envelope": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "Envelope",
-							"index": "0",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "745, 100",
-							"size": "335, 210",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"LFO": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "LFO",
-							"index": "0",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "745, 315",
-							"size": "335, 190",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"SubOsc": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "SubOsc",
-							"index": "0",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "655, 510",
-							"size": "85, 211",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"Midi": {
-						"attributes": {
-							"background-color": "bgd",
-							"background-color-draw-style": "filled and stroked",
-							"class": "Midi",
-							"index": "0",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "745, 510",
-							"size": "335, 211",
+							"size": "1085, 726",
 							"transparent": "false",
 							"wants-focus": "false"
 						}
@@ -148,19 +92,6 @@
 							"opacity": "1",
 							"origin": "745, 5",
 							"size": "335, 90",
-							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"Combine": {
-						"attributes": {
-							"background-color": "#00000000",
-							"background-color-draw-style": "filled and stroked",
-							"class": "Combine",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "5, 510",
-							"size": "650, 215",
 							"transparent": "false",
 							"wants-focus": "false"
 						}

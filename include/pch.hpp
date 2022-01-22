@@ -32,3 +32,4 @@ using namespace VSTGUI;
 #include <iostream>
 #include <array>
 #include <mutex>
+#include <fstream>

@@ -10,16 +10,86 @@ namespace Kaixo
     class TopBarView : public CViewContainer
     {
     public:
-        int index = 0;
         Knob* gain;
 
-        void createControls(IControlListener* listener, MyEditor* editor)
+        CNewFileSelector* selector;
+        CNewFileSelector* loader;
+
+        CMessageResult notify(CBaseObject* sender, IdStringPtr message) override
         {
-            constexpr CColor main{ 0, 179, 98, 255 };
-            constexpr CColor text{ 200, 200, 200, 255 };
-            constexpr CColor back{ 40, 40, 40, 255 };
-            constexpr CColor brdr{ 30, 30, 30, 255 };
-            constexpr CColor offt{ 128, 128, 128, 255 };
+            if (selector == sender)
+            {
+                if (auto file = selector->getSelectedFile(0))
+                {
+                    editor->savePreset(file);
+                }
+                return kMessageUnknown;
+            } else if (loader == sender)
+            {
+                if (auto file = loader->getSelectedFile(0))
+                {
+                    editor->loadPreset(file);
+                }
+                return kMessageUnknown;
+            }
+            else
+                return CViewContainer::notify(sender, message);
+        }
+
+        class Button : public CView
+        {
+        public:
+            using CView::CView;
+
+            std::function<void(void)> press;
+
+            CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+            {
+                press();
+                return kMouseEventHandled;
+            }
+
+            void draw(CDrawContext* pContext) override
+            {
+                auto a = getViewSize();
+                pContext->setFillColor({ 255, 255, 255, 255 });
+                pContext->drawRect(a, kDrawFilled);
+            }
+        };
+
+        Button* bSave;
+        Button* bLoad;
+
+        MyEditor* editor;
+
+        TopBarView(const CRect& size, IControlListener* listener, MyEditor* editor)
+            : CViewContainer(size), editor(editor)
+        {
+            setBackgroundColor({ 0, 0, 0, 0 });
+            addView(new BackgroundEffect{ { 0, 0, getWidth(), getHeight() } });
+            bSave = new Button{ { 0, 0, 100, 100 } };
+            bSave->press = [this]() {
+                selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile);
+                selector->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+                selector->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+                selector->setDefaultSaveName("Preset.cmbnex");
+                selector->setTitle("Choose An Audio File");
+                selector->run(this);
+                selector->forget();
+            };          
+            
+            bLoad= new Button{ { 105, 0, 105 + 100, 100 } };
+            bLoad->press = [this]() {
+                loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
+                loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+                loader->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+                loader->setDefaultSaveName("Preset.cmbnex");
+                loader->setTitle("Choose An Audio File");
+                loader->run(this);
+                loader->forget();
+            };
+            addView(bSave);
+            addView(bLoad);
 
             gain = new Knob{ {   5,  5,   5 + 65,  5 + 100 }, editor };
 
@@ -27,53 +97,17 @@ namespace Kaixo
 
             gain->setTag(Params::GainZ);
 
-
-            gain->name = "L,H,B";
-            gain->min = 4;
-            gain->max = 3;
+            gain->name = "Gain";
+            gain->min = 0;
+            gain->max = 100;
             gain->reset = 1;
-            gain->decimals = 0;
-            gain->unit = "";
-            gain->type = 4;
+            gain->decimals = 1;
+            gain->unit = " %";
+            gain->type = 0;
+            gain->modable = false;
 
-            addView(gain);
-        }
+            //addView(gain);
 
-        TopBarView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
-            : CViewContainer(size), index(index)
-        {
-            createControls(listener, editor);
-            setBackgroundColor({ 23, 23, 23, 255 });
         }
     };
-
-    struct TopBarAttributes
-    {
-        static inline CPoint Size = { 140, 110 };
-
-        static inline auto Name = "TopBar";
-        static inline auto BaseView = UIViewCreator::kCViewContainer;
-
-        static inline std::tuple Attributes
-        {
-            Attr{ "index", &TopBarView::index },
-        };
-    };
-
-    class TopBarViewFactory : public ViewFactoryBase<TopBarView, TopBarAttributes>
-    {
-    public:
-        CView* create(const UIAttributes& attributes, const IUIDescription* description) const override
-        {
-            CRect _size{ CPoint{ 45, 45 }, TopBarAttributes::Size };
-            int _index = 0;
-            attributes.getIntegerAttribute("index", _index);
-            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
-            auto* _value = new TopBarView(_size, _index, description->getControlListener(""), _editor);
-            apply(_value, attributes, description);
-            return _value;
-        }
-    };
-
-    static inline TopBarViewFactory topBarViewFactory; 
 }

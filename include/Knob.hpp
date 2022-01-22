@@ -9,6 +9,48 @@
 
 namespace Kaixo
 {
+    class BackgroundEffect : public CView
+    {
+    public:
+        BackgroundEffect(const CRect& c, bool dark = false)
+            : CView(c), dark(dark)
+        {}
+
+        bool pressed = false;
+        bool dark = false;
+
+        int sides = 0;
+
+        double edge = 1;
+
+        void draw(CDrawContext* pContext)
+        {
+            auto a = getViewSize();
+            a.inset({ sides != 1 ? edge : 0, sides != 2 ? edge : 0 });
+            
+            if (sides != 1) a.left -= edge;
+            if (sides != 2) a.top -= edge;
+            if (sides != 1) a.right -= edge;
+            if (sides != 2) a.bottom -= edge;
+            pContext->setFillColor(dark ? pressed ? MainBackL : MainBackD : pressed ? MainBackD : MainBackL);
+            pContext->drawRect(a, kDrawFilled);
+
+            if (sides != 1) a.left += 2 * edge;
+            if (sides != 2) a.top += 2 * edge;
+            if (sides != 1) a.right += 2 * edge;
+            if (sides != 2) a.bottom += 2 * edge;
+            pContext->setFillColor(dark ? pressed ? MainBackD : MainBackL : pressed ? MainBackL : MainBackD);
+            pContext->drawRect(a, kDrawFilled);
+
+            if (sides != 1) a.left -= edge;
+            if (sides != 2) a.top -= edge;
+            if (sides != 1) a.right -= edge;
+            if (sides != 2) a.bottom -= edge;
+            pContext->setFillColor(dark ? DarkBack : MainBack);
+            pContext->drawRect(a, kDrawFilled);
+        }
+    };
+
     class Knob : public CControl, public IDropTarget
     {
     public:
@@ -22,6 +64,8 @@ namespace Kaixo
         int dragIndex = -1;
 
         double modulation = 0;
+        bool dark = false;
+
 
         double getModValue() { return modulation; }
 
@@ -107,18 +151,26 @@ namespace Kaixo
 
         int editIndex = -1;
 
-        CColor color = MainMain;
+        bool enabled = true;
 
         String name;
         String unit;
 
         MyEditor* editor;
 
-        Knob(const CRect& size, MyEditor* editor)
-            : editor(editor), CControl(size)
+        Knob(const CRect& size, MyEditor* editor, bool dark = false)
+            : editor(editor), CControl(size), dark(dark)
         {
             setDropTarget(this);
         }
+
+        ~Knob()
+        {
+            if (editor->controller->wakeupCalls.empty()) return;
+            std::lock_guard _(editor->controller->lock);
+            editor->controller->wakeupCalls.clear();
+        }
+
 
         CMouseEventResult onMouseCancel() override
         {
@@ -332,6 +384,7 @@ namespace Kaixo
                 std::string _format = std::format("{:." + std::to_string((int)decimals) + "f}", val);
                 str = _format.c_str() + unit;
             }
+
             pContext->setFont(pContext->getFont(), 14, kNormalFace);
             pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
@@ -341,16 +394,22 @@ namespace Kaixo
 
             int modded = 0;
 
-            CColor main = color;;
-            //    index == 0 ? CColor{ 179, 0, 0, 255 } 
-            //: index == 1 ? CColor{ 0, 119, 179, 255 } 
-            //: index == 2 ? CColor{ 179, 116, 0, 255 } 
-            //: index == 3 ? CColor{ 0, 179, 98, 255 }
-            //: CColor{ 76, 24, 181, 255 };
-            constexpr CColor text{ 200, 200, 200, 255 };
-            constexpr CColor back{ 40, 40, 40, 255 };
-            constexpr CColor brdr{ 30, 30, 30, 255 };
-            constexpr CColor offt{ 128, 128, 128, 255 };
+            CColor main = MainGreen;
+            CColor text = MainText;
+            CColor back = KnobBack;
+            CColor brdr = Border;
+            CColor offt = OffText;
+
+            if (dark)
+            {
+                back = KnobBackDark;
+            }
+
+            if (!enabled)
+            {
+                main = OffText;
+                text = OffText;
+            }
 
             switch (type)
             {
@@ -504,7 +563,7 @@ namespace Kaixo
                         {
                             double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                             double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
-                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->setFrameColor(OffText);
                             pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                         }
 
@@ -692,7 +751,7 @@ namespace Kaixo
                         {
                             double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                             double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
-                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->setFrameColor(OffText);
                             pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                         }
 
@@ -751,7 +810,7 @@ namespace Kaixo
                         {
                             double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                             double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
-                            pContext->setFrameColor({ 128, 128, 128, 255 });
+                            pContext->setFrameColor(OffText);
                             pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                         }
 
@@ -788,13 +847,13 @@ namespace Kaixo
                 {
                     if (dragIndex == i)
                     {
-                        pContext->setFrameColor({ 70, 70, 70, 255 });
-                        pContext->setFillColor({ 18, 18, 18, 255 });
+                        pContext->setFrameColor(BorderHover);
+                        pContext->setFillColor(DarkBack);
                     }
                     else
                     {
-                        pContext->setFrameColor({ 30, 30, 30, 255 });
-                        pContext->setFillColor({ 18, 18, 18, 255 });
+                        pContext->setFrameColor(Border);
+                        pContext->setFillColor(DarkBack);
                     }
 
                     std::string _v = std::to_string((int)editor->modSource(getTag(), i));
@@ -830,7 +889,7 @@ namespace Kaixo
                     }
                     else
                     {
-                        pContext->setFontColor({ 128, 128, 128, 255 });
+                        pContext->setFontColor(OffText);
                     }
                     pContext->drawRect({ a.left, a.top, a.left + _w, a.bottom }, kDrawFilledAndStroked);
 

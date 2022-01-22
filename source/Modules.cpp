@@ -331,6 +331,7 @@ namespace Kaixo
     }
 
     inline double fastPow(double a, double b) {
+        return std::pow(a, b);
         union {
             double d;
             int x[2];

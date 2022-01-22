@@ -15,7 +15,7 @@ namespace Kaixo
         double index = 0;
         double repeat = 1;
 
-        CColor color = MainMain;
+        bool enabled = true;
 
         double offset = 0.5;
         double level = 1;
@@ -54,18 +54,24 @@ namespace Kaixo
             return level * (-_val / _oversample);
         }
 
+        BackgroundEffect bg{ getViewSize() };
+
         void draw(CDrawContext* pContext) override
         {
-            constexpr CColor back{ 15, 15, 15, 255 };
-            CColor main = color;
+            constexpr CColor back = ItemBack;
+            CColor main = MainGreen;
+            if (!enabled) main = OffText;
 
-            constexpr CColor crnr{ 128, 128, 128, 255 };
+            constexpr CColor crnr = OffText;
             pContext->setLineWidth(1);
             pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
             pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
             auto _s = getViewSize();
 
+            bg.dark = true;
+            bg.draw(pContext);
+            _s.inset({ 1, 1 });
             pContext->setFillColor(back);
             pContext->drawRect(_s, kDrawFilled);
             constexpr auto padding = 4;
@@ -100,6 +106,7 @@ namespace Kaixo
             pContext->drawPolygon(_points, kDrawFilled);
 
             double _bsize = 8;
+            _s.inset({ -1, 0 });
             pContext->setLineWidth(1);
             pContext->setFrameColor(crnr);
             pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });

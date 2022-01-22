@@ -3,6 +3,7 @@
 
 namespace Kaixo
 {
+
     class TestController;
     class MyEditor : public VST3Editor
     {
@@ -17,6 +18,9 @@ namespace Kaixo
         void modSource(int32_t param, int index, ModSources set);
         double modAmount(int32_t param, int index);
         void modAmount(int32_t param, int index, double val);
+
+        void savePreset(UTF8StringPtr file);
+        void loadPreset(UTF8StringPtr file);
     };
 
     class TestController : public EditControllerEx1, public IMidiMapping
@@ -26,9 +30,11 @@ namespace Kaixo
 
         ~TestController () override = default;
 
+        std::mutex lock;
         std::vector<std::tuple<int, std::reference_wrapper<double>, std::reference_wrapper<bool>>> wakeupCalls;
         void updateModulation(Params param, double val)
         {
+            std::lock_guard _(lock);
             for (auto& i : wakeupCalls)
                 if (param == std::get<0>(i) && std::get<1>(i) != val)
                 {
@@ -37,14 +43,7 @@ namespace Kaixo
                 }
         }
 
-        IPlugView* PLUGIN_API createView(FIDString name) override
-        {
-            if (std::strcmp(name, ViewType::kEditor) == 0)
-            {
-                return new MyEditor(this);
-            }
-            return 0;
-        }
+        IPlugView* PLUGIN_API createView(FIDString name) override;
 
         static FUnknown* createInstance (void*) { return static_cast<IEditController*>(new TestController); }
 

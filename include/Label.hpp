@@ -6,21 +6,23 @@ namespace Kaixo
     class Label : public CView
     {
     public:
-        using CView::CView;
+        Label(const CRect& r)
+            : CView(r)
+        {}
 
         String value;
         int center = true;
         int fontsize = 20;
         bool line = false;
 
-        CColor color = { 200, 200, 200, 255 };
+        bool enabled = true;
 
         void draw(CDrawContext* pContext) override
         {
             pContext->setLineWidth(2);
             pContext->setFont(pContext->getFont(), fontsize);
-            pContext->setFontColor(color);
-            pContext->setFrameColor(color);
+            pContext->setFontColor(enabled ? MainText : OffText);
+            pContext->setFrameColor(enabled ? MainText : OffText);
             auto _w = pContext->getStringWidth(value);
             auto _s = getViewSize().getTopCenter();
             _s.x -= _w / 2;

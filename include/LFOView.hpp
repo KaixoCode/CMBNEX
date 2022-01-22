@@ -37,6 +37,30 @@ namespace Kaixo
         SwitchThing* swtc;
 
         bool pressed = false;
+        bool modulateChange = false;
+
+        void onIdle()
+        {
+            if (modulateChange)
+            {
+                modulateChange = false;
+                if (sync->getValue())
+                {
+                    size_t _index = std::floor(rate->getValue() * (TimesAmount - 1));
+                    curve->repeat = 1 + _index;
+                }
+                else
+                {
+                    curve->repeat = 1 + rate->getValue() * rate->getValue() * 20;
+                }
+                curve->level = amnt->getValue() * 2 - 1;
+                curve->osc.settings.wtpos = posi->getValue();
+                curve->phase = offs->getValue();
+                curve->osc.settings.shaper3 = shpr->getValue();
+
+                curve->setDirty(true);
+            }
+        }
 
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
         {
@@ -68,45 +92,24 @@ namespace Kaixo
 
         void valueChanged(CControl* pControl)
         {
-            bool _f = false;
+            modulateChange = true;
+            onIdle();
             if (pControl == sync)
             {
                 if (sync->getValue()) rate->unit = "time";
                 else rate->unit = " Hz";
                 rate->setDirty(true);
-                _f = true;
             }
-            
-            if (pControl == rate || pControl == sync)
-            {
-                if (sync->getValue())
-                {
-                    size_t _index = std::floor(rate->getValue() * (TimesAmount - 1));
-                    curve->repeat = 1 + _index;
-                }
-                else
-                {
-                    curve->repeat = 1 + rate->getValue() * rate->getValue() * 20;
-                }
-                _f = true;
-            }
-            else if (pControl == amnt) curve->level = amnt->getValue() * 2 - 1, _f = true;
-            else if (pControl == posi) curve->osc.settings.wtpos = posi->getValue(), _f = true;
-            else if (pControl == offs) curve->phase = offs->getValue(), _f = true;
-            else if (pControl == shpr) curve->osc.settings.shaper3 = shpr->getValue(), _f = true;
-            
-            if (_f)
-                curve->setDirty(true);
         }
 
         void UpdateIndex()
         {
-            lfo1->color = lfo2->color = lfo3->color = lfo4->color = lfo5->color = { 128, 128, 128, 255 };
-            if (index == 0) lfo1->color = { 200, 200, 200, 255 };
-            if (index == 1) lfo2->color = { 200, 200, 200, 255 };
-            if (index == 2) lfo3->color = { 200, 200, 200, 255 };
-            if (index == 3) lfo4->color = { 200, 200, 200, 255 };
-            if (index == 4) lfo5->color = { 200, 200, 200, 255 };
+            lfo1->enabled = lfo2->enabled = lfo3->enabled = lfo4->enabled = lfo5->enabled = false;
+            if (index == 0) lfo1->enabled = true;
+            if (index == 1) lfo2->enabled = true;
+            if (index == 2) lfo3->enabled = true;
+            if (index == 3) lfo4->enabled = true;
+            if (index == 4) lfo5->enabled = true;
 
             rate->setTag(Params::LFORate1 + index);
             amnt->setTag(Params::LFOLvl1 + index);
@@ -118,8 +121,13 @@ namespace Kaixo
             setDirty(true);
         }
 
-        void createControls(IControlListener* listener, MyEditor* editor)
+        LFOView(const CRect& size, IControlListener* listener, MyEditor* editor)
+            : CViewContainer(size)
         {
+            setBackgroundColor({ 0, 0, 0, 0 });
+            addView(new BackgroundEffect{ { 0, 0, getWidth(), getHeight() } });
+            setWantsIdle(true);
+
             swtc = new SwitchThing{ { 0, 0, 335, 30 } };
             swtc->setIndex = [&](int i) {
                 if (i < 0 || i > 4) return;
@@ -147,38 +155,30 @@ namespace Kaixo
             nvd4->source = ModSources::LFO4;
             nvd5->source = ModSources::LFO5;
 
-            rate->color = MainLFO;
-            amnt->color = MainLFO;
-            posi->color = MainLFO;
-            offs->color = MainLFO;
-            shpr->color = MainLFO;
-            sync->color = MainLFO;
-            curve->color = MainLFO;
-
             lfo1 = new Label{ {   5,   5,   5 + 65,   5 + 20 } };
             lfo1->fontsize = 14;
             lfo1->center = true;
-            lfo1->color = { 200, 200, 200, 255 };
+            lfo1->enabled = true;
             lfo1->value = "LFO 1";
             lfo2 = new Label{ {  71,   5,  71 + 65,   5 + 20 } };
             lfo2->fontsize = 14;
             lfo2->center = true;
-            lfo2->color = { 128, 128, 128, 255 };
+            lfo2->enabled = false;
             lfo2->value = "LFO 2";
             lfo3 = new Label{ { 137,   5, 137 + 65,   5 + 20 } };
             lfo3->fontsize = 14;
             lfo3->center = true;
-            lfo3->color = { 128, 128, 128, 255 };
+            lfo3->enabled = false;
             lfo3->value = "LFO 3";
             lfo4 = new Label{ { 203,   5, 203 + 65,   5 + 20 } };
             lfo4->fontsize = 14;
             lfo4->center = true;
-            lfo4->color = { 128, 128, 128, 255 };
+            lfo4->enabled = false;
             lfo4->value = "LFO 4";
             lfo5 = new Label{ { 269,   5, 269 + 65,   5 + 20 } };
             lfo5->fontsize = 14;
             lfo5->center = true;
-            lfo5->color = { 128, 128, 128, 255 };
+            lfo5->enabled = false;
             lfo5->value = "LFO 5";
 
             rate->setListener(listener);
@@ -240,43 +240,22 @@ namespace Kaixo
             addView(nvd5);
 
             addView(swtc);
+
+            editor->controller->wakeupCalls.emplace_back(Params::LFORate1 + index, rate->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::LFOLvl1 + index, amnt->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::LFOPos1 + index, posi->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::LFOPhase1 + index, offs->modulation, modulateChange);
+            editor->controller->wakeupCalls.emplace_back(Params::LFOShaper1 + index, shpr->modulation, modulateChange);
         }
 
-        LFOView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
-            : CViewContainer(size), index(index)
+        ~LFOView()
         {
-            createControls(listener, editor);
-            setBackgroundColor({ 23, 23, 23, 255 });
+            rate->forget();
+            amnt->forget();
+            posi->forget();
+            offs->forget();
+            shpr->forget();
+            sync->forget();
         }
     };
-
-    struct LFOAttributes
-    {
-        static inline CPoint Size = { 335, 200 };
-
-        static inline auto Name = "LFO";
-        static inline auto BaseView = UIViewCreator::kCViewContainer;
-
-        static inline std::tuple Attributes
-        {
-            Attr{ "index", &LFOView::index },
-        };
-    };
-
-    class LFOViewFactory : public ViewFactoryBase<LFOView, LFOAttributes>
-    {
-    public:
-        CView* create(const UIAttributes& attributes, const IUIDescription* description) const override
-        {
-            CRect _size{ CPoint{ 45, 45 }, LFOAttributes::Size };
-            int _index = 0;
-            attributes.getIntegerAttribute("index", _index);
-            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
-            auto* _value = new LFOView(_size, _index, description->getControlListener(""), _editor);
-            apply(_value, attributes, description);
-            return _value;
-        }
-    };
-
-    static inline LFOViewFactory lfoViewFactory;
 }

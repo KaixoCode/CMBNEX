@@ -8,41 +8,6 @@
 
 namespace Kaixo
 {
-
-    class SelectOverlay : public CView
-    {
-    public:
-        SelectOverlay(CRect size)
-            : CView(size)
-        {
-            setMouseEnabled(false);
-        }
-
-        CColor color{ 128, 128, 128, 255 };
-        int size = 170;
-
-        void draw(CDrawContext* pContext) override
-        {
-            return;
-            auto _s = getViewSize();
-            double _bsize = size;
-            pContext->setLineWidth(5);
-            pContext->setFrameColor(color);
-            pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });
-            pContext->drawLine({ _s.left, _s.top }, { _s.left + _bsize, _s.top });
-
-            pContext->drawLine({ _s.right - 1, _s.top }, { _s.right - 1,  _s.top + _bsize });
-            pContext->drawLine({ _s.right - 1, _s.top }, { _s.right - _bsize - 1, _s.top });
-
-            pContext->drawLine({ _s.right - 1, _s.bottom - 1 }, { _s.right - 1,  _s.bottom - _bsize - 1 });
-            pContext->drawLine({ _s.right - 1, _s.bottom - 1 }, { _s.right - _bsize - 1, _s.bottom - 1 });
-
-            pContext->drawLine({ _s.left, _s.bottom - 1 }, { _s.left,  _s.bottom - _bsize - 1 });
-            pContext->drawLine({ _s.left, _s.bottom - 1 }, { _s.left + _bsize, _s.bottom - 1 });
-
-        }
-    };
-
     class XYPanel : public CView, public IControlListener
     {
     public:
@@ -97,33 +62,50 @@ namespace Kaixo
             y->registerControlListener(this);
         }
 
-        CColor color = { 23, 23, 23, 255 };
+        bool enabled = true;
+
+        BackgroundEffect bg{ getViewSize() };
 
         void draw(CDrawContext* pContext) override
         {
             auto a = getViewSize();
-            pContext->setFillColor(color);
+            bg.draw(pContext);
+            a.inset({ 1, 1 });
+            pContext->setFillColor(MainBack);
             pContext->drawRect(a, kDrawFilled);
             pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
-            pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
-            pContext->setFrameColor({ 40, 40, 40, 255 });
+            pContext->setDrawMode(kAntiAliasing);
+            pContext->setFrameColor(Border); 
+            constexpr static double nmr = 10;
+            for (int i = 0; i < nmr; i++)
+            {
+                double x = a.left + i * a.getWidth() / nmr;
+                double y = a.top + i * a.getHeight() / nmr;
+                pContext->drawLine({ x, a.top }, { x, a.bottom - 1 });
+                pContext->drawLine({ a.left, y }, { a.right - 1, y });
+            }
+
+            pContext->setFrameColor(KnobBack);
             pContext->setLineWidth(1);
-            pContext->drawLine({ a.getCenter().x, a.top }, { a.getCenter().x, a.bottom });
-            pContext->drawLine({ a.left, a.getCenter().y }, { a.right, a.getCenter().y });
 
+            pContext->drawLine({ a.getCenter().x, a.top }, { a.getCenter().x, a.bottom - 1 });
+            pContext->drawLine({ a.left, a.getCenter().y }, { a.right - 1, a.getCenter().y });
+
+            pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
             double _padding = 12;
             double _x = a.left + x->getValue() * (getWidth() - 2 * _padding + 1) + _padding;
             double _y = a.top + (1 - y->getValue()) * (getHeight() - 2 * _padding + 1) + _padding;
-            pContext->setFrameColor(MainOsc);
-            pContext->setFillColor(color);
+            if (enabled) pContext->setFrameColor(MainGreen);
+            else pContext->setFrameColor(OffText);
+            pContext->setFillColor(MainBack);
             pContext->setLineWidth(3);
             pContext->drawRect({ _x - _padding / 2, _y - _padding / 2, _x + _padding / 2, _y + _padding / 2 }, kDrawFilledAndStroked);
 
             auto _s = getViewSize();
             double _bsize = 8;
             pContext->setLineWidth(1);
-            pContext->setFrameColor({ 128, 128, 128, 255 });
+            pContext->setFrameColor(OffText);
             pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });
             pContext->drawLine({ _s.left, _s.top }, { _s.left + _bsize, _s.top });
 
@@ -187,68 +169,63 @@ namespace Kaixo
         OscillatorToggle(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), index(index)
         {
-            setBackgroundColor({ 23, 23, 23, 0 });
+            setBackgroundColor({ 0, 0, 0, 0 });
 
-            auto* v = new CViewContainer{ { 0, 5, getWidth(), getHeight() - 5 } };
-            v->setBackgroundColor({ 23, 23, 23, 255 });
+            double y = 2;
+
+            auto* v = new BackgroundEffect{ { 0, 5 + y, getWidth(), getHeight() - 5 - y } };
             addView(v);
 
-            CColor brdclr{ 70, 70, 70, 255 };
+            CColor brdclr = MainBack;
             if (index == 0)
             {
-                auto* v = new CViewContainer{ { 0, 0, getWidth() / 2 - 3, 5 } };
-                v->setBackgroundColor(brdclr);
+                auto* v = new BackgroundEffect{ { 0, 0, getWidth() / 2 - 2, 8 } };
+                v->sides = 2;
                 addView(v);
-            } else if (index == 1)
+            }
+            else if (index == 1)
             {
-                auto* v = new CViewContainer{ { getWidth() / 2 + 2, 0, getWidth(), 5 } };
-                v->setBackgroundColor(brdclr);
+                auto* v = new BackgroundEffect{ { getWidth() / 2 + 3, 0, getWidth(), 8 } };
+                v->sides = 2;
                 addView(v);
-            } else if (index == 2)
+            }
+            else if (index == 2)
             {
-                auto* v = new CViewContainer{ { 0, getHeight() - 5, getWidth() / 2 - 3, getHeight() } };
-                v->setBackgroundColor(brdclr);
+                auto* v = new BackgroundEffect{ { 0, getHeight() - 8, getWidth() / 2 - 2, getHeight() } };
+                v->sides = 2;
                 addView(v);
-            } else if (index == 3)
+            }
+            else if (index == 3)
             {
-                auto* v = new CViewContainer{ { getWidth() / 2 + 2, getHeight() - 5, getWidth(), getHeight() } };
-                v->setBackgroundColor(brdclr);
+                auto* v = new BackgroundEffect{ { getWidth() / 2 + 3, getHeight() - 8, getWidth(), getHeight() } };
+                v->sides = 2;
                 addView(v);
             }
 
-            CColor dkrclr{ 17, 17, 17, 255 };
-
-            auto* v1 = new CViewContainer{ {   5, 10,   5 + 179, 10 + 200 } };
-            v1->setBackgroundColor(dkrclr);
+            auto* v1 = new BackgroundEffect{ {   5, 10 + y,   5 + 179, 10 + 200 + y }, true };
             addView(v1);
 
-            auto* v2 = new CViewContainer{ { 189, 10, 189 + 206, 10 + 200 } };
-            v2->setBackgroundColor(dkrclr);
+            auto* v2 = new BackgroundEffect{ { 189, 10 + y, 189 + 206, 10 + 200 + y}, true };
             addView(v2);
 
-            auto* v3 = new CViewContainer{ { 400, 10, 400 +  70, 10 + 200 } };
-            v3->setBackgroundColor(dkrclr);
+            auto* v3 = new BackgroundEffect{ { 400, 10 + y, 400 +  70, 10 + 200 + y }, true };
             addView(v3);
 
-            auto* v4 = new CViewContainer{ { 475, 10, 475 +  70, 10 + 200 } };
-            v4->setBackgroundColor(dkrclr);
+            auto* v4 = new BackgroundEffect{ { 475, 10 + y, 475 +  70, 10 + 200 + y }, true };
             addView(v4);
 
-            auto* v5 = new CViewContainer{ { 550, 10, 550 +  70, 10 + 200 } };
-            v5->setBackgroundColor(dkrclr);
+            auto* v5 = new BackgroundEffect{ { 550, 10 + y, 550 +  70, 10 + 200 + y }, true };
             addView(v5);
 
-            auto* v6 = new CViewContainer{ { 625, 10, 625 +  70, 10 + 200 } };
-            v6->setBackgroundColor(dkrclr);
+            auto* v6 = new BackgroundEffect{ { 625, 10 + y, 625 +  70, 10 + 200 + y }, true };
             addView(v6);
 
-            auto* v7 = new CViewContainer{ { 700, 10, 700 +  30, 10 + 200 } };
-            v7->setBackgroundColor(dkrclr);
+            auto* v7 = new BackgroundEffect{ { 700, 10 + y, 700 +  30, 10 + 200 + y }, true };
             addView(v7);
 
-            outl = new Label{ { 700,  13, 700 + 30,  13 + 18  } };
+            outl = new Label{ { 699,  13 + y, 699 + 30,  13 + 18 + y  } };
             outl->fontsize = 14, outl->center = true, outl->value = "Out";
-            dest = new Knob{ { 705,  39, 705 + 20,  39 + 169 }, editor };
+            dest = new Knob{ { 704,  39 + y, 704 + 20,  39 + 169 + y }, editor };
             dest->name = "I,II,III,IV,V,VI,O";
             dest->min = 4;
             dest->max = 7;
@@ -259,47 +236,47 @@ namespace Kaixo
 
             dest->setListener(listener); dest->setTag(Params::DestA + index);
 
-            phse = new Knob{ {  10,  15,  10 +  55,  15 +  90 }, editor }; phse->setListener(listener); phse->setTag(Params::Phase1 + index);
-            plsw = new Knob{ {  67,  15,  67 +  55,  15 +  90 }, editor }; plsw->setListener(listener); plsw->setTag(Params::PulseW1 + index);
-            bend = new Knob{ { 124,  15, 124 +  55,  15 +  90 }, editor }; bend->setListener(listener); bend->setTag(Params::Bend1 + index);
-            wtps = new Knob{ {  10, 115,  10 +  55, 115 +  90 }, editor }; wtps->setListener(listener); wtps->setTag(Params::WTPos1 + index);
-            sync = new Knob{ {  67, 115,  67 +  55, 115 +  90 }, editor }; sync->setListener(listener); sync->setTag(Params::Sync1 + index);
-            dcof = new Knob{ { 124, 115, 124 +  55, 115 +  90 }, editor }; dcof->setListener(listener); dcof->setTag(Params::DCOff1 + index);
+            phse = new Knob{ {  10,  15 + y,  10 +  55,  15 +  90 + y }, editor, true }; phse->setListener(listener); phse->setTag(Params::Phase1 + index);
+            plsw = new Knob{ {  67,  15 + y,  67 +  55,  15 +  90 + y }, editor, true }; plsw->setListener(listener); plsw->setTag(Params::PulseW1 + index);
+            bend = new Knob{ { 124,  15 + y, 124 +  55,  15 +  90 + y }, editor, true }; bend->setListener(listener); bend->setTag(Params::Bend1 + index);
+            wtps = new Knob{ {  10, 115 + y,  10 +  55, 115 +  90 + y }, editor, true }; wtps->setListener(listener); wtps->setTag(Params::WTPos1 + index);
+            sync = new Knob{ {  67, 115 + y,  67 +  55, 115 +  90 + y }, editor, true }; sync->setListener(listener); sync->setTag(Params::Sync1 + index);
+            dcof = new Knob{ { 124, 115 + y, 124 +  55, 115 +  90 + y }, editor, true }; dcof->setListener(listener); dcof->setTag(Params::DCOff1 + index);
 
-            shpl = new Label{ { 209,  13, 209 + 90,  13 + 18 } };
+            shpl = new Label{ { 209,  13 + y, 209 + 90,  13 + 18 + y } };
             shpl->fontsize = 14, shpl->center = false, shpl->value = "Waveshaper";
-            enbs = new Knob{ { 193,  14, 193 +  14,  14 +  14 }, editor }; enbs->setListener(listener); enbs->setTag(Params::ENBShaper1 + index);
-            shpr = new Knob{ { 194,  35, 194 +  65,  35 +  53 }, editor }; shpr->setListener(listener); shpr->setTag(Params::Shaper1 + index);
-            shpm = new Knob{ { 259,  35, 259 +  65,  35 +  53 }, editor }; shpm->setListener(listener); shpm->setTag(Params::ShaperMix1 + index);
-            shp2 = new Knob{ { 324, 152, 324 + 65, 152 + 53 }, editor }; shp2->setListener(listener); shp2->setTag(Params::Shaper21 + index);
-            sh2m = new Knob{ { 324,  95, 324 + 65,  95 + 53 }, editor }; sh2m->setListener(listener); sh2m->setTag(Params::Shaper2Mix1 + index);
-            shmr = new Knob{ { 324,  35, 324 + 65,  35 + 53 }, editor }; shmr->setListener(listener); shmr->setTag(Params::ShaperMorph1 + index);
-            panel = new XYPanel{ shpr, shp2, { 194, 93, 194 + 125, 93 + 112 } };
+            enbs = new Knob{ { 193,  14 + y, 193 +  14,  14 +  14 + y }, editor }; enbs->setListener(listener); enbs->setTag(Params::ENBShaper1 + index);
+            shpr = new Knob{ { 194,  35 + y, 194 +  65,  35 +  53 + y }, editor }; shpr->setListener(listener); shpr->setTag(Params::Shaper1 + index);
+            shpm = new Knob{ { 259,  35 + y, 259 +  65,  35 +  53 + y }, editor }; shpm->setListener(listener); shpm->setTag(Params::ShaperMix1 + index);
+            shp2 = new Knob{ { 324, 152 + y, 324 + 65, 152 + 53 + y }, editor }; shp2->setListener(listener); shp2->setTag(Params::Shaper21 + index);
+            sh2m = new Knob{ { 324,  95 + y, 324 + 65,  95 + 53 + y }, editor }; sh2m->setListener(listener); sh2m->setTag(Params::Shaper2Mix1 + index);
+            shmr = new Knob{ { 324,  35 + y, 324 + 65,  35 + 53 + y }, editor }; shmr->setListener(listener); shmr->setTag(Params::ShaperMorph1 + index);
+            panel = new XYPanel{ shpr, shp2, { 194, 93 + y, 194 + 125, 93 + 112 + y } };
 
-            fldl = new Label{ { 420,  13, 420 + 40,  13 + 18 } };
+            fldl = new Label{ { 420,  13 + y, 420 + 40,  13 + 18 + y } };
             fldl->fontsize = 14, fldl->center = false, fldl->value = "Fold";
-            enbf = new Knob{ { 404,  14, 404 + 14,  14 + 14 }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
-            flda = new Knob{ { 405,  52, 405 + 60,  52 + 95 }, editor }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
-            bias = new Knob{ { 405, 152, 405 + 65, 152 + 53 }, editor }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
+            enbf = new Knob{ { 404,  14 + y, 404 + 14,  14 + 14 + y }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
+            flda = new Knob{ { 405,  52 + y, 405 + 60,  52 + 95 + y }, editor }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
+            bias = new Knob{ { 405, 152 + y, 405 + 65, 152 + 53 + y }, editor }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
 
-            nsel = new Label{ { 495,  13, 495 + 40,  13 + 18  } };
+            nsel = new Label{ { 495,  13 + y, 495 + 40,  13 + 18 + y  } };
             nsel->fontsize = 14, nsel->center = false, nsel->value = "Noise";
-            enbn = new Knob{ { 479,  14, 479 + 14,  14 + 14 }, editor }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
-            nois = new Knob{ { 480,  52, 480 + 60,  52 + 95 }, editor }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
-            nscl = new Knob{ { 480, 152, 480 + 65, 152 + 53 }, editor }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
+            enbn = new Knob{ { 479,  14 + y, 479 + 14,  14 + 14 + y }, editor }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
+            nois = new Knob{ { 480,  52 + y, 480 + 60,  52 + 95 + y }, editor }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
+            nscl = new Knob{ { 480, 152 + y, 480 + 65, 152 + 53 + y }, editor }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
 
-            drvl = new Label{ { 570,  13, 570 + 40,  13 + 18 } };
+            drvl = new Label{ { 570,  13 + y, 570 + 40,  13 + 18 + y } };
             drvl->fontsize = 14, drvl->center = false, drvl->value = "Drive";
-            enbd = new Knob{ { 554,  14, 554 + 14,  14 + 14 }, editor }; enbd->setListener(listener); enbd->setTag(Params::ENBDrive1 + index);
-            drvg = new Knob{ { 555,  52, 555 + 60,  52 + 95 }, editor }; drvg->setListener(listener); drvg->setTag(Params::DriveGain1 + index);
-            drve = new Knob{ { 555, 152, 555 + 65, 152 + 53 }, editor }; drve->setListener(listener); drve->setTag(Params::DriveAmt1 + index);
+            enbd = new Knob{ { 554,  14 + y, 554 + 14,  14 + 14 + y }, editor }; enbd->setListener(listener); enbd->setTag(Params::ENBDrive1 + index);
+            drvg = new Knob{ { 555,  52 + y, 555 + 60,  52 + 95 + y }, editor }; drvg->setListener(listener); drvg->setTag(Params::DriveGain1 + index);
+            drve = new Knob{ { 555, 152 + y, 555 + 65, 152 + 53 + y }, editor }; drve->setListener(listener); drve->setTag(Params::DriveAmt1 + index);
 
-            ftrl = new Label{ { 645,  13, 645 + 40,  13 + 18 } };
+            ftrl = new Label{ { 645,  13 + y, 645 + 40,  13 + 18 + y } };
             ftrl->fontsize = 14, ftrl->center = false, ftrl->value = "Filter";
-            enbr = new Knob{ { 629,  14, 629 + 14,  14 + 14 }, editor }; enbr->setListener(listener); enbr->setTag(Params::ENBFilter1 + index);
-            fltr = new Knob{ { 629,  32, 629 + 63,  32 + 17 }, editor }; fltr->setListener(listener); fltr->setTag(Params::Filter1 + index);
-            freq = new Knob{ { 630,  52, 630 + 60,  52 + 95 }, editor }; freq->setListener(listener); freq->setTag(Params::Freq1 + index);
-            reso = new Knob{ { 630, 152, 630 + 65, 152 + 53 }, editor }; reso->setListener(listener); reso->setTag(Params::Reso1 + index);
+            enbr = new Knob{ { 629,  14 + y, 629 + 14,  14 + 14 + y }, editor }; enbr->setListener(listener); enbr->setTag(Params::ENBFilter1 + index);
+            fltr = new Knob{ { 629,  32 + y, 629 + 63,  32 + 17 + y }, editor }; fltr->setListener(listener); fltr->setTag(Params::Filter1 + index);
+            freq = new Knob{ { 630,  52 + y, 630 + 60,  52 + 95 + y }, editor }; freq->setListener(listener); freq->setTag(Params::Freq1 + index);
+            reso = new Knob{ { 630, 152 + y, 630 + 65, 152 + 53 + y }, editor }; reso->setListener(listener); reso->setTag(Params::Reso1 + index);
 
             phse->name = "Phase"; plsw->name = "PW";  bend->name = "Bend"; wtps->name = "WTP"; sync->name = "Sync"; dcof->name = "Offset"; 
             phse->min = 0;        plsw->min = -100;   bend->min = -100;    wtps->min = 0;      sync->min = 100;     dcof->min = -1;
@@ -390,6 +367,42 @@ namespace Kaixo
 
             addView(panel);
         }
+
+        ~OscillatorToggle()
+        {
+            phse->forget();
+            sync->forget();
+            plsw->forget();
+            wtps->forget();
+            bend->forget();
+            dcof->forget();
+
+            enbs->forget();
+            shpr->forget();
+            shpm->forget();
+            shp2->forget();
+            sh2m->forget();
+            shmr->forget();
+            
+            enbn->forget();
+            nois->forget();
+            nscl->forget();
+            
+            enbf->forget();
+            flda->forget();
+            bias->forget();
+
+            enbd->forget();
+            drvg->forget();
+            drve->forget();
+
+            enbr->forget();
+            fltr->forget();
+            freq->forget();
+            reso->forget();
+
+            dest->forget();
+        }
     };
 
     class OscillatorView : public CViewContainer, public IControlListener
@@ -406,8 +419,6 @@ namespace Kaixo
         Label* titl = nullptr; // Oscillator title
         WaveformView* wfrm = nullptr; // Waveform view
 
-        SelectOverlay* ovrl;
-
         int index = 0;
         bool viewWave = false;
         
@@ -418,8 +429,15 @@ namespace Kaixo
             if (!selected)
             {
                 toggle->setVisible(true);
-                ovrl->color = { 17, 17, 17, 255 };
-                ovrl->setDirty(true);
+                //bgef->pressed = true;
+                //bgef->setDirty(true);
+                //enbl->setViewSize(((CRect)enbl->getViewSize()).offset({ bgef->edge, bgef->edge }));
+                //tune->setViewSize(((CRect)tune->getViewSize()).offset({ bgef->edge, bgef->edge }));
+                //pann->setViewSize(((CRect)pann->getViewSize()).offset({ bgef->edge, bgef->edge }));
+                //detn->setViewSize(((CRect)detn->getViewSize()).offset({ bgef->edge, bgef->edge }));
+                //volm->setViewSize(((CRect)volm->getViewSize()).offset({ bgef->edge, bgef->edge }));
+                //titl->setViewSize(((CRect)titl->getViewSize()).offset({ bgef->edge, bgef->edge }));
+                //wfrm->setViewSize(((CRect)wfrm->getViewSize()).offset({ bgef->edge, bgef->edge }));
             }
             selected = true;
         }
@@ -429,8 +447,15 @@ namespace Kaixo
             if (selected)
             {
                 toggle->setVisible(false);
-                ovrl->color = { 128, 128, 128, 0 };
-                ovrl->setDirty(true);
+                //bgef->pressed = false;
+                //bgef->setDirty(true);
+                //enbl->setViewSize(((CRect)enbl->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
+                //tune->setViewSize(((CRect)tune->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
+                //pann->setViewSize(((CRect)pann->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
+                //detn->setViewSize(((CRect)detn->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
+                //volm->setViewSize(((CRect)volm->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
+                //titl->setViewSize(((CRect)titl->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
+                //wfrm->setViewSize(((CRect)wfrm->getViewSize()).offset({ -bgef->edge, -bgef->edge }));
             }
             selected = false;
         }
@@ -471,10 +496,10 @@ namespace Kaixo
             getTransform().inverse().transform(where2);
             if (wfrm->getViewSize().pointInside(where2))
             {
-                if (selected)
+                if (buttons.isDoubleClick())
                 {
                     viewWave ^= true;
-                    if (viewWave) wfrm->setViewSize({ 0, 0, getWidth(), getHeight() });
+                    if (viewWave) wfrm->setViewSize({ 1, 1, getWidth() - 1, getHeight() - 1 });
                     else wfrm->setViewSize({ 140, 35, 140 + 87, 35 + 75 });
                 }
             }
@@ -493,57 +518,114 @@ namespace Kaixo
         {
             modulateChange = true;
             onIdle();
-            bool _f = false;
-            if (pControl == enbl)
+            if (pControl == enbl || pControl == toggle->enbd || pControl == toggle->enbf || pControl == toggle->enbn 
+                || pControl == toggle->enbr || pControl == toggle->enbs)
             {
-                titl->color = enbl->getValue() > 0.5 ? CColor{ 200, 200, 200, 255 } : CColor{ 128, 128, 128, 255 };
+                titl->enabled = enbl->getValue() > 0.5;
 
-                CColor _clr = enbl->getValue() > 0.5 ? MainOsc : CColor{ 128, 128, 128, 255 };
-                wfrm->color = _clr;
-                tune->color = _clr;
-                volm->color = _clr;
-                detn->color = _clr;
-                pann->color = _clr;
-                toggle->freq->color = _clr;
-                toggle->sync->color = _clr;
-                toggle->plsw->color = _clr;
-                toggle->phse->color = _clr;
-                toggle->wtps->color = _clr;
-                toggle->reso->color = _clr;
-                toggle->shpr->color = _clr;
-                toggle->shp2->color = _clr;
-                toggle->nois->color = _clr;
-                toggle->fltr->color = _clr;
+                bool _clr = enbl->getValue() > 0.5;
+                wfrm->enabled = _clr;
+                tune->enabled = _clr;
+                volm->enabled = _clr;
+                detn->enabled = _clr;
+                pann->enabled = _clr;
+
+                toggle->dest->enabled = _clr;
+                toggle->phse->enabled = _clr;
+                toggle->sync->enabled = _clr;
+                toggle->plsw->enabled = _clr;
+                toggle->wtps->enabled = _clr;
+                toggle->bend->enabled = _clr;
+                toggle->dcof->enabled = _clr;
+
+                toggle->enbs->enabled = _clr;
+                bool _c1 = toggle->enbs->getValue() > 0.5 && _clr;
+                toggle->shpl->enabled = _c1;
+                toggle->shpr->enabled = _c1;
+                toggle->shpm->enabled = _c1;
+                toggle->shp2->enabled = _c1;
+                toggle->sh2m->enabled = _c1;
+                toggle->shmr->enabled = _c1;
+                toggle->panel->enabled = _c1;
+
+                toggle->enbn->enabled = _clr;
+                bool _c2 = toggle->enbn->getValue() > 0.5 && _clr;
+                toggle->nsel->enabled = _c2;
+                toggle->nois->enabled = _c2;
+                toggle->nscl->enabled = _c2;
+
+                toggle->enbf->enabled = _clr;
+                bool _c3 = toggle->enbf->getValue() > 0.5 && _clr;
+                toggle->fldl->enabled = _c3;
+                toggle->flda->enabled = _c3;
+                toggle->bias->enabled = _c3;
+
+                toggle->enbd->enabled = _clr;
+                bool _c4 = toggle->enbd->getValue() > 0.5 && _clr;
+                toggle->drvl->enabled = _c4;
+                toggle->drvg->enabled = _c4;
+                toggle->drve->enabled = _c4;
+
+                toggle->enbr->enabled = _clr;
+                bool _c5 = toggle->enbr->getValue() > 0.5 && _clr;
+                toggle->ftrl->enabled = _c5;
+                toggle->fltr->enabled = _c5;
+                toggle->freq->enabled = _c5;
+                toggle->reso->enabled = _c5;
+
+                toggle->outl->enabled = _clr;
+
 
                 tune->setDirty(true);
                 volm->setDirty(true);
                 detn->setDirty(true);
                 pann->setDirty(true);
-                toggle->freq->setDirty(true);
+                toggle->dest->setDirty(true);
+                toggle->phse->setDirty(true);
                 toggle->sync->setDirty(true);
                 toggle->plsw->setDirty(true);
-                toggle->phse->setDirty(true);
                 toggle->wtps->setDirty(true);
-                toggle->reso->setDirty(true);
+                toggle->bend->setDirty(true);
+                toggle->dcof->setDirty(true);
+                toggle->enbs->setDirty(true);
+                toggle->shpl->setDirty(true);
                 toggle->shpr->setDirty(true);
+                toggle->shpm->setDirty(true);
                 toggle->shp2->setDirty(true);
+                toggle->sh2m->setDirty(true);
+                toggle->shmr->setDirty(true);
+                toggle->panel->setDirty(true);
+                toggle->enbn->setDirty(true);
+                toggle->nsel->setDirty(true);
                 toggle->nois->setDirty(true);
+                toggle->nscl->setDirty(true);
+                toggle->fldl->setDirty(true);
+                toggle->enbf->setDirty(true);
+                toggle->flda->setDirty(true);
+                toggle->bias->setDirty(true);
+                toggle->drvl->setDirty(true);
+                toggle->enbd->setDirty(true);
+                toggle->drvg->setDirty(true);
+                toggle->drve->setDirty(true);
+                toggle->ftrl->setDirty(true);
+                toggle->enbr->setDirty(true);
                 toggle->fltr->setDirty(true);
+                toggle->freq->setDirty(true);
+                toggle->reso->setDirty(true);
+                toggle->outl->setDirty(true);
+
                 wfrm->setDirty(true);
             }
-
-            if (_f)
-                wfrm->setDirty(true);
         }
-
+        BackgroundEffect* bgef;
         OscillatorView(OscillatorToggle* toggle, const CRect& size, int index, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size), toggle(toggle), index(index)
         {
-            setBackgroundColor({ 23, 23, 23, 255 });
-            setWantsIdle(true);
+            setBackgroundColor({ 0, 0, 0, 0 });
+            bgef = new BackgroundEffect{ { 0, 0, getWidth(), getHeight() } };
+            addView(bgef);
 
-            ovrl = new SelectOverlay{ { 0, 0, getWidth(), getHeight() } };
-            ovrl->color = { 0, 0, 0, 0 };
+            setWantsIdle(true);
 
             enbl = new Knob{ { 169,   3     , 169 + 28,   3 + 28  }, editor };
             tune = new Knob{ {  65,   5     ,  65 + 70,   5 + 96 + 10      }, editor };
@@ -558,7 +640,6 @@ namespace Kaixo
             titl->setMouseEnabled(false);
             titl->fontsize = 24;
             titl->center = true;
-            titl->color = { 200, 200, 200, 255 };
             std::string a;
             a += (char)('A' + index);
             titl->value = a.c_str();
@@ -577,13 +658,13 @@ namespace Kaixo
             detn->setTag(Params::Detune1 + index);
             volm->setTag(Params::Volume1 + index);
 
-            tune->name = "Pitch";    pann->name = "Pan";   
-            tune->min = -24;         pann->min = -50;      
-            tune->max = 24;          pann->max = 50;       
-            tune->reset = 0;         pann->reset = 0;      
-            tune->decimals = 1;      pann->decimals = 1;   
-            tune->unit = " st";      pann->unit = "pan";   
-            tune->type = 0;          pann->type = 0;       
+            tune->name = "Pitch";    pann->name = "Pan";
+            tune->min = -24;         pann->min = -50;
+            tune->max = 24;          pann->max = 50;
+            tune->reset = 0;         pann->reset = 0;
+            tune->decimals = 1;      pann->decimals = 1;
+            tune->unit = " st";      pann->unit = "pan";
+            tune->type = 0;          pann->type = 0;
 
             detn->name = "Detune";   volm->name = "Gain";
             detn->min = -200;        volm->min = 0;
@@ -593,13 +674,13 @@ namespace Kaixo
             detn->unit = " ct";      volm->unit = " dB";
             detn->type = 0;          volm->type = 0;
 
-            enbl->name = "";   
-            enbl->min = 0;     
-            enbl->max = 1;     
-            enbl->reset = 0;   
+            enbl->name = "";
+            enbl->min = 0;
+            enbl->max = 1;
+            enbl->reset = 0;
             enbl->decimals = 0;
-            enbl->unit = "";   
-            enbl->type = 3;    
+            enbl->unit = "";
+            enbl->type = 3;
 
             addView(enbl);
             addView(tune);
@@ -610,8 +691,15 @@ namespace Kaixo
             addView(titl);
 
             addView(wfrm);
+        }
 
-            addView(ovrl);
+        ~OscillatorView() 
+        {
+            enbl->forget();
+            tune->forget();
+            pann->forget();
+            detn->forget();
+            volm->forget();
         }
     };
 
@@ -651,22 +739,22 @@ namespace Kaixo
             : CViewContainer(size)
         {
             setBackgroundColor({ 0, 0, 0, 0 });
-            
-            toggles[0] = new OscillatorToggle{ { 5, 170, 5 + 670 + 65, 170 + 220 }, 0, listener, editor };
-            toggles[1] = new OscillatorToggle{ { 5, 170, 5 + 670 + 65, 170 + 220 }, 1, listener, editor };
-            toggles[2] = new OscillatorToggle{ { 5, 170, 5 + 670 + 65, 170 + 220 }, 2, listener, editor };
-            toggles[3] = new OscillatorToggle{ { 5, 170, 5 + 670 + 65, 170 + 220 }, 3, listener, editor };
-            
+
+            toggles[0] = new OscillatorToggle{ { 5, 168, 5 + 670 + 65, 168 + 224 }, 0, listener, editor };
+            toggles[1] = new OscillatorToggle{ { 5, 168, 5 + 670 + 65, 168 + 224 }, 1, listener, editor };
+            toggles[2] = new OscillatorToggle{ { 5, 168, 5 + 670 + 65, 168 + 224 }, 2, listener, editor };
+            toggles[3] = new OscillatorToggle{ { 5, 168, 5 + 670 + 65, 168 + 224 }, 3, listener, editor };
+
             toggles[0]->setVisible(false);
             toggles[1]->setVisible(false);
             toggles[2]->setVisible(false);
             toggles[3]->setVisible(false);
 
             views[0] = new OscillatorView{ toggles[0], {   5,  55,   5 + 335 + 30,  55 + 115 }, 0, listener, editor };
-            views[1] = new OscillatorView{ toggles[1], { 375,  55, 377 + 335 + 30,  55 + 115 }, 1, listener, editor };
+            views[1] = new OscillatorView{ toggles[1], { 375,  55, 375 + 335 + 30,  55 + 115 }, 1, listener, editor };
             views[2] = new OscillatorView{ toggles[2], {   5, 390,   5 + 335 + 30, 390 + 115 }, 2, listener, editor };
-            views[3] = new OscillatorView{ toggles[3], { 375, 390, 377 + 335 + 30, 390 + 115 }, 3, listener, editor };
-            
+            views[3] = new OscillatorView{ toggles[3], { 375, 390, 375 + 335 + 30, 390 + 115 }, 3, listener, editor };
+
             for (auto& i : views)
             {
                 i->toggle->phse->registerControlListener(i);
@@ -720,30 +808,4 @@ namespace Kaixo
             addView(toggles[3]);
         }
     };
-
-    struct OscillatorAttributes
-    {
-        static inline CPoint Size = { 335, 200 };
-
-        static inline auto Name = "Oscillator";
-        static inline auto BaseView = UIViewCreator::kCViewContainer;
-
-        static inline std::tuple Attributes{};
-    };
-
-    class OscillatorViewFactory : public ViewFactoryBase<OscillatorPart, OscillatorAttributes>
-    {
-    public:
-        CView* create(const UIAttributes& attributes, const IUIDescription* description) const override
-        {
-            CRect _size{ CPoint{ 45, 45 }, OscillatorAttributes::Size };
-            int _index = 0;
-            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
-            auto* _value = new OscillatorPart(_size, description->getControlListener(""), _editor);
-            apply(_value, attributes, description);
-            return _value;
-        }
-    };
-
-    static inline OscillatorViewFactory oscillatorViewFactory;
 }

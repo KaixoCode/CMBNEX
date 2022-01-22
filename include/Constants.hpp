@@ -1,17 +1,40 @@
 #pragma once
 
-constexpr CColor MainMain =  CColor{ 0, 179, 98, 255 };
-constexpr CColor MainOsc =   CColor{ 0, 179, 98, 255 };
-constexpr CColor MainEnv = CColor{ 0, 179, 98, 255 };
-constexpr CColor MainMacro = CColor{ 0, 179, 98, 255 };
-constexpr CColor MainLFO = CColor{ 0, 179, 98, 255 };
-//constexpr CColor MainMain = CColor{ 0, 179, 98, 255 };
-//constexpr CColor MainOsc = CColor{ 212, 72, 72, 255 };
-//constexpr CColor MainEnv = CColor{ 255, 216, 43, 255 };
-//constexpr CColor MainMacro = CColor{ 212, 72, 72, 255 };
-//constexpr CColor MainLFO = CColor{ 72, 77, 212, 255 };
+//constexpr CColor Background = CColor{ 30, 30, 30, 255 };
+//constexpr CColor MainGreen =  CColor{ 0, 179, 98, 255 };
+//constexpr CColor MainBack =  CColor{ 23, 23, 23, 255 };
+//constexpr CColor DarkBack =  CColor{ 17, 17, 17, 255 };
+//constexpr CColor ItemBack =  CColor{ 15, 15, 15, 255 };
+//constexpr CColor KnobBack =  CColor{ 40, 40, 40, 255 };
+//constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
+//constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
+//constexpr CColor OffText = CColor{ 128, 128, 128, 255 };
+//constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
+
+constexpr CColor Background = CColor{ 15, 15, 15, 255 };
+constexpr CColor MainGreen =  CColor{ 0, 179, 98, 255 };
+constexpr CColor MainBack =  CColor{ 25, 25, 25, 255 };
+constexpr CColor MainBackL =  CColor{ 40, 40, 40, 255 };
+constexpr CColor MainBackD =  CColor{  0,  0,  0, 255 };
+constexpr CColor DarkBack =  CColor{ 15, 15, 15, 255 };
+constexpr CColor ItemBack =  CColor{ 15, 15, 15, 255 };
+constexpr CColor KnobBack =  CColor{ 40, 40, 40, 255 };
+constexpr CColor KnobBackDark =  CColor{ 30, 30, 30, 255 };
+constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
 constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
-constexpr CColor OffText = CColor{ 128, 128, 128, 255 };
+constexpr CColor OffText = CColor{ 100, 100, 100, 255 };
+constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
+
+//constexpr CColor Background = CColor{ 30, 30, 30, 255 };
+//constexpr CColor MainGreen = CColor{ 0, 179, 98, 255 };
+//constexpr CColor MainBack = CColor{ 15, 15, 15, 255 };
+//constexpr CColor DarkBack = CColor{  5,  5,  5, 255 };
+//constexpr CColor ItemBack = CColor{  5,  5,  5, 255 };
+//constexpr CColor KnobBack = CColor{ 30, 30, 30, 255 };
+//constexpr CColor Border = CColor{ 25, 25, 25, 255 };
+//constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
+//constexpr CColor OffText = CColor{  75,  75,  75, 255 };
+//constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
 
 
 struct ParamInfo
@@ -27,6 +50,8 @@ struct ParamInfo
 
 enum Params
 {
+    Macro1, Macro2, Macro3, Macro4, Macro5,
+
     Volume1,      Volume2,      Volume3,      Volume4,
     Pitch1,       Pitch2,       Pitch3,       Pitch4,
     Detune1,      Detune2,      Detune3,      Detune4,
@@ -111,8 +136,6 @@ enum Params
 
     SubOct,
 
-    Macro1, Macro2, Macro3, Macro4, Macro5,
-
     Clipping, Oversample, Retrigger,
 
     FilterX, FilterY, FilterZ,
@@ -144,7 +167,9 @@ enum class ModSources
 };
 
 constexpr ParamInfo ParamNames[]
-{ 
+{
+    { "Macro 1", 0 }, { "Macro 2", 0 }, { "Macro 3", 0 }, { "Macro 4", 0 }, { "Macro 5", 0 },
+
     { "A Gain", 1 },           { "B Gain", 0 },           { "C Gain", 0 },           { "D Gain", 0 },
     { "A Pitch", 0.5, 1, 0 },  { "B Pitch", 0.5, 1, 0 },  { "C Pitch", 0.5, 1, 0 },  { "D Pitch", 0.5, 1, 0 },
     { "A Detune", 0.5, 1, 0 }, { "B Detune", 0.5, 1, 0 }, { "C Detune", 0.5, 1, 0 }, { "D Detune", 0.5, 1, 0 },
@@ -228,8 +253,6 @@ constexpr ParamInfo ParamNames[]
     { "A Random", 0 },            { "B Random", 0 },            { "C Random", 0 },            { "D Random", 0 },
 
     { "Octave", 0.5, false, true, true, 4 },
-
-    { "Macro 1", 0 }, { "Macro 2", 0 }, { "Macro 3", 0 }, { "Macro 4", 0 }, { "Macro 5", 0 }, 
 
     { "Clipping", 1 }, { "Oversample", 0.25 }, { "Retrigger", 1 },
 

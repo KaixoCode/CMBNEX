@@ -40,8 +40,8 @@ namespace Kaixo
 
         void draw(CDrawContext* pContext) override
         {
-            constexpr CColor back{ 40, 40, 40, 255 };
-            constexpr CColor brdr{ 30, 30, 30, 255 };
+            constexpr CColor back = KnobBack;
+            constexpr CColor brdr = Border;
             auto a = getViewSize();
             pContext->setLineWidth(1);
             a.top += 1;
@@ -49,7 +49,7 @@ namespace Kaixo
             pContext->setFillColor({ 255, 255, 255, 16 });
             pContext->drawRect(a, kDrawFilled);
             a.right = a.left + 3;
-            pContext->setFillColor(MainOsc);
+            pContext->setFillColor(MainGreen);
             pContext->drawRect(a, kDrawFilled);
         }
     };

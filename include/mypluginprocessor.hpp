@@ -3,14 +3,7 @@
 #include "myplugincids.hpp"
 #include "Modules.hpp"
 #include "Knob.hpp"
-#include "OscillatorView.hpp"
-#include "EnvelopeView.hpp"
-#include "CombineView.hpp"
 #include "ModeView.hpp"
-#include "LFOView.hpp"
-#include "SubOscView.hpp"
-#include "MidiView.hpp"
-#include "TopBarView.hpp"
 #include "myplugincontroller.hpp"
 
 /**
@@ -86,11 +79,19 @@
  * 
  * TODO:
  * - LFO Sync not synced
- * 
+ * - LFO global sync
  * - Noise Color
- * - Waveshaper X-Y Panel Thingy
- * - Optimize new shapers
- * 
+ * - Top bar (save/load preset)
+ * - Better Drive algorithm
+ * - Random phase button
+ * X Parameter color when disabled
+ * - LFO/Envelope modulation redraw
+ * - Alignment of parameters sub oscillator
+ * - Enable button of combiner filter
+ * X Globalize all colors
+ * - 'Display big waveform' toggle as parameter so it's saved.
+ * X Change big waveform display to double click, and add to lfo and envelope
+ * - Change LFO speed = mouseX, Amount = mouseY
  * 
  */
 
@@ -512,7 +513,7 @@ namespace Kaixo
                     else if (source >= (int)ModSources::Mac1)
                     {
                         int mindex = (source - (int)ModSources::Mac1);
-                        modulated[m] += (params[Params::Macro1 + mindex] * amount);
+                        modulated[m] += (modulated[Params::Macro1 + mindex] * amount);
                     }
                     else if (source >= (int)ModSources::Env1)
                     {
@@ -522,7 +523,7 @@ namespace Kaixo
                     else
                     {
                         int mindex = (source - (int)ModSources::LFO1);
-                        modulated[m] += ((params[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
+                        modulated[m] += ((modulated[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
                     }
                 }
 
@@ -666,16 +667,16 @@ namespace Kaixo
 
         inline double Combine(double a, double b, int index)
         {
-            const auto mmin = modulated[Params::MinMixX + index] * CombineSingle(a, b, MIN);
-            const auto mult = modulated[Params::MultMixX + index] * CombineSingle(a, b, MULT);
-            const auto pong = modulated[Params::PongMixX + index] * CombineSingle(a, b, PONG);
-            const auto mmax = modulated[Params::MaxMixX + index] * CombineSingle(a, b, MAX);
-            const auto mmod = modulated[Params::ModMixX + index] * CombineSingle(a, b, MOD);
-            const auto mand = modulated[Params::AndMixX + index] * CombineSingle(a, b, AND);
-            const auto inlv = modulated[Params::InlvMixX + index] * CombineSingle(a, b, INLV);
-            const auto mmor = modulated[Params::OrMixX + index] * CombineSingle(a, b, OR);
-            const auto mxor = modulated[Params::XOrMixX + index] * CombineSingle(a, b, XOR);
-            const auto madd = modulated[Params::AddMixX + index] * CombineSingle(a, b, ADD);
+            const auto mmin = modulated[Params::MinMixX + index] ? modulated[Params::MinMixX + index] * CombineSingle(a, b, MIN) : 0;
+            const auto mult = modulated[Params::MultMixX + index] ? modulated[Params::MultMixX + index] * CombineSingle(a, b, MULT) : 0;
+            const auto pong = modulated[Params::PongMixX + index] ? modulated[Params::PongMixX + index] * CombineSingle(a, b, PONG) : 0;
+            const auto mmax = modulated[Params::MaxMixX + index] ? modulated[Params::MaxMixX + index] * CombineSingle(a, b, MAX) : 0;
+            const auto mmod = modulated[Params::ModMixX + index] ? modulated[Params::ModMixX + index] * CombineSingle(a, b, MOD) : 0;
+            const auto mand = modulated[Params::AndMixX + index] ? modulated[Params::AndMixX + index] * CombineSingle(a, b, AND) : 0;
+            const auto inlv = modulated[Params::InlvMixX + index] ? modulated[Params::InlvMixX + index] * CombineSingle(a, b, INLV) : 0;
+            const auto mmor = modulated[Params::OrMixX + index] ? modulated[Params::OrMixX + index] * CombineSingle(a, b, OR) : 0;
+            const auto mxor = modulated[Params::XOrMixX + index] ? modulated[Params::XOrMixX + index] * CombineSingle(a, b, XOR) : 0;
+            const auto madd = modulated[Params::AddMixX + index] ? modulated[Params::AddMixX + index] * CombineSingle(a, b, ADD) : 0;
             
             const auto multiplier = 1 + modulated[Params::MinMixX + index] + modulated[Params::MultMixX + index]
                 + modulated[Params::PongMixX + index] + modulated[Params::MaxMixX + index] + modulated[Params::ModMixX + index]

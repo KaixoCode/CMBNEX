@@ -17,7 +17,7 @@ namespace Kaixo
 
         bool pressed = false;
 
-        CColor color = MainMain;
+        CColor color = MainGreen;
         
         enum Section { Attack, AttackCurve, Decay, DecayCurve, Sustain, SustainLine, Release, ReleaseCurve, None } section;
         Section editing = None;
@@ -174,10 +174,10 @@ namespace Kaixo
 
         void draw(CDrawContext* pContext) override
         {
-            constexpr CColor back{ 15, 15, 15, 255 };
+            constexpr CColor back = ItemBack;
             CColor main = color;
             CColor brgt = color;
-            constexpr CColor crnr{ 128, 128, 128, 255 };
+            constexpr CColor crnr = OffText;
             pContext->setLineWidth(1);
             pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
             pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
@@ -448,12 +448,12 @@ namespace Kaixo
 
         void UpdateIndex()
         {
-            env1->color = env2->color = env3->color = env4->color = env5->color = { 128, 128, 128, 255 };
-            if (index == 0) env1->color = { 200, 200, 200, 255 };
-            if (index == 1) env2->color = { 200, 200, 200, 255 };
-            if (index == 2) env3->color = { 200, 200, 200, 255 };
-            if (index == 3) env4->color = { 200, 200, 200, 255 };
-            if (index == 4) env5->color = { 200, 200, 200, 255 };
+            env1->enabled = env2->enabled = env3->enabled = env4->enabled = env5->enabled = false;
+            if (index == 0) env1->enabled = true;
+            if (index == 1) env2->enabled = true;
+            if (index == 2) env3->enabled = true;
+            if (index == 3) env4->enabled = true;
+            if (index == 4) env5->enabled = true;
 
             attk->setTag(Params::Env1A + index);
             atkc->setTag(Params::Env1AC + index);
@@ -478,7 +478,7 @@ namespace Kaixo
             {
                 int _page = std::floor((where.x - getViewSize().left) / 112);
 
-                time->color = vlue->color = slpe->color = { 128, 128, 128, 255 };
+                time->enabled = vlue->enabled = slpe->enabled = false;
                 switch (_page)
                 {
                 case 0:
@@ -495,7 +495,7 @@ namespace Kaixo
                     attl->setVisible(false);
                     decl->setVisible(false);
 
-                    time->color = { 200, 200, 200, 255 };
+                    time->enabled = true;
                     break;
                 }
                 case 1:
@@ -512,7 +512,7 @@ namespace Kaixo
                     attl->setVisible(false);
                     decl->setVisible(false);
 
-                    slpe->color = { 200, 200, 200, 255 };
+                    slpe->enabled = true;
                     break;
                 }
                 case 2:
@@ -529,7 +529,7 @@ namespace Kaixo
                     attl->setVisible(true);
                     decl->setVisible(true);
 
-                    vlue->color = { 200, 200, 200, 255 };
+                    vlue->enabled = true;
                     break;
                 }
                 }
@@ -541,8 +541,13 @@ namespace Kaixo
             return kMouseEventHandled;
         }
 
-        void createControls(IControlListener* listener, MyEditor* editor)
+
+        EnvelopeView(const CRect& size, IControlListener* listener, MyEditor* editor)
+            : CViewContainer(size)
         {
+            setBackgroundColor({ 0, 0, 0, 0 });
+            addView(new BackgroundEffect{ { 0, 0, getWidth(), getHeight() } });
+
             swtc = new SwitchThing{ { 0, 0, 335, 30 } };
             swtc->setIndex = [&](int i) {
                 if (i < 0 || i > 4) return;
@@ -573,57 +578,46 @@ namespace Kaixo
             nvd4->source = ModSources::Env4;
             nvd5->source = ModSources::Env5;
 
-            attk->color =  MainEnv;
-            atkc->color =  MainEnv;
-            attl->color =  MainEnv;
-            decy->color =  MainEnv;
-            dcyc->color =  MainEnv;
-            decl->color =  MainEnv;
-            sust->color =  MainEnv;
-            rels->color =  MainEnv;
-            rlsc->color =  MainEnv;
-            curve->color = MainEnv;
-
             time = new Label{ {   5, 130,   5 + 110, 130 + 20 } };
             time->fontsize = 14;
             time->center = true;
-            time->color = { 200, 200, 200, 255 };
+            time->enabled = true;
             time->value = "Time";
             slpe = new Label{ { 115, 130, 115 + 110, 130 + 20 } };
             slpe->fontsize = 14;
             slpe->center = true;
-            slpe->color = { 128, 128, 128, 255 };
+            slpe->enabled = false;
             slpe->value = "Slope";
             vlue = new Label{ { 225, 130, 225 + 110, 130 + 20 } };
             vlue->fontsize = 14;
             vlue->center = true;
-            vlue->color = { 128, 128, 128, 255 };
+            vlue->enabled = false;
             vlue->value = "Value";
 
             env1 = new Label{ {   5,   5,   5 + 65,   5 + 20 } };
             env1->fontsize = 14;
             env1->center = true;
-            env1->color = { 200, 200, 200, 255 };
+            env1->enabled = true;
             env1->value = "Gain";
             env2 = new Label{ {  71,   5,  71 + 65,   5 + 20 } };
             env2->fontsize = 14;
             env2->center = true;
-            env2->color = { 128, 128, 128, 255 };
+            env2->enabled = false;
             env2->value = "Env 2";
             env3 = new Label{ { 137,   5, 137 + 65,   5 + 20 } };
             env3->fontsize = 14;
             env3->center = true;
-            env3->color = { 128, 128, 128, 255 };
+            env3->enabled = false;
             env3->value = "Env 3";
             env4 = new Label{ { 203,   5, 203 + 65,   5 + 20 } };
             env4->fontsize = 14;
             env4->center = true;
-            env4->color = { 128, 128, 128, 255 };
+            env4->enabled = false;
             env4->value = "Env 4";
             env5 = new Label{ { 269,   5, 269 + 65,   5 + 20 } };
             env5->fontsize = 14;
             env5->center = true;
-            env5->color = { 128, 128, 128, 255 };
+            env5->enabled = false;
             env5->value = "Env 5";
 
             attk->setListener(listener);
@@ -714,7 +708,7 @@ namespace Kaixo
             addView(env2);
             addView(env3);
             addView(env4);
-            addView(env5);    
+            addView(env5);
 
             addView(nvd1);
             addView(nvd2);
@@ -725,41 +719,17 @@ namespace Kaixo
             addView(swtc);
         }
 
-        EnvelopeView(const CRect& size, int index, IControlListener* listener, MyEditor* editor)
-            : CViewContainer(size), index(index)
+        ~EnvelopeView()
         {
-            createControls(listener, editor);
-            setBackgroundColor({ 23, 23, 23, 255 });
+            attk->forget();
+            atkc->forget();
+            attl->forget();
+            decy->forget();
+            dcyc->forget();
+            decl->forget();
+            sust->forget();
+            rels->forget();
+            rlsc->forget();
         }
     };
-
-    struct EnvelopeAttributes
-    {
-        static inline CPoint Size = { 335, 200 };
-
-        static inline auto Name = "Envelope";
-        static inline auto BaseView = UIViewCreator::kCViewContainer;
-
-        static inline std::tuple Attributes
-        {
-            Attr{ "index", &EnvelopeView::index },
-        };
-    };
-
-    class EnvelopeViewFactory : public ViewFactoryBase<EnvelopeView, EnvelopeAttributes>
-    {
-    public:
-        CView* create(const UIAttributes& attributes, const IUIDescription* description) const override
-        {
-            CRect _size{ CPoint{ 45, 45 }, EnvelopeAttributes::Size };
-            int _index = 0;
-            attributes.getIntegerAttribute("index", _index);
-            MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
-            auto* _value = new EnvelopeView(_size, _index, description->getControlListener(""), _editor);
-            apply(_value, attributes, description);
-            return _value;
-        }
-    };
-
-    static inline EnvelopeViewFactory envelopeViewFactory;
 }
