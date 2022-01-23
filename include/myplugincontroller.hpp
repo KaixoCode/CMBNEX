@@ -21,6 +21,7 @@ namespace Kaixo
 
         void savePreset(UTF8StringPtr file);
         void loadPreset(UTF8StringPtr file);
+        void Init();
     };
 
     class TestController : public EditControllerEx1, public IMidiMapping
@@ -30,17 +31,32 @@ namespace Kaixo
 
         ~TestController () override = default;
 
+        String preset = "Default";
+
         std::mutex lock;
         std::vector<std::tuple<int, std::reference_wrapper<double>, std::reference_wrapper<bool>>> wakeupCalls;
-        void updateModulation(Params param, double val)
+
+        tresult PLUGIN_API notify(IMessage* message) override
         {
-            std::lock_guard _(lock);
-            for (auto& i : wakeupCalls)
-                if (param == std::get<0>(i) && std::get<1>(i) != val)
-                {
-                    std::get<1>(i).get() = val;
-                    std::get<2>(i).get() = true;
-                }
+            if (FIDStringsEqual(message->getMessageID(), UPDATE_MODULATION))
+            {
+                int64 param;
+                double val;
+                message->getAttributes()->getInt(UPDATE_MODULATION_PARAM, param);
+                message->getAttributes()->getFloat(UPDATE_MODULATION_VALUE, val);
+
+                std::lock_guard _(lock);
+                for (auto& i : wakeupCalls)
+                    if (param == std::get<0>(i) && std::get<1>(i) != val)
+                    {
+                        std::get<1>(i).get() = val;
+                        std::get<2>(i).get() = true;
+                    }
+
+                return kResultOk;
+            }
+
+            return EditControllerEx1::notify(message);
         }
 
         IPlugView* PLUGIN_API createView(FIDString name) override;
@@ -85,6 +101,36 @@ namespace Kaixo
             return result;
         }
 
+        void Init()
+        {
+            preset = "default";
+
+            for (int i = 0; i < Params::ModCount * ModAmt; i++)
+            {
+                int index = i * 2 + Params::Size;
+                beginEdit(index);
+                setParamNormalized(index, 0);
+                performEdit(index, 0);
+                endEdit(index);
+                beginEdit(index + 1);
+                setParamNormalized(index + 1, 0.5);
+                performEdit(index + 1, 0.5);
+                endEdit(index + 1);
+            }
+
+            for (size_t i = 0; i < Params::Size; i++)
+            {
+                beginEdit(i);
+                performEdit(i, ParamNames[i].reset);
+                if (auto p = getParameterObject(i))
+                {
+                    p->setNormalized(ParamNames[i].reset);
+                    p->changed();
+                }
+                endEdit(i);
+            }
+        }
+
         tresult PLUGIN_API terminate() override { return EditControllerEx1::terminate(); };
 
         tresult PLUGIN_API setComponentState(IBStream* state) override
@@ -92,6 +138,8 @@ namespace Kaixo
             if (!state) return kResultFalse;
 
             IBStreamer streamer(state, kLittleEndian);
+
+            preset = streamer.readStr8();
 
             for (size_t i = 0; i < Params::Size; i++)
             { 
@@ -116,6 +164,8 @@ namespace Kaixo
         tresult PLUGIN_API setState(IBStream* state) override
         {
             IBStreamer streamer(state, kLittleEndian);
+
+            preset = streamer.readStr8();
 
             for (size_t i = 0; i < Params::Size; i++)
             {
@@ -149,6 +199,8 @@ namespace Kaixo
         tresult PLUGIN_API getState(IBStream* state) override
         {
             IBStreamer streamer(state, kLittleEndian);
+
+            streamer.writeStr8(preset);
 
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.writeDouble(getParamNormalized(i));

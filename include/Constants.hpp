@@ -11,14 +11,21 @@
 //constexpr CColor OffText = CColor{ 128, 128, 128, 255 };
 //constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
 
+constexpr const char* UPDATE_MODULATION = "update modulation";
+constexpr const char* UPDATE_MODULATION_PARAM = "update modulation param";
+constexpr const char* UPDATE_MODULATION_VALUE = "update modulation value";
+
 constexpr CColor Background = CColor{ 15, 15, 15, 255 };
 constexpr CColor MainGreen =  CColor{ 0, 179, 98, 255 };
 constexpr CColor MainBack =  CColor{ 25, 25, 25, 255 };
 constexpr CColor MainBackL =  CColor{ 40, 40, 40, 255 };
-constexpr CColor MainBackD =  CColor{  0,  0,  0, 255 };
+constexpr CColor MainBackD =  CColor{  5,  5,  5, 255 };
+constexpr CColor DarkBackD =  CColor{ 5, 5, 5, 255 };
 constexpr CColor DarkBack =  CColor{ 15, 15, 15, 255 };
+constexpr CColor DarkBackH =  CColor{ 23, 23, 23, 255 };
 constexpr CColor ItemBack =  CColor{ 15, 15, 15, 255 };
-constexpr CColor KnobBack =  CColor{ 40, 40, 40, 255 };
+constexpr CColor KnobBack =  CColor{ 45, 45, 45, 255 };
+constexpr CColor KnobBackL =  CColor{ 55, 55, 55, 255 };
 constexpr CColor KnobBackDark =  CColor{ 30, 30, 30, 255 };
 constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
 constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
@@ -146,7 +153,8 @@ enum Params
 
     DestA, DestB, DestC, DestD, DestX, DestY,
 
-    LFOSync1,   LFOSync2,   LFOSync3,   LFOSync4,   LFOSync5,
+    LFOSync1, LFOSync2, LFOSync3, LFOSync4, LFOSync5,
+    LFORetr1, LFORetr2, LFORetr3, LFORetr4, LFORetr5,
 
     PitchBend,
 
@@ -161,9 +169,9 @@ enum class ModSources
     LFO1, LFO2, LFO3, LFO4, LFO5, 
     Env1, Env2, Env3, Env4, Env5, 
     Mac1, Mac2, Mac3, Mac4, Mac5,
-    Osc1, Osc2, Osc3, Osc4,
     Key, Vel,
-    Amount
+    Amount,
+    //Osc1, Osc2, Osc3, Osc4,
 };
 
 constexpr ParamInfo ParamNames[]
@@ -195,7 +203,7 @@ constexpr ParamInfo ParamNames[]
     { "A Bias", 0.5 },         { "B Bias", 0.5 },         { "C Bias", 0.5 },         { "D Bias", 0.5 },
 
     { "A Drive Gain", 0 },     { "B Drive Gain", 0 },     { "C Drive Gain", 0 },     { "D Drive Gain", 0 },
-    { "A Drive", 0 },          { "B Drive", 0 },          { "C Drive", 0 },          { "D Drive", 0 },
+    { "A Drive Shape", 0 },    { "B Drive Shape", 0 },    { "C Drive Shape", 0 },    { "D Drive Shape", 0 },
 
     { "A Freq", 1 },           { "B Freq", 1 },           { "C Freq", 1 },           { "D Freq", 1 },
     { "A Reso", 0 },           { "B Reso", 0 },           { "C Reso", 0 },           { "D Reso", 0 },
@@ -266,6 +274,7 @@ constexpr ParamInfo ParamNames[]
     { "Destination D",  8. / 128., 0, 1, 0 }, { "Destination X",  16. / 128., 0, 1, 0 }, { "Destination Y",  32. / 128., 0, 1, 0 },
     
     { "LFO 1 Sync", 0 }, { "LFO 2 Sync", 0 }, { "LFO 3 Sync", 0 }, { "LFO 4 Sync", 0 }, { "LFO 5 Sync", 0 },
+    { "LFO 1 Retrigger", 1 }, { "LFO 2 Retrigger", 1 }, { "LFO 3 Retrigger", 1 }, { "LFO 4 Retrigger", 1 }, { "LFO 5 Retrigger", 1 },
 
     { "Pitch Bend", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
 };

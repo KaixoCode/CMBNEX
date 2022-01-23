@@ -107,6 +107,8 @@ namespace Kaixo
 
             double _bsize = 8;
             _s.inset({ -1, 0 });
+            _s.top -= 1;
+            _s.bottom += 1;
             pContext->setLineWidth(1);
             pContext->setFrameColor(crnr);
             pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });

@@ -1,11 +1,6 @@
 {
 	"vstgui-ui-description": {
 		"version": "1",
-		"bitmaps": {
-			"logo": {
-				"path": "C:\\Users\\Jeroen\\source\\repos\\VstTest\\Test\\resource\\logo.png",
-			}
-		},
 		"fonts": {},
 		"colors": {
 			"Gray": "#c8c8c8ff",

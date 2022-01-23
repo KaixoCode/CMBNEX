@@ -18,36 +18,56 @@ namespace Kaixo
 
         bool pressed = false;
         bool dark = false;
+        bool button = false;
 
         int sides = 0;
 
         double edge = 1;
 
+        static inline void draw(CDrawContext* pContext, CRect size, double edge = 1, bool dark = false, bool button = false, bool pressed = false, int sides = 0, bool enabled = true)
+        {
+            auto a = size;
+            a.inset({ sides != 1 ? edge : 0, sides != 2 ? edge : 0 });
+
+            bool corner = !button;
+
+            constexpr static auto MainGreenC = MainGreen;
+            constexpr static auto MainGreenB = CColor{ 
+                (int)std::min(MainGreenC.red * 1.1, 255.),
+                (int)std::min(MainGreenC.green * 1.1, 255.),
+                (int)std::min(MainGreenC.blue * 1.1, 255.), 255 };
+
+            if (sides != 1) a.left -= edge;
+            if (sides != 2) a.top -= edge;
+            if (sides != 1) a.right -= corner ? edge : 0;
+            if (sides != 2) a.bottom -= corner ? edge : 0;
+            pContext->setFillColor(dark && !button ? 
+                pressed ? button ? enabled ? MainGreenB : OffText : MainBackL : MainBackD :
+                pressed ? MainBackD : button ? KnobBackL : MainBackL);
+            pContext->drawRect(a, kDrawFilled);
+
+            if (sides != 1) a.left += (corner ? 2 : 1) * edge;
+            if (sides != 2) a.top += (corner ? 2 : 1) * edge;
+            if (sides != 1) a.right += (corner ? 2 : 1) * edge;
+            if (sides != 2) a.bottom += (corner ? 2 : 1) * edge;
+            pContext->setFillColor(dark && !button ?
+                pressed ? MainBackD : button ? KnobBackL : MainBackL :
+                pressed ? button ? enabled ? MainGreenB : OffText : MainBackL : MainBackD);
+            pContext->drawRect(a, kDrawFilled);
+
+            if (sides != 1) a.left -= corner ? edge : 0;
+            if (sides != 2) a.top -= corner ? edge : 0;
+            if (sides != 1) a.right -= corner ? edge : edge;
+            if (sides != 2) a.bottom -= corner ? edge : edge;
+            pContext->setFillColor(button ? 
+                pressed ? enabled ? MainGreenC : OffText : KnobBack :
+                dark ? DarkBack : MainBack);
+            pContext->drawRect(a, kDrawFilled);
+        }
+
         void draw(CDrawContext* pContext)
         {
-            auto a = getViewSize();
-            a.inset({ sides != 1 ? edge : 0, sides != 2 ? edge : 0 });
-            
-            if (sides != 1) a.left -= edge;
-            if (sides != 2) a.top -= edge;
-            if (sides != 1) a.right -= edge;
-            if (sides != 2) a.bottom -= edge;
-            pContext->setFillColor(dark ? pressed ? MainBackL : MainBackD : pressed ? MainBackD : MainBackL);
-            pContext->drawRect(a, kDrawFilled);
-
-            if (sides != 1) a.left += 2 * edge;
-            if (sides != 2) a.top += 2 * edge;
-            if (sides != 1) a.right += 2 * edge;
-            if (sides != 2) a.bottom += 2 * edge;
-            pContext->setFillColor(dark ? pressed ? MainBackD : MainBackL : pressed ? MainBackL : MainBackD);
-            pContext->drawRect(a, kDrawFilled);
-
-            if (sides != 1) a.left -= edge;
-            if (sides != 2) a.top -= edge;
-            if (sides != 1) a.right -= edge;
-            if (sides != 2) a.bottom -= edge;
-            pContext->setFillColor(dark ? DarkBack : MainBack);
-            pContext->drawRect(a, kDrawFilled);
+            draw(pContext, getViewSize(), edge, dark, button, pressed, sides);
         }
     };
 
@@ -590,7 +610,8 @@ namespace Kaixo
                 pContext->setFillColor(getValue() > 0.5 ? main : back);
                 a.top += 1;
                 a.left += 1;
-                pContext->drawRect(a, kDrawFilledAndStroked);
+                bool pressed = getValue() > 0.5;
+                BackgroundEffect::draw(pContext, a, 0, dark, true, pressed, 0, enabled);
                 pContext->setFontColor(getValue() > 0.5 ? text : offt);
                 pContext->drawString(name, { a.getCenter().x - w2 / 2, a.getCenter().y + 6 }, true);
                 break;
@@ -614,11 +635,14 @@ namespace Kaixo
                         auto _x = a.getCenter().x;
 
                         String _n{ _view.data(), (int32)_c };
-                        auto _w = pContext->getStringWidth(_n);
+                        auto _w = std::floor(pContext->getStringWidth(_n));
 
-                        pContext->setFillColor(std::abs(getValue() * (max - 1) - i) < 0.5 ? main : back);
-                        pContext->setFontColor(std::abs(getValue() * (max - 1) - i) < 0.5 ? text : offt);
-                        pContext->drawRect({ a.left, _y, a.right, _y + _h - min - 1 }, kDrawFilledAndStroked);
+                        bool pressed = std::abs(getValue() * (max - 1) - i) < 0.5;
+
+                        pContext->setFillColor(pressed ? main : back);
+                        pContext->setFontColor(pressed ? text : offt);
+
+                        BackgroundEffect::draw(pContext, { a.left, _y, a.right, _y + _h - min - 1 }, 0, dark, true, pressed, 0, enabled);
                         pContext->drawString(_n, { _x - _w / 2, _y + 6 + (_h - min - 1) / 2 }, true);
 
                         if (_c != std::string_view::npos)
@@ -637,11 +661,13 @@ namespace Kaixo
                         auto _y = a.getCenter().y;
 
                         String _n{ _view.data(), (int32)_c };
-                        auto _sw = pContext->getStringWidth(_n);
+                        auto _sw = std::floor(pContext->getStringWidth(_n));
 
-                        pContext->setFillColor(std::abs(getValue() * (max - 1) - i) < 0.5 ? main : back);
-                        pContext->setFontColor(std::abs(getValue() * (max - 1) - i) < 0.5 ? text : offt);
-                        pContext->drawRect({ _x, a.top, _x + _w - min - 1, a.bottom }, kDrawFilledAndStroked);
+                        bool pressed = std::abs(getValue() * (max - 1) - i) < 0.5;
+
+                        pContext->setFillColor(pressed ? main : back);
+                        pContext->setFontColor(pressed ? text : offt);
+                        BackgroundEffect::draw(pContext, { _x, a.top, _x + _w - min - 1, a.bottom }, 0, dark, true, pressed, 0, enabled);
                         pContext->drawString(_n, { _x + (_w - min - 2) / 2 - _sw / 2, _y + 6 }, true);
 
                         if (_c != std::string_view::npos)
@@ -677,7 +703,7 @@ namespace Kaixo
 
                         pContext->setFillColor(_set ? main : back);
                         pContext->setFontColor(_set ? text : offt);
-                        pContext->drawRect({ a.left, _y, a.right, _y + _h - min - 1 }, kDrawFilledAndStroked);
+                        BackgroundEffect::draw(pContext, { a.left, _y, a.right, _y + _h - min - 1 }, 0, dark, true, _set, 0, enabled);
                         pContext->drawString(_n, { _x - _w / 2, _y + 6 + (_h - min - 1) / 2 }, true);
 
                         if (_c != std::string_view::npos)
@@ -701,7 +727,7 @@ namespace Kaixo
 
                         pContext->setFillColor(_set ? main : back);
                         pContext->setFontColor(_set ? text : offt);
-                        pContext->drawRect({ _x, a.top, _x + _w - min - 1, a.bottom }, kDrawFilledAndStroked);
+                        BackgroundEffect::draw(pContext, { _x, a.top, _x + _w - min - 1, a.bottom }, 0, dark, true, _set, 0, enabled);
                         pContext->drawString(_n, { _x + (_w - min - 2) / 2 - _sw / 2, _y + 6 }, true);
 
                         if (_c != std::string_view::npos)
@@ -845,15 +871,47 @@ namespace Kaixo
 
                 for (int i = 0; i < ModAmt; i++)
                 {
-                    if (dragIndex == i)
+                    if (dark)
                     {
-                        pContext->setFrameColor(BorderHover);
-                        pContext->setFillColor(DarkBack);
+                        if (dragIndex == i)
+                        {
+                            pContext->setFillColor(MainBackD);
+                            pContext->drawRect({ a.left, a.top, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                            pContext->setFillColor(MainBack);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w, a.bottom }, kDrawFilled);
+                            pContext->setFillColor(DarkBack);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                        }
+                        else
+                        {
+                            pContext->setFillColor(MainBackD);
+                            pContext->drawRect({ a.left, a.top, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                            pContext->setFillColor(MainBack);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w, a.bottom }, kDrawFilled);
+                            pContext->setFillColor(DarkBackD);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                        }
                     }
                     else
                     {
-                        pContext->setFrameColor(Border);
-                        pContext->setFillColor(DarkBack);
+                        if (dragIndex == i)
+                        {
+                            pContext->setFillColor(MainBackD);
+                            pContext->drawRect({ a.left, a.top, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                            pContext->setFillColor(MainBackL);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w, a.bottom }, kDrawFilled);
+                            pContext->setFillColor(DarkBackH);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                        }
+                        else
+                        {
+                            pContext->setFillColor(MainBackD);
+                            pContext->drawRect({ a.left, a.top, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                            pContext->setFillColor(MainBackL);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w, a.bottom }, kDrawFilled);
+                            pContext->setFillColor(DarkBack);
+                            pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
+                        }
                     }
 
                     std::string _v = std::to_string((int)editor->modSource(getTag(), i));
@@ -867,11 +925,11 @@ namespace Kaixo
                         pContext->setFontColor(main);
                         _v = (char)('K');
                     }
-                    else if (editor->modSource(getTag(), i) >= ModSources::Osc1)
-                    {
-                        pContext->setFontColor(main);
-                        _v = (char)('A' + (int)editor->modSource(getTag(), i) - (int)ModSources::Osc1);
-                    } 
+                    //else if (editor->modSource(getTag(), i) >= ModSources::Osc1)
+                    //{
+                    //    pContext->setFontColor(main);
+                    //    _v = (char)('A' + (int)editor->modSource(getTag(), i) - (int)ModSources::Osc1);
+                    //} 
                     else if (editor->modSource(getTag(), i) >= ModSources::Mac1)
                     {
                         pContext->setFontColor(main);
@@ -891,7 +949,6 @@ namespace Kaixo
                     {
                         pContext->setFontColor(OffText);
                     }
-                    pContext->drawRect({ a.left, a.top, a.left + _w, a.bottom }, kDrawFilledAndStroked);
 
                     if (editor->modSource(getTag(), i) != ModSources::None)
                     {

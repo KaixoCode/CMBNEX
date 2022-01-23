@@ -123,42 +123,42 @@ namespace Kaixo
 
             dcol = new Label{ { 379 + x,  10, 379 + 30 + x,  10 + 20 } };
             dcol->fontsize = 14, dcol->center = true, dcol->value = "DC";
-            dcof = new Knob{ { 384 + x,  30, 384 + 20 + x,  30 + 20 }, editor }; dcof->setListener(listener); dcof->setTag(Params::DCX + index);
+            dcof = new Knob{ { 384 + x,  30, 384 + 20 + x,  30 + 20 }, editor, true }; dcof->setListener(listener); dcof->setTag(Params::DCX + index);
 
             ftrl = new Label{ { 325 + x,  8, 325 + 40 + x,   8 + 18 } };
             ftrl->fontsize = 14, ftrl->center = false, ftrl->value = "Filter";
-            enbr = new Knob{ { 309 + x,   9, 309 + 14 + x,   9 + 14 }, editor }; enbr->setListener(listener); enbr->setTag(Params::ENBFilterX + index);
-            fltr = new Knob{ { 309 + x,  27, 309 + 63 + x,  27 + 17 }, editor }; fltr->setListener(listener); fltr->setTag(Params::FilterX + index);
-            freq = new Knob{ { 310 + x,  47, 310 + 60 + x,  47 + 95 }, editor }; freq->setListener(listener); freq->setTag(Params::FreqX + index);
-            reso = new Knob{ { 310 + x, 148, 310 + 65 + x, 148 + 53 }, editor }; reso->setListener(listener); reso->setTag(Params::ResoX + index);
+            enbr = new Knob{ { 309 + x,   9, 309 + 14 + x,   9 + 14 }, editor, true }; enbr->setListener(listener); enbr->setTag(Params::ENBFilterX + index);
+            fltr = new Knob{ { 309 + x,  27, 309 + 63 + x,  27 + 17 }, editor, true }; fltr->setListener(listener); fltr->setTag(Params::FilterX + index);
+            freq = new Knob{ { 310 + x,  47, 310 + 60 + x,  47 + 95 }, editor, true }; freq->setListener(listener); freq->setTag(Params::FreqX + index);
+            reso = new Knob{ { 310 + x, 148, 310 + 65 + x, 148 + 53 }, editor, true }; reso->setListener(listener); reso->setTag(Params::ResoX + index);
 
             drvl = new Label{ { 250 + x,  8, 250 + 40 + x,   8 + 18 } };
             drvl->fontsize = 14, drvl->center = false, drvl->value = "Drive";
-            enbd = new Knob{ { 234 + x,   9, 234 + 14 + x,   9 + 14 }, editor }; enbd->setListener(listener); enbd->setTag(Params::ENBDriveX + index);
-            dgai = new Knob{ { 235 + x,  47, 235 + 60 + x,  47 + 95 }, editor }; dgai->setListener(listener); dgai->setTag(Params::DriveGainX + index);
-            driv = new Knob{ { 235 + x, 148, 235 + 65 + x, 148 + 53 }, editor }; driv->setListener(listener); driv->setTag(Params::DriveAmtX + index);
+            enbd = new Knob{ { 234 + x,   9, 234 + 14 + x,   9 + 14 }, editor, true }; enbd->setListener(listener); enbd->setTag(Params::ENBDriveX + index);
+            dgai = new Knob{ { 235 + x,  47, 235 + 60 + x,  47 + 95 }, editor, true }; dgai->setListener(listener); dgai->setTag(Params::DriveGainX + index);
+            driv = new Knob{ { 235 + x, 148, 235 + 65 + x, 148 + 53 }, editor, true }; driv->setListener(listener); driv->setTag(Params::DriveAmtX + index);
 
             fldl = new Label{ { 175 + x,  8, 175 + 40 + x,   8 + 18 } };
             fldl->fontsize = 14, fldl->center = false, fldl->value = "Fold";
-            enbf = new Knob{ { 159 + x,   9, 159 + 14 + x,   9 + 14 }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFoldX + index);
-            fold = new Knob{ { 160 + x,  47, 160 + 60 + x,  47 + 95 }, editor }; fold->setListener(listener); fold->setTag(Params::FoldX + index);
-            bias = new Knob{ { 160 + x, 148, 160 + 65 + x, 148 + 53 }, editor }; bias->setListener(listener); bias->setTag(Params::BiasX + index);
+            enbf = new Knob{ { 159 + x,   9, 159 + 14 + x,   9 + 14 }, editor, true }; enbf->setListener(listener); enbf->setTag(Params::ENBFoldX + index);
+            fold = new Knob{ { 160 + x,  47, 160 + 60 + x,  47 + 95 }, editor, true }; fold->setListener(listener); fold->setTag(Params::FoldX + index);
+            bias = new Knob{ { 160 + x, 148, 160 + 65 + x, 148 + 53 }, editor, true }; bias->setListener(listener); bias->setTag(Params::BiasX + index);
 
-            minm = new Knob{ { 15 + x,  10 - 0 * 1, 15 + 65 + x,  10 + 35 - 0 * 1 }, editor }; minm->setListener(listener); minm->setTag(Params::MinMixX + index);
-            mulm = new Knob{ { 15 + x,  50 - 1 * 1, 15 + 65 + x,  50 + 35 - 1 * 1 }, editor }; mulm->setListener(listener); mulm->setTag(Params::MultMixX + index);
-            ponm = new Knob{ { 15 + x,  90 - 2 * 1, 15 + 65 + x,  90 + 35 - 2 * 1 }, editor }; ponm->setListener(listener); ponm->setTag(Params::PongMixX + index); 
-            maxm = new Knob{ { 15 + x, 130 - 3 * 1, 15 + 65 + x, 130 + 35 - 3 * 1 }, editor }; maxm->setListener(listener); maxm->setTag(Params::MaxMixX + index); 
-            modm = new Knob{ { 15 + x, 170 - 4 * 1, 15 + 65 + x, 170 + 35 - 4 * 1 }, editor }; modm->setListener(listener); modm->setTag(Params::ModMixX + index); 
-            andm = new Knob{ { 80 + x,  10 - 0 * 1, 80 + 65 + x,  10 + 35 - 0 * 1 }, editor }; andm->setListener(listener); andm->setTag(Params::AndMixX + index); 
-            inlm = new Knob{ { 80 + x,  50 - 1 * 1, 80 + 65 + x,  50 + 35 - 1 * 1 }, editor }; inlm->setListener(listener); inlm->setTag(Params::InlvMixX + index); 
-            orrm = new Knob{ { 80 + x,  90 - 2 * 1, 80 + 65 + x,  90 + 35 - 2 * 1 }, editor }; orrm->setListener(listener); orrm->setTag(Params::OrMixX + index); 
-            xorm = new Knob{ { 80 + x, 130 - 3 * 1, 80 + 65 + x, 130 + 35 - 3 * 1 }, editor }; xorm->setListener(listener); xorm->setTag(Params::XOrMixX + index);
-            addm = new Knob{ { 80 + x, 170 - 4 * 1, 80 + 65 + x, 170 + 35 - 4 * 1 }, editor }; addm->setListener(listener); addm->setTag(Params::AddMixX + index);
+            minm = new Knob{ { 15 + x,  10 - 0 * 1, 15 + 65 + x,  10 + 35 - 0 * 1 }, editor, true }; minm->setListener(listener); minm->setTag(Params::MinMixX + index);
+            mulm = new Knob{ { 15 + x,  50 - 1 * 1, 15 + 65 + x,  50 + 35 - 1 * 1 }, editor, true }; mulm->setListener(listener); mulm->setTag(Params::MultMixX + index);
+            ponm = new Knob{ { 15 + x,  90 - 2 * 1, 15 + 65 + x,  90 + 35 - 2 * 1 }, editor, true }; ponm->setListener(listener); ponm->setTag(Params::PongMixX + index); 
+            maxm = new Knob{ { 15 + x, 130 - 3 * 1, 15 + 65 + x, 130 + 35 - 3 * 1 }, editor, true }; maxm->setListener(listener); maxm->setTag(Params::MaxMixX + index); 
+            modm = new Knob{ { 15 + x, 170 - 4 * 1, 15 + 65 + x, 170 + 35 - 4 * 1 }, editor, true }; modm->setListener(listener); modm->setTag(Params::ModMixX + index); 
+            andm = new Knob{ { 80 + x,  10 - 0 * 1, 80 + 65 + x,  10 + 35 - 0 * 1 }, editor, true }; andm->setListener(listener); andm->setTag(Params::AndMixX + index); 
+            inlm = new Knob{ { 80 + x,  50 - 1 * 1, 80 + 65 + x,  50 + 35 - 1 * 1 }, editor, true }; inlm->setListener(listener); inlm->setTag(Params::InlvMixX + index); 
+            orrm = new Knob{ { 80 + x,  90 - 2 * 1, 80 + 65 + x,  90 + 35 - 2 * 1 }, editor, true }; orrm->setListener(listener); orrm->setTag(Params::OrMixX + index); 
+            xorm = new Knob{ { 80 + x, 130 - 3 * 1, 80 + 65 + x, 130 + 35 - 3 * 1 }, editor, true }; xorm->setListener(listener); xorm->setTag(Params::XOrMixX + index);
+            addm = new Knob{ { 80 + x, 170 - 4 * 1, 80 + 65 + x, 170 + 35 - 4 * 1 }, editor, true }; addm->setListener(listener); addm->setTag(Params::AddMixX + index);
 
             enbr->name = "";    fltr->name = "L,H,B"; freq->name = "Freq"; reso->name = "Reso";
-            enbr->min = 0;      fltr->min = 4;        freq->min = 20;      reso->min = 0;
+            enbr->min = 0;      fltr->min = 4;        freq->min = 30;      reso->min = 0;
             enbr->max = 1;      fltr->max = 3;        freq->max = 22000;   reso->max = 125;
-            enbr->reset = 0;    fltr->reset = 1;      freq->reset = 0;     reso->reset = 0;
+            enbr->reset = 0;    fltr->reset = 1;      freq->reset = 22000; reso->reset = 0;
             enbr->decimals = 1; fltr->decimals = 0;   freq->decimals = 1;  reso->decimals = 1;
             enbr->unit = "";    fltr->unit = "";      freq->unit = " Hz";  reso->unit = " %";
             enbr->type = 3;     fltr->type = 4;       freq->type = 0;      reso->type = 2;
@@ -263,7 +263,7 @@ namespace Kaixo
         }
     };
 
-    class CombineView : public CViewContainer
+    class CombineView : public CViewContainer, public IControlListener
     {
     public:
         int index = 0;
@@ -312,6 +312,36 @@ namespace Kaixo
             selected = false;
         }
 
+        void valueChanged(CControl* pControl) override
+        {
+            bool _c1 = toggle->enbf->getValue() > 0.5;
+            toggle->fldl->enabled = _c1;
+            toggle->fold->enabled = _c1;
+            toggle->bias->enabled = _c1;
+
+            bool _c2 = toggle->enbd->getValue() > 0.5;
+            toggle->driv->enabled = _c2;
+            toggle->drvl->enabled = _c2;
+            toggle->dgai->enabled = _c2;
+
+            bool _c3 = toggle->enbr->getValue() > 0.5;
+            toggle->ftrl->enabled = _c3;
+            toggle->fltr->enabled = _c3;
+            toggle->freq->enabled = _c3;
+            toggle->reso->enabled = _c3;
+
+            toggle->fldl->setDirty(true);
+            toggle->fold->setDirty(true);
+            toggle->bias->setDirty(true);
+            toggle->driv->setDirty(true);
+            toggle->drvl->setDirty(true);
+            toggle->dgai->setDirty(true);
+            toggle->ftrl->setDirty(true);
+            toggle->fltr->setDirty(true);
+            toggle->freq->setDirty(true);
+            toggle->reso->setDirty(true);
+        }
+
         BackgroundEffect* bgef;
 
         CombineView(CombineToggle* toggle, const CRect& size, int index, IControlListener* listener, MyEditor* editor)
@@ -320,6 +350,10 @@ namespace Kaixo
             setBackgroundColor({ 0, 0, 0, 0 });
             bgef = new BackgroundEffect{ { 0, 0, getWidth(), getHeight() } };
             addView(bgef);
+
+            toggle->enbd->registerControlListener(this);
+            toggle->enbf->registerControlListener(this);
+            toggle->enbr->registerControlListener(this);
 
             constexpr CColor main = MainGreen;
             constexpr CColor text = MainText;

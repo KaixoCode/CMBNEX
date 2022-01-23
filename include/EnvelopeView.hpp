@@ -172,6 +172,8 @@ namespace Kaixo
             return _val;
         }
 
+        BackgroundEffect bgef{ getViewSize() };
+
         void draw(CDrawContext* pContext) override
         {
             constexpr CColor back = ItemBack;
@@ -198,7 +200,9 @@ namespace Kaixo
 
             env.Trigger();
             pContext->setFillColor(back);
-            pContext->drawRect(_s, kDrawFilled);
+            //pContext->drawRect(_s, kDrawFilled);
+            bgef.dark = true;
+            bgef.draw(pContext);
             pContext->setFrameColor(main);
             double _rsize = 8;
             double _ssize = 6;

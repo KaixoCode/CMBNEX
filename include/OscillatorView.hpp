@@ -76,6 +76,7 @@ namespace Kaixo
             pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
 
             pContext->setDrawMode(kAntiAliasing);
+            pContext->setLineWidth(1);
             pContext->setFrameColor(Border); 
             constexpr static double nmr = 10;
             for (int i = 0; i < nmr; i++)
@@ -87,7 +88,6 @@ namespace Kaixo
             }
 
             pContext->setFrameColor(KnobBack);
-            pContext->setLineWidth(1);
 
             pContext->drawLine({ a.getCenter().x, a.top }, { a.getCenter().x, a.bottom - 1 });
             pContext->drawLine({ a.left, a.getCenter().y }, { a.right - 1, a.getCenter().y });
@@ -127,6 +127,7 @@ namespace Kaixo
         Label* outl = nullptr;
         Knob* dest = nullptr;
 
+        Knob* rphs = nullptr;
         Knob* phse = nullptr; // Phase
         Knob* sync = nullptr; // Sync
         Knob* plsw = nullptr; // Pulse Width
@@ -236,6 +237,7 @@ namespace Kaixo
 
             dest->setListener(listener); dest->setTag(Params::DestA + index);
 
+            rphs = new Knob{ {   8,  16 + y,   8 +  14,  16 +  14 + y }, editor, true }; rphs->setListener(listener); rphs->setTag(Params::RandomPhase1 + index);
             phse = new Knob{ {  10,  15 + y,  10 +  55,  15 +  90 + y }, editor, true }; phse->setListener(listener); phse->setTag(Params::Phase1 + index);
             plsw = new Knob{ {  67,  15 + y,  67 +  55,  15 +  90 + y }, editor, true }; plsw->setListener(listener); plsw->setTag(Params::PulseW1 + index);
             bend = new Knob{ { 124,  15 + y, 124 +  55,  15 +  90 + y }, editor, true }; bend->setListener(listener); bend->setTag(Params::Bend1 + index);
@@ -245,46 +247,46 @@ namespace Kaixo
 
             shpl = new Label{ { 209,  13 + y, 209 + 90,  13 + 18 + y } };
             shpl->fontsize = 14, shpl->center = false, shpl->value = "Waveshaper";
-            enbs = new Knob{ { 193,  14 + y, 193 +  14,  14 +  14 + y }, editor }; enbs->setListener(listener); enbs->setTag(Params::ENBShaper1 + index);
-            shpr = new Knob{ { 194,  35 + y, 194 +  65,  35 +  53 + y }, editor }; shpr->setListener(listener); shpr->setTag(Params::Shaper1 + index);
-            shpm = new Knob{ { 259,  35 + y, 259 +  65,  35 +  53 + y }, editor }; shpm->setListener(listener); shpm->setTag(Params::ShaperMix1 + index);
-            shp2 = new Knob{ { 324, 152 + y, 324 + 65, 152 + 53 + y }, editor }; shp2->setListener(listener); shp2->setTag(Params::Shaper21 + index);
-            sh2m = new Knob{ { 324,  95 + y, 324 + 65,  95 + 53 + y }, editor }; sh2m->setListener(listener); sh2m->setTag(Params::Shaper2Mix1 + index);
-            shmr = new Knob{ { 324,  35 + y, 324 + 65,  35 + 53 + y }, editor }; shmr->setListener(listener); shmr->setTag(Params::ShaperMorph1 + index);
+            enbs = new Knob{ { 193,  14 + y, 193 + 14,  14 + 14 + y }, editor, true }; enbs->setListener(listener); enbs->setTag(Params::ENBShaper1 + index);
+            shpr = new Knob{ { 194,  35 + y, 194 + 65,  35 + 53 + y }, editor, true }; shpr->setListener(listener); shpr->setTag(Params::Shaper1 + index);
+            shpm = new Knob{ { 259,  35 + y, 259 + 65,  35 + 53 + y }, editor, true }; shpm->setListener(listener); shpm->setTag(Params::ShaperMix1 + index);
+            shp2 = new Knob{ { 324, 152 + y, 324 + 65, 152 + 53 + y }, editor, true }; shp2->setListener(listener); shp2->setTag(Params::Shaper21 + index);
+            sh2m = new Knob{ { 324,  95 + y, 324 + 65,  95 + 53 + y }, editor, true }; sh2m->setListener(listener); sh2m->setTag(Params::Shaper2Mix1 + index);
+            shmr = new Knob{ { 324,  35 + y, 324 + 65,  35 + 53 + y }, editor, true }; shmr->setListener(listener); shmr->setTag(Params::ShaperMorph1 + index);
             panel = new XYPanel{ shpr, shp2, { 194, 93 + y, 194 + 125, 93 + 112 + y } };
 
             fldl = new Label{ { 420,  13 + y, 420 + 40,  13 + 18 + y } };
             fldl->fontsize = 14, fldl->center = false, fldl->value = "Fold";
-            enbf = new Knob{ { 404,  14 + y, 404 + 14,  14 + 14 + y }, editor }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
-            flda = new Knob{ { 405,  52 + y, 405 + 60,  52 + 95 + y }, editor }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
-            bias = new Knob{ { 405, 152 + y, 405 + 65, 152 + 53 + y }, editor }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
+            enbf = new Knob{ { 404,  14 + y, 404 + 14,  14 + 14 + y }, editor, true }; enbf->setListener(listener); enbf->setTag(Params::ENBFold1 + index);
+            flda = new Knob{ { 405,  52 + y, 405 + 60,  52 + 95 + y }, editor, true }; flda->setListener(listener); flda->setTag(Params::Fold1 + index);
+            bias = new Knob{ { 405, 152 + y, 405 + 65, 152 + 53 + y }, editor, true }; bias->setListener(listener); bias->setTag(Params::Bias1 + index);
 
             nsel = new Label{ { 495,  13 + y, 495 + 40,  13 + 18 + y  } };
             nsel->fontsize = 14, nsel->center = false, nsel->value = "Noise";
-            enbn = new Knob{ { 479,  14 + y, 479 + 14,  14 + 14 + y }, editor }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
-            nois = new Knob{ { 480,  52 + y, 480 + 60,  52 + 95 + y }, editor }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
-            nscl = new Knob{ { 480, 152 + y, 480 + 65, 152 + 53 + y }, editor }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
+            enbn = new Knob{ { 479,  14 + y, 479 + 14,  14 + 14 + y }, editor, true }; enbn->setListener(listener); enbn->setTag(Params::ENBNoise1 + index);
+            nois = new Knob{ { 480,  52 + y, 480 + 60,  52 + 95 + y }, editor, true }; nois->setListener(listener); nois->setTag(Params::Noise1 + index);
+            nscl = new Knob{ { 480, 152 + y, 480 + 65, 152 + 53 + y }, editor, true }; nscl->setListener(listener); nscl->setTag(Params::Color1 + index);
 
             drvl = new Label{ { 570,  13 + y, 570 + 40,  13 + 18 + y } };
             drvl->fontsize = 14, drvl->center = false, drvl->value = "Drive";
-            enbd = new Knob{ { 554,  14 + y, 554 + 14,  14 + 14 + y }, editor }; enbd->setListener(listener); enbd->setTag(Params::ENBDrive1 + index);
-            drvg = new Knob{ { 555,  52 + y, 555 + 60,  52 + 95 + y }, editor }; drvg->setListener(listener); drvg->setTag(Params::DriveGain1 + index);
-            drve = new Knob{ { 555, 152 + y, 555 + 65, 152 + 53 + y }, editor }; drve->setListener(listener); drve->setTag(Params::DriveAmt1 + index);
+            enbd = new Knob{ { 554,  14 + y, 554 + 14,  14 + 14 + y }, editor, true }; enbd->setListener(listener); enbd->setTag(Params::ENBDrive1 + index);
+            drvg = new Knob{ { 555,  52 + y, 555 + 60,  52 + 95 + y }, editor, true }; drvg->setListener(listener); drvg->setTag(Params::DriveGain1 + index);
+            drve = new Knob{ { 555, 152 + y, 555 + 65, 152 + 53 + y }, editor, true }; drve->setListener(listener); drve->setTag(Params::DriveAmt1 + index);
 
             ftrl = new Label{ { 645,  13 + y, 645 + 40,  13 + 18 + y } };
             ftrl->fontsize = 14, ftrl->center = false, ftrl->value = "Filter";
-            enbr = new Knob{ { 629,  14 + y, 629 + 14,  14 + 14 + y }, editor }; enbr->setListener(listener); enbr->setTag(Params::ENBFilter1 + index);
-            fltr = new Knob{ { 629,  32 + y, 629 + 63,  32 + 17 + y }, editor }; fltr->setListener(listener); fltr->setTag(Params::Filter1 + index);
-            freq = new Knob{ { 630,  52 + y, 630 + 60,  52 + 95 + y }, editor }; freq->setListener(listener); freq->setTag(Params::Freq1 + index);
-            reso = new Knob{ { 630, 152 + y, 630 + 65, 152 + 53 + y }, editor }; reso->setListener(listener); reso->setTag(Params::Reso1 + index);
+            enbr = new Knob{ { 629,  14 + y, 629 + 14,  14 + 14 + y }, editor, true }; enbr->setListener(listener); enbr->setTag(Params::ENBFilter1 + index);
+            fltr = new Knob{ { 629,  32 + y, 629 + 63,  32 + 17 + y }, editor, true }; fltr->setListener(listener); fltr->setTag(Params::Filter1 + index);
+            freq = new Knob{ { 630,  52 + y, 630 + 60,  52 + 95 + y }, editor, true }; freq->setListener(listener); freq->setTag(Params::Freq1 + index);
+            reso = new Knob{ { 630, 152 + y, 630 + 65, 152 + 53 + y }, editor, true }; reso->setListener(listener); reso->setTag(Params::Reso1 + index);
 
-            phse->name = "Phase"; plsw->name = "PW";  bend->name = "Bend"; wtps->name = "WTP"; sync->name = "Sync"; dcof->name = "Offset"; 
-            phse->min = 0;        plsw->min = -100;   bend->min = -100;    wtps->min = 0;      sync->min = 100;     dcof->min = -1;
-            phse->max = 100;      plsw->max = 100;    bend->max = 100;     wtps->max = 100;    sync->max = 800;     dcof->max = 1;      
-            phse->reset = 0;      plsw->reset = 0;    bend->reset = 0;     wtps->reset = 0;    sync->reset = 100;   dcof->reset = 0;      
-            phse->decimals = 1;   plsw->decimals = 1; bend->decimals = 1;  wtps->decimals = 1; sync->decimals = 1;  dcof->decimals = 2;   
-            phse->unit = " %";    plsw->unit = " %";  bend->unit = " %";   wtps->unit = " %";  sync->unit = " %";   dcof->unit = "";    
-            phse->type = 0;       plsw->type = 0;     bend->type = 0;      wtps->type = 0;     sync->type = 0;      dcof->type = 0;       
+            phse->name = "   Phase"; rphs->name = "R";     plsw->name = "PW";  bend->name = "Bend"; wtps->name = "WTP"; sync->name = "Sync"; dcof->name = "Offset"; 
+            phse->min = 0;        rphs->min = 0;        plsw->min = -100;   bend->min = -100;    wtps->min = 0;      sync->min = 100;     dcof->min = -1;
+            phse->max = 100;      rphs->max = 100;      plsw->max = 100;    bend->max = 100;     wtps->max = 100;    sync->max = 800;     dcof->max = 1;      
+            phse->reset = 0;      rphs->reset = 0;      plsw->reset = 0;    bend->reset = 0;     wtps->reset = 0;    sync->reset = 100;   dcof->reset = 0;      
+            phse->decimals = 1;   rphs->decimals = 1;   plsw->decimals = 1; bend->decimals = 1;  wtps->decimals = 1; sync->decimals = 1;  dcof->decimals = 2;   
+            phse->unit = " %";    rphs->unit = "";      plsw->unit = " %";  bend->unit = " %";   wtps->unit = " %";  sync->unit = " %";   dcof->unit = "";    
+            phse->type = 0;       rphs->type = 3;       plsw->type = 0;     bend->type = 0;      wtps->type = 0;     sync->type = 0;      dcof->type = 0;       
 
             enbs->name = "";    shpr->name = "SHP-X"; shpm->name = "Mix-X"; shp2->name = "SHP-Y"; sh2m->name = "Mix-Y"; shmr->name = "Morph";
             enbs->min = 0;      shpr->min = -100;     shpm->min = 0;        shp2->min = -100;     sh2m->min = 0;        shmr->min = 0;
@@ -310,7 +312,7 @@ namespace Kaixo
             enbf->unit = "";    flda->unit = " dB";    bias->unit = "";
             enbf->type = 3;     flda->type = 0;        bias->type = 2;
 
-            enbd->name = "";    drvg->name = "Gain"; drve->name = "Drive";
+            enbd->name = "";    drvg->name = "Gain"; drve->name = "Shape";
             enbd->min = 0;      drvg->min = 1;       drve->min = 0;
             enbd->max = 1;      drvg->max = 4;       drve->max = 100;
             enbd->reset = 0;    drvg->reset = 1;     drve->reset = 0;
@@ -319,14 +321,15 @@ namespace Kaixo
             enbd->type = 3;     drvg->type = 0;      drve->type = 2;
 
             enbr->name = "";    fltr->name = "L,H,B"; freq->name = "Freq"; reso->name = "Reso";
-            enbr->min = 0;      fltr->min = 4;        freq->min = 20;      reso->min = 0;
+            enbr->min = 0;      fltr->min = 4;        freq->min = 30;      reso->min = 0;
             enbr->max = 1;      fltr->max = 3;        freq->max = 22000;   reso->max = 125;
-            enbr->reset = 0;    fltr->reset = 1;      freq->reset = 0;     reso->reset = 0;
+            enbr->reset = 0;    fltr->reset = 1;      freq->reset = 22000; reso->reset = 0;
             enbr->decimals = 1; fltr->decimals = 0;   freq->decimals = 1;  reso->decimals = 1;
             enbr->unit = "";    fltr->unit = "";      freq->unit = " Hz";  reso->unit = " %";
             enbr->type = 3;     fltr->type = 4;       freq->type = 0;      reso->type = 2;
 
             addView(phse);
+            addView(rphs);
             addView(sync);
             addView(plsw);
             addView(wtps);
@@ -505,19 +508,18 @@ namespace Kaixo
             }
             else if (_r != kMouseEventHandled)
             {
-                int* _data = new int[1];
-                _data[0] = (int)ModSources::Osc1 + index;
-                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
-                return kMouseEventHandled;
+                //int* _data = new int[1];
+                //_data[0] = (int)ModSources::Osc1 + index;
+                //doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) });
+                //return kMouseEventHandled;
             }
 
             return _r;
         }
 
-        void valueChanged(CControl* pControl)
+        void valueChanged(CControl* pControl) override
         {
             modulateChange = true;
-            onIdle();
             if (pControl == enbl || pControl == toggle->enbd || pControl == toggle->enbf || pControl == toggle->enbn 
                 || pControl == toggle->enbr || pControl == toggle->enbs)
             {
@@ -529,6 +531,10 @@ namespace Kaixo
                 volm->enabled = _clr;
                 detn->enabled = _clr;
                 pann->enabled = _clr;
+                //if (_clr)
+                //    titl->setViewSize({ 151, 3 + 1, 151 + 65, 3 + 30 + 1 });
+                //else
+                //    titl->setViewSize({ 151 - 1, 3, 151 + 65 - 1, 3 + 30 });
 
                 toggle->dest->enabled = _clr;
                 toggle->phse->enabled = _clr;
@@ -616,6 +622,7 @@ namespace Kaixo
 
                 wfrm->setDirty(true);
             }
+            onIdle();
         }
         BackgroundEffect* bgef;
         OscillatorView(OscillatorToggle* toggle, const CRect& size, int index, IControlListener* listener, MyEditor* editor)

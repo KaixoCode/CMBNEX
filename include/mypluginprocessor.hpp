@@ -80,18 +80,19 @@
  * TODO:
  * - LFO Sync not synced
  * - LFO global sync
- * - Noise Color
- * - Top bar (save/load preset)
- * - Better Drive algorithm
- * - Random phase button
+ * X Noise Color
+ * X Top bar (save/load preset)
+ * = Better Drive algorithm
+ * X Random phase button
  * X Parameter color when disabled
- * - LFO/Envelope modulation redraw
- * - Alignment of parameters sub oscillator
- * - Enable button of combiner filter
+ * = LFO/Envelope modulation redraw
+ * X Alignment of parameters sub oscillator
+ * X Enable button of combiner filter
  * X Globalize all colors
- * - 'Display big waveform' toggle as parameter so it's saved.
+ * = 'Display big waveform' toggle as parameter so it's saved.
  * X Change big waveform display to double click, and add to lfo and envelope
- * - Change LFO speed = mouseX, Amount = mouseY
+ * = Change LFO speed = mouseX, Amount = mouseY
+ * - Rename Drive in Combiner section to Shape
  * 
  */
 
@@ -102,8 +103,6 @@ namespace Kaixo
     public:
         Instrument() { setControllerClass(kCMBNEXControllerUID); }
         ~Instrument() override {};
-
-        TestController* controller;
 
         tresult PLUGIN_API initialize(FUnknown* context) override
         {
@@ -127,7 +126,6 @@ namespace Kaixo
         tresult PLUGIN_API setActive(TBool state) override { return AudioEffect::setActive(state); }
         tresult PLUGIN_API setupProcessing(ProcessSetup& newSetup) override 
         {
-            controller = dynamic_cast<TestController*>(getPeer());
             return AudioEffect::setupProcessing(newSetup); 
         }
     
@@ -228,9 +226,13 @@ namespace Kaixo
             return kResultOk;
         }
 
+        String preset = "default";
+
         tresult PLUGIN_API setState(IBStream* state) override
         {
             IBStreamer streamer(state, kLittleEndian);
+
+            preset = streamer.readStr8();
 
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.readDouble(paramgoals[i]);
@@ -247,6 +249,8 @@ namespace Kaixo
         tresult PLUGIN_API getState(IBStream* state) override
         {
             IBStreamer streamer(state, kLittleEndian);
+
+            streamer.writeStr8(preset);
 
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.writeDouble(paramgoals[i]);
@@ -390,28 +394,29 @@ namespace Kaixo
             {
                 if (!(modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5)) continue;
                  
-                double _vs = osc[i].sample + modulated[Params::DCOff1 + i] * 2 - 1;
+                oscs[i] = osc[i].sample + modulated[Params::DCOff1 + i] * 2 - 1;
 
                 // Fold
                 if (params[Params::ENBFold1 + i] > 0.5)
-                    _vs = Shapers::fold(_vs * (modulated[Params::Fold1 + i] * 15 + 1), modulated[Params::Bias1 + i] * 2 - 1);
+                    oscs[i] = Shapers::fold(oscs[i] * (modulated[Params::Fold1 + i] * 15 + 1), modulated[Params::Bias1 + i] * 2 - 1);
 
                 // Noise
-                if (modulated[Params::Noise1 + i])
-                    _vs += modulated[Params::Noise1 + i] * random(); // Add noise
+                if (params[Params::ENBNoise1 + i] > 0.5)
+                    oscs[i] += modulated[Params::Noise1 + i] * noiself[i].Apply(noisehf[i].Apply(random(), channel), channel); // Add noise
 
                 // Drive
                 if (params[Params::ENBDrive1 + i] > 0.5)
-                    _vs = Shapers::drive(_vs, modulated[Params::DriveGain1 + i] * 3 + 1, modulated[Params::DriveAmt1 + i]);
+                    oscs[i] = Shapers::drive(oscs[i], modulated[Params::DriveGain1 + i] * 3 + 1, modulated[Params::DriveAmt1 + i]);
                 else
-                    _vs = std::max(std::min(_vs, 1.), -1.);
+                    oscs[i] = std::max(std::min(oscs[i], 1.), -1.);
 
                 // Filter
                 if (!filterp[i].off && params[Params::ENBFilter1 + i] > 0.5)
-                    _vs = filter[i].Apply(_vs, channel); // Apply pre-combine filter
+                    oscs[i] = filter[i].Apply(oscs[i], channel); // Apply pre-combine filter
 
                 // Gain
-                _vs *= modulated[Params::Volume1 + i]; // Adjust for volume
+                oscs[i] *= modulated[Params::Volume1 + i]; // Adjust for volume
+                double _vs = oscs[i];
 
                 // Pan
                 if (modulated[Params::Pan1 + i] != 0.5)
@@ -470,11 +475,18 @@ namespace Kaixo
         std::pair<Sample64, Sample64> Generate(ProcessData& data) override
         {
             bool _editNow = count >= 512;
+
             for (int m = 0; m < Params::ModCount; m++)
             {
-                if (_editNow && controller) {
+                if (_editNow) {
                     count = 0;
-                    controller->updateModulation((Params)m, modulated[m]);
+                    
+                    auto message = Steinberg::owned(allocateMessage());
+                    message->setMessageID(UPDATE_MODULATION);
+                    message->getAttributes()->setInt(UPDATE_MODULATION_PARAM, m);
+                    message->getAttributes()->setFloat(UPDATE_MODULATION_VALUE, modulated[m]);
+
+                    sendMessage(message);
                 }
             }
             count++;
@@ -492,7 +504,7 @@ namespace Kaixo
                 for (int i = 0; i < ModAmt; i++)
                 {
                     int index = m * ModAmt + i;
-                    int source = (modgoals[index] * (int)ModSources::Amount);
+                    int source = (modgoals[index] * (int)ModSources::Amount + 0.1);
                     if (source == 0) continue;
                     edited = true;
                     double amount = modamount[index] * 2 - 1;
@@ -505,11 +517,11 @@ namespace Kaixo
                     {
                         modulated[m] += (key * amount);
                     }
-                    else if (source >= (int)ModSources::Osc1)
-                    {
-                        int mindex = (source - (int)ModSources::Osc1);
-                        modulated[m] += (osc[mindex].sample * amount);
-                    }
+                    //else if (source >= (int)ModSources::Osc1)
+                    //{
+                    //    int mindex = (source - (int)ModSources::Osc1);
+                    //    modulated[m] += (oscs[mindex] * amount);
+                    //}
                     else if (source >= (int)ModSources::Mac1)
                     {
                         int mindex = (source - (int)ModSources::Mac1);
@@ -593,7 +605,7 @@ namespace Kaixo
 
                 auto _ft = std::floor(params[Params::FilterX + i] * 3); // Filter parameters
                 cfilterp[i].sampleRate = samplerate;
-                cfilterp[i].f0 = modulated[Params::FreqX + i] * modulated[Params::FreqX + i] * (22000 - 20) + 20;
+                cfilterp[i].f0 = modulated[Params::FreqX + i] * modulated[Params::FreqX + i] * (22000 - 30) + 30;
                 cfilterp[i].Q = modulated[Params::ResoX + i] * 16 + 1;
                 cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
                 cfilterp[i].RecalculateParameters();
@@ -620,6 +632,18 @@ namespace Kaixo
                 filterp[i].Q = modulated[Params::Reso1 + i] * 16 + 1;
                 filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
                 filterp[i].RecalculateParameters();
+
+                noiselfp[i].sampleRate = samplerate;
+                noiselfp[i].f0 = (std::min(modulated[Params::Color1 + i] * 2, 1.)) * 21000 + 1000;
+                noiselfp[i].Q = 0.6;
+                noiselfp[i].type = FilterType::LowPass;
+                noiselfp[i].RecalculateParameters();
+
+                noisehfp[i].sampleRate = samplerate;
+                noisehfp[i].f0 = (std::max(modulated[Params::Color1 + i] * 2 - 1, 0.)) * 21000 + 30;
+                noisehfp[i].Q = 0.6;
+                noisehfp[i].type = FilterType::HighPass;
+                noisehfp[i].RecalculateParameters();
             }
 
             if (_osa == 1)
@@ -722,11 +746,17 @@ namespace Kaixo
         BiquadParameters aafp;
         StereoEqualizer<2, BiquadFilter<>> aaf{ aafp };
 
+        double oscs[Oscillators];
         Oscillator osc[Oscillators];
         Oscillator lfo[LFOs];
 
         BiquadParameters filterp[Oscillators];
         StereoEqualizer<2, BiquadFilter<>> filter[Oscillators]{ filterp[0], filterp[1], filterp[2], filterp[3] };
+
+        BiquadParameters noiselfp[Oscillators];
+        StereoEqualizer<2, BiquadFilter<>> noiself[Oscillators]{ noiselfp[0], noiselfp[1], noiselfp[2], noiselfp[3] };
+        BiquadParameters noisehfp[Oscillators];
+        StereoEqualizer<2, BiquadFilter<>> noisehf[Oscillators]{ noisehfp[0], noisehfp[1], noisehfp[2], noisehfp[3] };
 
         BiquadParameters cfilterp[Combines];
         StereoEqualizer<2, BiquadFilter<>> cfilter[Combines]{ cfilterp[0], cfilterp[1], cfilterp[2] };

@@ -15,6 +15,7 @@
 #include "vstgui/vstgui_uidescription.h"
 #include "vstgui/uidescription/detail/uiviewcreatorattributes.h"
 #include "vstgui/uidescription/uiviewfactory.h"
+#include "pluginterfaces/base/smartpointer.h"
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -32,4 +33,5 @@ using namespace VSTGUI;
 #include <iostream>
 #include <array>
 #include <mutex>
+#include <filesystem>
 #include <fstream>
