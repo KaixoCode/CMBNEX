@@ -78,21 +78,22 @@
  * 
  * 
  * TODO:
- * - LFO Sync not synced
- * - LFO global sync
+ * X LFO Sync not synced
+ * X LFO global sync
  * X Noise Color
  * X Top bar (save/load preset)
- * = Better Drive algorithm
  * X Random phase button
  * X Parameter color when disabled
- * = LFO/Envelope modulation redraw
  * X Alignment of parameters sub oscillator
  * X Enable button of combiner filter
  * X Globalize all colors
- * = 'Display big waveform' toggle as parameter so it's saved.
  * X Change big waveform display to double click, and add to lfo and envelope
+ * X Rename Drive in Combiner section to Shape
+ *
+ * = Better Drive algorithm
+ * = LFO/Envelope modulation redraw
+ * = 'Display big waveform' toggle as parameter so it's saved.
  * = Change LFO speed = mouseX, Amount = mouseY
- * - Rename Drive in Combiner section to Shape
  * 
  */
 
@@ -193,6 +194,9 @@ namespace Kaixo
             void** in = getChannelBuffersPointer(processSetup, data.inputs[0]);
             void** out = getChannelBuffersPointer(processSetup, data.outputs[0]);
 
+
+            double _samples = data.processContext->projectTimeSamples;
+
             if (data.symbolicSampleSize == kSample32)
             {
                 for (size_t sample = 0; sample < data.numSamples; sample++)
@@ -200,7 +204,7 @@ namespace Kaixo
                     for (size_t param = 0; param < Params::Size; param++)
                         params[param] = ParamNames[param].smooth ? params[param] * 0.99 + paramgoals[param] * 0.01 : paramgoals[param];
 
-                    auto [l, r] = Generate(data);
+                    auto [l, r] = Generate(data, _samples + sample);
                     if (data.outputs[0].numChannels == 2)
                     {
                         ((Sample32**)out)[0][sample] = l;
@@ -215,7 +219,7 @@ namespace Kaixo
                     for (size_t param = 0; param < Params::Size; param++)
                         params[param] = ParamNames[param].smooth ? params[param] * 0.99 + paramgoals[param] * 0.01 : paramgoals[param];
 
-                    auto[l, r] = Generate(data);
+                    auto[l, r] = Generate(data, _samples + sample);
                     if (data.outputs[0].numChannels == 2)
                     {
                         ((Sample64**)out)[0][sample] = l;
@@ -264,7 +268,7 @@ namespace Kaixo
             return kResultOk;
         }
 
-        virtual std::pair<Sample64, Sample64> Generate(ProcessData& data) = 0;
+        virtual std::pair<Sample64, Sample64> Generate(ProcessData& data, double samples) = 0;
         virtual void Event(Vst::Event& e) = 0;
         
         double params[Params::Size];
@@ -293,7 +297,9 @@ namespace Kaixo
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
         };
-
+        
+        double samples = 0;
+        double samplesPress = 0;
 
         void Event(Vst::Event& event) override
         {
@@ -314,6 +320,7 @@ namespace Kaixo
                     for (int i = 0; i < LFOs; i++)
                         lfo[i].phase = 0;
                     sub.phase = 0;
+                    samplesPress = samples;
                 }
                 
                 for (int i = 0; i < Envelopes; i++)
@@ -345,6 +352,7 @@ namespace Kaixo
                                 osc[i].phase = params[Params::RandomPhase1 + i] ? (std::rand() % 32767) / 32767. : 0;
                             for (int i = 0; i < LFOs; i++)
                                 lfo[i].phase = 0;
+                            samplesPress = samples;
                         }
 
                         for (int i = 0; i < Envelopes; i++)
@@ -472,8 +480,9 @@ namespace Kaixo
         }
 
         int count = 0;
-        std::pair<Sample64, Sample64> Generate(ProcessData& data) override
+        std::pair<Sample64, Sample64> Generate(ProcessData& data, double s) override
         {
+            samples = s;
             bool _editNow = count >= 512;
 
             for (int m = 0; m < Params::ModCount; m++)
@@ -535,7 +544,7 @@ namespace Kaixo
                     else
                     {
                         int mindex = (source - (int)ModSources::LFO1);
-                        modulated[m] += ((modulated[Params::LFOLvl1 + mindex] * 2 - 1) * lfo[mindex].sample * amount);
+                        modulated[m] += (lfo[mindex].sample * amount);
                     }
                 }
 
@@ -585,14 +594,35 @@ namespace Kaixo
                 if (params[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
                 {
                     size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
-                    double _ps = (bpm / 60.) / (TimesValue[_type] * 4); // (beats per phase / bpm) / 60 = seconds per phase
-                    lfo[i].settings.frequency = _ps;
+
+                    double _ps = (60. / bpm) * TimesValue[_type] * 4; // Seconds per oscillation
+                    double _f = 1 / _ps; // Frequency of the oscillations
+                    double _spp = _ps * data.processContext->sampleRate; // Samples per oscillation
+                    double _phase = std::fmod(params[Params::LFORetr1 + i] > 0.5 ? samples - samplesPress : samples, _spp) / _spp;
+
+                    // If playing, sync phase to samples played
+                    if (data.processContext->state & ProcessContext::kPlaying)
+                        lfo[i].phase = _phase;
+                    lfo[i].settings.frequency = _f;
                 }
                 else
-                    lfo[i].settings.frequency = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1;
+                {
+                    size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
+
+                    double _f = _timeMult * modulated[Params::LFORate1 + i] * modulated[Params::LFORate1 + i] * 29.9 + 0.1; // Frequency of the oscillations
+                    double _ps = 1 / _f; // Seconds per oscillation
+                    double _spp = _ps * data.processContext->sampleRate; // Samples per oscillation
+                    double _phase = std::fmod(params[Params::LFORetr1 + i] > 0.5 ? samples - samplesPress : samples, _spp) / _spp;
+
+                    // If playing, sync phase to samples played
+                    if (data.processContext->state & ProcessContext::kPlaying)
+                        lfo[i].phase = _phase;
+                    lfo[i].settings.frequency = _f;
+                }
+
                 lfo[i].settings.wtpos = modulated[Params::LFOPos1 + i];
                 lfo[i].settings.shaper3 = modulated[Params::LFOShaper1 + i];
-                lfo[i].sample = lfo[i].OffsetOnce(modulated[Params::LFOPhase1 + i]);
+                lfo[i].sample = lfo[i].OffsetOnce(modulated[Params::LFOPhase1 + i]) * (modulated[Params::LFOLvl1 + i] * 2 - 1);
             }
 
             for (int i = 0; i < Combines; i++)

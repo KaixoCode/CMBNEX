@@ -171,7 +171,7 @@ namespace Kaixo
             enbf->unit = "";    fold->unit = " dB";  bias->unit = "";
             enbf->type = 3;     fold->type = 0;      bias->type = 2;
                         
-            enbd->name = "";    dgai->name = "Gain"; driv->name = "Drive";
+            enbd->name = "";    dgai->name = "Gain"; driv->name = "Shape";
             enbd->min = 0;      dgai->min = 1;       driv->min = 0;
             enbd->max = 1;      dgai->max = 4;     driv->max = 100;
             enbd->reset = 0;    dgai->reset = 1;     driv->reset = 0;

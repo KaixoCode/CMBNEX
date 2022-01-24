@@ -21,6 +21,7 @@ namespace Kaixo
         Knob* offs;
         Knob* shpr;
         Knob* sync;
+        Knob* retr;
 
         Label* lfo1;
         Label* lfo2;
@@ -117,6 +118,7 @@ namespace Kaixo
             offs->setTag(Params::LFOPhase1 + index);
             shpr->setTag(Params::LFOShaper1 + index);
             sync->setTag(Params::LFOSync1 + index);
+            retr->setTag(Params::LFORetr1 + index);
 
             setDirty(true);
         }
@@ -141,6 +143,7 @@ namespace Kaixo
             offs = new Knob{ { 200, 130, 200 + 65, 130 + 55 }, editor };
             shpr = new Knob{ { 265, 130, 265 + 65, 130 + 55 }, editor };
             sync = new Knob{ { 282,  32, 282 + 45,  32 + 20 }, editor };
+            retr = new Knob{ { 257,  32, 257 + 20,  32 + 20 }, editor };
             curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
 
             nvd1 = new DragThing{ {   5,   5,   5 + 60,   5 + 18 } };
@@ -187,6 +190,7 @@ namespace Kaixo
             offs->setListener(listener);
             shpr->setListener(listener);
             sync->setListener(listener);
+            retr->setListener(listener);
 
             rate->registerControlListener(this);
             amnt->registerControlListener(this);
@@ -201,6 +205,7 @@ namespace Kaixo
             offs->setTag(Params::LFOPhase1 + index);
             shpr->setTag(Params::LFOShaper1 + index);
             sync->setTag(Params::LFOSync1 + index);
+            retr->setTag(Params::LFORetr1 + index);
 
             rate->name = "Rate"; amnt->name = "Amount";   posi->name = "Pos";
             rate->min = 0.1;     amnt->min = -100;        posi->min = 0;
@@ -210,13 +215,13 @@ namespace Kaixo
             rate->unit = " Hz";  amnt->unit = " %";       posi->unit = " %";
             rate->type = 2;      amnt->type = 2;          posi->type = 2;
 
-            offs->name = "Offset"; shpr->name = "Shaper"; sync->name = "Sync";
-            offs->min = 0;         shpr->min = -100;      sync->min = 0;
-            offs->max = 100;       shpr->max = 100;       sync->max = 1;
-            offs->reset = 0;       shpr->reset = 0;       sync->reset = 0;
-            offs->decimals = 1;    shpr->decimals = 1;    sync->decimals = 1;
-            offs->unit = " %";     shpr->unit = " %";     sync->unit = "";
-            offs->type = 2;        shpr->type = 2;        sync->type = 3;
+            offs->name = "Offset"; shpr->name = "Shaper"; sync->name = "Sync"; retr->name = "R";
+            offs->min = 0;         shpr->min = -100;      sync->min = 0;       retr->min = 0;
+            offs->max = 100;       shpr->max = 100;       sync->max = 1;       retr->max = 1;
+            offs->reset = 0;       shpr->reset = 0;       sync->reset = 0;     retr->reset = 0;
+            offs->decimals = 1;    shpr->decimals = 1;    sync->decimals = 1;  retr->decimals = 1;
+            offs->unit = " %";     shpr->unit = " %";     sync->unit = "";     retr->unit = "";
+            offs->type = 2;        shpr->type = 2;        sync->type = 3;      retr->type = 3;
 
             addView(curve);
 
@@ -226,6 +231,7 @@ namespace Kaixo
             addView(offs);
             addView(shpr);
             addView(sync);
+            addView(retr);
 
             addView(lfo1);
             addView(lfo2);

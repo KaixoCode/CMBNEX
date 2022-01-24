@@ -216,7 +216,7 @@ constexpr ParamInfo ParamNames[]
     { "X Fold", 0 },      { "Y Fold", 0 },      { "Z Fold", 0 },
     { "X Bias", 0.5 },      { "Y Bias", 0.5 },      { "Z Bias", 0.5 },
     { "X Drive Gain", 0 },      { "Y Drive Gain", 0 },      { "Z Drive Gain", 0 },
-    { "X Drive", 0 },      { "Y Drive", 0 },      { "Z Drive", 0 },
+    { "X Drive Shape", 0 },      { "Y Drive Shape", 0 },      { "Z Drive Shape", 0 },
     { "X Add Mix", 1 },  { "Y Add Mix", 1 },  { "Z Add Mix", 1 },
     { "X Min Mix", 0 },  { "Y Min Mix", 0 },  { "Z Min Mix", 0 },
     { "X Mult Mix", 0 }, { "Y Mult Mix", 0 }, { "Z Mult Mix", 0 },
