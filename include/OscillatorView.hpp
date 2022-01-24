@@ -502,7 +502,7 @@ namespace Kaixo
                 if (buttons.isDoubleClick())
                 {
                     viewWave ^= true;
-                    if (viewWave) wfrm->setViewSize({ 1, 1, getWidth() - 1, getHeight() - 1 });
+                    if (viewWave) wfrm->setViewSize({ 1, 1, getWidth() - 1, getHeight() - 2 });
                     else wfrm->setViewSize({ 140, 35, 140 + 87, 35 + 75 });
                 }
             }

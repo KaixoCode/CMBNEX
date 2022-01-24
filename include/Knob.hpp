@@ -313,7 +313,7 @@ namespace Kaixo
                 {
                     double mult = buttons.isShiftSet() ? 0.25 : 1;
                     double diff = 0;
-                    if (type == SLIDER && editIndex == -1) diff = (where.x - pwhere.x) / getViewSize().getWidth();
+                    if ((type == SLIDER || type == SMALLSLIDER) && editIndex == -1) diff = (where.x - pwhere.x) / getViewSize().getWidth();
                     else if (type == INTERPOLATE && editIndex == -1) diff = (where.x - pwhere.x) / (parts.size() * getViewSize().getWidth());
                     else diff = (pwhere.y - where.y) * 0.005;
                     pwhere = where;

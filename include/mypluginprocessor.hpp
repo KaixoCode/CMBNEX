@@ -89,6 +89,7 @@
  * X Globalize all colors
  * X Change big waveform display to double click, and add to lfo and envelope
  * X Rename Drive in Combiner section to Shape
+ * - Filter Disable Combiner not implemented
  *
  * = Better Drive algorithm
  * = LFO/Envelope modulation redraw
@@ -311,7 +312,7 @@ namespace Kaixo
                 velocity = event.noteOn.velocity;
                 pressedOld = frequency;
                 pressed = event.noteOn.pitch + event.noteOn.tuning * 0.01;
-                key = event.noteOn.pitch / 127.;
+                key = event.noteOn.pitch;
                 notesPressed[event.noteOn.pitch] = true;
                 if (params[Params::Retrigger] > 0.5 || !env[0].Gate())
                 { 
@@ -385,7 +386,7 @@ namespace Kaixo
                 for (int i = 0; i < Oscillators; i++)
                 {   // Oscillator generate
                     if (modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                        osc[i].sample = osc[i].OffsetOnce(std::fmod(modulated[Params::Phase1 + i] + 5, 1.));
+                        osc[i].sample = osc[i].OffsetOnce(myfmod1(modulated[Params::Phase1 + i] + 5));
                 }
 
                 { // Sub oscillator
@@ -458,7 +459,9 @@ namespace Kaixo
 
                 _v = _v * modulated[Params::GainX + i];
 
-                if (!cfilterp[i].off) _v = cfilter[i].Apply(_v, channel);
+                if (params[Params::ENBFilterX + i] > 0.5)
+                    _v = cfilter[i].Apply(_v, channel);
+
                 _v = params[Params::DCX + i] > 0.5 ? dcoff[i].Apply(_v, channel) : _v;
 
                 if (i == Combines - 1)
@@ -479,26 +482,43 @@ namespace Kaixo
             return env[0].Apply(_res, channel); // Envelope 0 is gain
         }
 
+        bool work = true;
+
+        ~TestProcessor()
+        {
+            work = false;
+            modulationThread.join();
+        }
+
+        std::thread modulationThread{ [this]() {
+            while (work)
+            {
+                for (int m = 0; m < Params::ModCount; m++)
+                {
+                    auto message = Steinberg::owned(allocateMessage());
+
+                    if (message)
+                    {
+                        message->setMessageID(UPDATE_MODULATION);
+                        message->getAttributes()->setInt(UPDATE_MODULATION_PARAM, m);
+                        message->getAttributes()->setFloat(UPDATE_MODULATION_VALUE, modulated[m]);
+
+                        sendMessage(message);
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
+            }
+        } };
+
         int count = 0;
         std::pair<Sample64, Sample64> Generate(ProcessData& data, double s) override
         {
+            const double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
+            
             samples = s;
-            bool _editNow = count >= 512;
-
-            for (int m = 0; m < Params::ModCount; m++)
-            {
-                if (_editNow) {
-                    count = 0;
-                    
-                    auto message = Steinberg::owned(allocateMessage());
-                    message->setMessageID(UPDATE_MODULATION);
-                    message->getAttributes()->setInt(UPDATE_MODULATION_PARAM, m);
-                    message->getAttributes()->setFloat(UPDATE_MODULATION_VALUE, modulated[m]);
-
-                    sendMessage(message);
-                }
-            }
-            count++;
+            //bool _editNow = count >= data.processContext->sampleRate / 60.;
+            //count++;
 
             const size_t _index = std::floor(params[Params::Oversample] * 4);
             const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
@@ -524,7 +544,7 @@ namespace Kaixo
                     }
                     else if (source == (int)ModSources::Key)
                     {
-                        modulated[m] += (key * amount);
+                        modulated[m] += (((key + _bendOffset) / 127.0) * amount);
                     }
                     //else if (source >= (int)ModSources::Osc1)
                     //{
@@ -559,7 +579,6 @@ namespace Kaixo
             if (data.processContext->state & ProcessContext::kTempoValid)
                 bpm = data.processContext->tempo;
 
-            const double _bendOffset = params[Params::PitchBend] * 12 * modulated[Params::Bend] - 6 * modulated[Params::Bend] + modulated[Params::Transpose] * 96 - 48;
             const double _timeMult = modulated[Params::Time] < 0.5 ? (modulated[Params::Time] + 0.5) : ((modulated[Params::Time] - 0.5) * 2 + 1);
             
             deltaf = _timeMult * std::abs((pressed - pressedOld) / (0.001 + modulated[Params::Glide] * modulated[Params::Glide] * modulated[Params::Glide] * 10 * data.processContext->sampleRate));

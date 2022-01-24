@@ -49,6 +49,10 @@ namespace Kaixo
 #define db2lin(db) std::powf(10.0f, 0.05 * (db))
 #define lin2db(lin) (20.0f * std::log10f(static_cast<float>(lin)))
 
+    constexpr static inline double myf(double a) { a -= (int)a; return a; }
+
+#define myfmod1(x) myf(x) //std::fmod(x, 1.)
+
     enum Polarity { Positive = 1, Negative = -1 };
 
     using Wavetable = double(*)(double, double);
