@@ -252,11 +252,11 @@ constexpr ParamInfo ParamNames[]
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
 
     { "A Enable", 1 },            { "B Enable", 1 },            { "C Enable", 1 },            { "D Enable", 1 },
-    { "A Enable Waveshaper", 1 }, { "B Enable Waveshaper", 1 }, { "C Enable Waveshaper", 1 }, { "D Enable Waveshaper", 1 },
-    { "A Enable Noise", 1 },      { "B Enable Noise", 1 },      { "C Enable Noise", 1 },      { "D Enable Noise", 1 },
-    { "A Enable Fold", 1 },       { "B Enable Fold", 1 },       { "C Enable Fold", 1 },       { "D Enable Fold", 1 },
-    { "A Enable Drive", 1 },      { "B Enable Drive", 1 },      { "C Enable Drive", 1 },      { "D Enable Drive", 1 },
-    { "A Enable Filter", 1 },     { "B Enable Filter", 1 },     { "C Enable Filter", 1 },     { "D Enable Filter", 1 },
+    { "A Enable Waveshaper", 0 }, { "B Enable Waveshaper", 0 }, { "C Enable Waveshaper", 0 }, { "D Enable Waveshaper", 0 },
+    { "A Enable Noise", 0 },      { "B Enable Noise", 0 },      { "C Enable Noise", 0 },      { "D Enable Noise", 0 },
+    { "A Enable Fold", 0 },       { "B Enable Fold", 0 },       { "C Enable Fold", 0 },       { "D Enable Fold", 0 },
+    { "A Enable Drive", 0 },      { "B Enable Drive", 0 },      { "C Enable Drive", 0 },      { "D Enable Drive", 0 },
+    { "A Enable Filter", 0 },     { "B Enable Filter", 0 },     { "C Enable Filter", 0 },     { "D Enable Filter", 0 },
     { "A Filter", 0 },            { "B Filter", 0 },            { "C Filter", 0 },            { "D Filter", 0 },
     { "A Random", 0 },            { "B Random", 0 },            { "C Random", 0 },            { "D Random", 0 },
 
@@ -266,9 +266,9 @@ constexpr ParamInfo ParamNames[]
 
     { "Filter X", 0 }, { "Filter Y", 0 }, { "Filter Z", 0 },
     { "DC X", 0 },     { "DC Y", 0 },     { "DC Z", 0 },
-    { "Enable Fold X", 1 },     { "Enable Fold Y", 1 },     { "Enable Fold Z", 1 },
-    { "Enable Drive X", 1 },     { "Enable Drive Y", 1 },     { "Enable Drive Z", 1 },
-    { "Enable Filter X", 1 },     { "Enable Filter Y", 1 },     { "Enable Filter Z", 1 },
+    { "Enable Fold X", 0 },     { "Enable Fold Y", 0 },     { "Enable Fold Z", 0 },
+    { "Enable Drive X", 0 },     { "Enable Drive Y", 0 },     { "Enable Drive Z", 0 },
+    { "Enable Filter X", 0 },     { "Enable Filter Y", 0 },     { "Enable Filter Z", 0 },
     
     { "Destination A", 1. / 128., 0, 1, 0 }, { "Destination B",  2. / 128., 0, 1, 0 }, { "Destination C",  4. / 128., 0, 1, 0 },
     { "Destination D",  8. / 128., 0, 1, 0 }, { "Destination X",  16. / 128., 0, 1, 0 }, { "Destination Y",  32. / 128., 0, 1, 0 },
