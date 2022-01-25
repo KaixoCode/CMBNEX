@@ -16,12 +16,18 @@ namespace Kaixo
 
             inline double get(double x, double amt) const
             {
-                return table[(int)((x + 1) * (precision / 2.)) + (precision + 1) * (int)(amt * precision)];
+                //double v = (x + 1) * (precision / 2.);
+                //int a = (int)(v);
+                //double r = v - a;
+                //return (1 - r) * table[a + (precision + 1) * (int)(amt * precision)]
+                //    + r * table[a + 1 + (precision + 1) * (int)(amt * precision)];
+
+                return table[(int)((x * 0.5 + 0.5) * precision) + (precision + 1) * (int)(amt * precision)];
             }
 
-            double table[(precision + 1) * (precision + 1)];
+            float table[(precision + 1) * (precision + 1)];
         };
-        double noShaper(double x, double amt) { return x; }
+        inline double noShaper(double x, double amt) { return x; }
 
         const static Table shaper1l = [](double x, double amt) {
             const double cos1 = std::cos(159 * x);
@@ -30,7 +36,7 @@ namespace Kaixo
             return constrain(res, -1., 1.);
         };
 
-        double shaper1(double x, double amt)
+        inline double shaper1(double x, double amt)
         {
             return shaper1l.get(x, amt);
         }
@@ -45,7 +51,7 @@ namespace Kaixo
             return constrain(res, -1., 1.);
         };
 
-        double shaper2(double x, double amt)
+        inline double shaper2(double x, double amt)
         {
             return shaper2l.get(x, amt);
         }
@@ -61,7 +67,7 @@ namespace Kaixo
             return constrain(res, -1., 1.);
         };
 
-        double shaper3(double x, double amt)
+        inline double shaper3(double x, double amt)
         {
             return shaper3l.get(x, amt);
         }
@@ -77,7 +83,7 @@ namespace Kaixo
             return constrain(res, -1., 1.);
         };
 
-        double shaper8(double x, double amt)
+        inline double shaper8(double x, double amt)
         {
             return shaper8l.get(x, amt);
         }
@@ -176,17 +182,26 @@ namespace Kaixo
                 shaper1    // 15
             };
 
-            double res = 0;
-            for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
-            {
-                double r = (amt - (i - 1) / steps) * steps;
-                const double s1 = funcs[i - 1](x, 1 - r);
-                const double s2 = funcs[i](x, r);
-                const double s3 = funcs2[i - 1](x, 1 - r);
-                const double s4 = funcs2[i](x, r);
-                const double res = (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
-                return constrain(res, 0., 1.);
-            }
+            int i = amt * steps + 1;
+            double r = (amt - (i - 1) / steps) * steps;
+            const double s1 = funcs[i - 1](x, 1 - r);
+            const double s2 = funcs[i](x, r);
+            const double s3 = funcs2[i - 1](x, 1 - r);
+            const double s4 = funcs2[i](x, r);
+            const double res = (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
+            return constrain(res, 0., 1.);
+            
+            //double res = 0;
+            //for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
+            //{
+            //    double r = (amt - (i - 1) / steps) * steps;
+            //    const double s1 = funcs[i - 1](x, 1 - r);
+            //    const double s2 = funcs[i](x, r);
+            //    const double s3 = funcs2[i - 1](x, 1 - r);
+            //    const double s4 = funcs2[i](x, r);
+            //    const double res = (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
+            //    return constrain(res, 0., 1.);
+            //}
         }
 
         double shaper24(double x, double amt, double morph)
@@ -209,17 +224,26 @@ namespace Kaixo
                 shaper1    // 15
             };
 
-            for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
-            {
-                double r = (amt - (i - 1) / steps) * steps;
-                const double s1 = funcs[i - 1](x, 1 - r);
-                const double s2 = funcs[i](x, r);
-                const double s3 = funcs2[i - 1](x, 1 - r);
-                const double s4 = funcs2[i](x, r);
-                return (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
-            }
+            int i = amt * steps + 1;
+            double r = (amt - (i - 1) / steps) * steps;
+            const double s1 = funcs[i - 1](x, 1 - r);
+            const double s2 = funcs[i](x, r);
+            const double s3 = funcs2[i - 1](x, 1 - r);
+            const double s4 = funcs2[i](x, r);
+            const double res = (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
+            return res; //constrain(res, 0., 1.);
 
-            return 0;
+            //for (int i = 1; i < steps + 1; i++) if (amt <= i / steps)
+            //{
+            //    double r = (amt - (i - 1) / steps) * steps;
+            //    const double s1 = funcs[i - 1](x, 1 - r);
+            //    const double s2 = funcs[i](x, r);
+            //    const double s3 = funcs2[i - 1](x, 1 - r);
+            //    const double s4 = funcs2[i](x, r);
+            //    return (1 - morph) * ((r * s2) + s1 * (1 - r)) + morph * ((r * s4) + s3 * (1 - r));
+            //}
+
+            //return 0;
         }
 
         double simpleshaper(double x, double amt)
@@ -256,10 +280,14 @@ namespace Kaixo
 
             inline double get(double x, double amt) const
             {
-                return table[(int)((x + 1) * (precision / 2.)) + (precision + 1) * (int)((amt + 1) * (precision / 2.))];
+                double v = (x + 1) * (precision / 2.);
+                int a = (int)(v);
+                double r = v - a;
+                return (1 - r) * table[a + (precision + 1) * (int)((amt * 0.5 + 0.5) * precision)]
+                    + r * table[a + 1 + (precision + 1) * (int)((amt * 0.5 + 0.5) * precision)];
             }
 
-            double table[(precision + 1) * (precision + 1)];
+            float table[(precision + 1) * (precision + 1)];
         };
 
         Table4 foldt = [](double x, double bias) {
@@ -270,6 +298,8 @@ namespace Kaixo
 
         double fold(double x, double bias)
         {
+            //x = constrain(x, -4., 4.);
+            //return foldt.get(x, bias);
             constexpr static double b = 4;
             x += bias;
             return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
@@ -282,15 +312,19 @@ namespace Kaixo
             {
                 for (int a = 0; a < precision + 1; a++)
                     for (int b = 0; b < precision + 1; b++)
-                        table[a + b * (precision + 1)] = l((a / (double)precision) * 8. - 4., (b / (double)precision));
+                        table[a + b * (precision + 1)] = l((a / (double)precision) * 10. - 5., (b / (double)precision));
             }
 
             inline double get(double x, double amt) const
             {
-                return table[(int)((x + 4) * (precision / 8.)) + (precision + 1) * (int)(amt * (double)precision)];
+                double v = (x + 5) * (precision / 10.);
+                int a = (int)(v);
+                double r = v - a;
+                return (1 - r) * table[a + (precision + 1) * (int)(amt * precision)]
+                    + r * table[a + 1 + (precision + 1) * (int)(amt * precision)];
             }
 
-            double table[(precision + 1) * (precision + 1)];
+            float table[(precision + 1) * (precision + 1)];
         };
 
         Table5 drivet = [](double x, double amt) {
@@ -302,6 +336,7 @@ namespace Kaixo
 
         double drive(double x, double gain, double amt)
         {
+            return drivet.get(gain * x, amt);
             const double _gain = gain * x;
             const double _abs = std::max(std::abs(_gain), 0.000001);
             const double _pow = (_gain / _abs) * (1 - std::exp((-_gain * _gain) / _abs));
@@ -335,9 +370,50 @@ namespace Kaixo
             //assert(phase >= 0 && phase <= 1);
             return 4 * std::abs(0.5 - phase) - 1;
         }
+        struct Table6
+        {
+            constexpr static size_t precision = 1000;
+            constexpr Table6(auto&& l)
+            {
+                for (int a = 0; a < precision + 1; a++)
+                    for (int b = 0; b < precision + 1; b++)
+                        table[a + b * (precision + 1)] = l(a / (double)precision, b / (double)precision);
+            }
+
+            inline double get(double x, double amt) const
+            {
+                double v = x * precision;
+                int a = (int)(v);
+                double r = v - a;
+                return (1 - r) * table[a + (precision + 1) * (int)(amt * precision)]
+                    + r * table[a + 1 + (precision + 1) * (int)(amt * precision)];
+            }
+
+            float table[(precision + 1) * (precision + 1)];
+        };
+
+        Table6 basict = [](double phase, double wtpos) {
+            double p = phase;
+            if (wtpos < 0.33)
+            {
+                const double r = wtpos * 3;
+                return triangle(p, wtpos) * r + sine(p, wtpos) * (1 - r);
+            }
+            else if (wtpos < 0.66)
+            {
+                const double r = (wtpos - 0.33) * 3;
+                return saw(p, wtpos) * r + triangle(p, wtpos) * (1 - r);
+            }
+            else
+            {
+                const double r = (wtpos - 0.66) * 2.9;
+                return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
+            }
+        };
 
         double basic(double phase, double wtpos)
         {
+            //return basict.get(phase, wtpos);
             double p = phase;
             if (wtpos < 0.33)
             {
@@ -402,10 +478,14 @@ namespace Kaixo
 
         inline double get(double x, double amt) const
         {
-            return table[(int)(x * precision) + (precision + 1) * (int)((amt * 0.5 + 0.5) * precision)];
+            double v = x * precision;
+            int a = (int)(v);
+            double r = v - a;
+            return (1 - r) * table[a + (precision + 1) * (int)((amt * 0.5 + 0.5) * precision)]
+                + r * table[a + 1 + (precision + 1) * (int)((amt * 0.5 + 0.5) * precision)];
         }
 
-        double table[(precision + 1) * (precision + 1)];
+        float table[(precision + 1) * (precision + 1)];
     };
 
     const static Table2 ftable = [](double x, double curve)
@@ -427,7 +507,7 @@ namespace Kaixo
 
     double f(double x, double curve)
     {
-        //return ftable.get(x, a);
+        return ftable.get(x, curve);
         constexpr double MULT = 16;
         const double a = curve < 0 ? (curve * MULT - 1) : curve * MULT + 1;
         constexpr static auto b = 0.5;
