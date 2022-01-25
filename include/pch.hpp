@@ -35,3 +35,5 @@ using namespace VSTGUI;
 #include <mutex>
 #include <filesystem>
 #include <fstream>
+#include <condition_variable>
+#include <future>
