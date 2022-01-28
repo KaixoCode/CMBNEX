@@ -87,7 +87,7 @@ namespace Kaixo
         bool dark = false;
 
 
-        double getModValue() { return modulation; }
+        double getModValue() { return constrain(modulation, 0., 1.); }
 
         int ModIndexPos(CPoint pos) 
         {

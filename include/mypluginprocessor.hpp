@@ -524,7 +524,7 @@ namespace Kaixo
 
             if (result != kResultOk) return result;
             for (int i = 0; i < Params::Size; i++)
-                params[i] = paramgoals[i] = ParamNames[i].reset;
+                params.values[i] = params.goals[i] = ParamNames[i].reset;
 
             for (int i = 0; i < Params::ModCount * ModAmt; i++)
                 modgoals[i] = 0, modamount[i] = 0.5;
@@ -568,7 +568,7 @@ namespace Kaixo
                         if (paramQueue->getPoint(numPoints - 1, sampleOffset, end) != kResultTrue) continue;
                         auto param = paramQueue->getParameterId();
                         if (param < Params::Size)
-                            paramgoals[param] = end;
+                            params.goals[param] = end;
                         else
                         {
                             param -= Params::Size;
@@ -642,6 +642,9 @@ namespace Kaixo
                 //    }
                 //}
             }
+
+            std::memcpy(params.values, params.goals, Params::Size * sizeof(double));
+
             return kResultOk;
         }
 
@@ -654,7 +657,7 @@ namespace Kaixo
             preset = streamer.readStr8();
 
             for (size_t i = 0; i < Params::Size; i++)
-                streamer.readDouble(paramgoals[i]);
+                streamer.readDouble(params.goals[i]);
 
             for (int i = 0; i < Params::ModCount * ModAmt; i++)
             {
@@ -672,7 +675,7 @@ namespace Kaixo
             streamer.writeStr8(preset);
 
             for (size_t i = 0; i < Params::Size; i++)
-                streamer.writeDouble(paramgoals[i]);
+                streamer.writeDouble(params.goals[i]);
 
             for (int i = 0; i < Params::ModCount * ModAmt; i++)
             {
@@ -686,8 +689,13 @@ namespace Kaixo
         virtual void Generate(ProcessData& data, size_t samples) = 0;
         virtual void Event(Vst::Event& e) = 0;
         
-        double params[Params::Size];
-        double paramgoals[Params::Size];
+        struct ParamList
+        {
+            double values[Params::Size];
+            double goals[Params::Size];
+
+            double operator[](std::pair<size_t, double> i) { return (1 - i.second) * values[i.first] + i.second * goals[i.first]; }
+        } params;
 
         double modgoals[Params::ModCount * ModAmt];
         double modamount[Params::ModCount * ModAmt];
@@ -741,10 +749,10 @@ namespace Kaixo
                     voices[voice].key = event.noteOn.pitch;
                     lastPressedVoice = voice;
 
-                    if (params[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
+                    if (params.goals[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
                     {
                         for (int i = 0; i < Oscillators; i++)
-                            voices[voice].osc[i].phase = params[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
+                            voices[voice].osc[i].phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
                         for (int i = 0; i < LFOs; i++)
                             voices[voice].lfo[i].phase = 0;
                         voices[voice].sub.phase = 0;
@@ -753,7 +761,7 @@ namespace Kaixo
 
                     for (int i = 0; i < Envelopes; i++)
                     {
-                        voices[voice].env[i].settings.legato = params[Params::Retrigger] < 0.5;
+                        voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;
                         voices[voice].env[i].Gate(true);
                     }
                 }
@@ -797,7 +805,7 @@ namespace Kaixo
             switch (event.type)
             {
             case Event::kNoteOnEvent:
-                if (paramgoals[Params::PitchBend] > 1 || paramgoals[Params::PitchBend] < 0) paramgoals[Params::PitchBend] = 0.5;
+                if (params.goals[Params::PitchBend] > 1 || params.goals[Params::PitchBend] < 0) params.goals[Params::PitchBend] = 0.5;
 
                 NotePress(event);
                 break;
@@ -808,7 +816,7 @@ namespace Kaixo
             }
         }
 
-        double GenerateSample(size_t channel, ProcessData& data, double samplerate, auto& voice)
+        double GenerateSample(size_t channel, ProcessData& data, double samplerate, auto& voice, double ratio)
         {
             double bpm = 128;
             if (data.processContext->state & ProcessContext::kTempoValid)
@@ -816,7 +824,7 @@ namespace Kaixo
 
             if (voice.env[0].Done()) return 0;
 
-            const double _bendOffset = params[Params::PitchBend] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
+            const double _bendOffset = params[{ Params::PitchBend, ratio }] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
             const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
 
             if (channel == 0) // Only do all generating on channel 0
@@ -824,42 +832,43 @@ namespace Kaixo
 
                 for (int i = 0; i < Oscillators; i++)
                 {   // Oscillator generate
-                    if (voice.modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5) // Generate oscillator sound
+                    if (voice.modulated[Params::Volume1 + i] && params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
                         voice.osc[i].sample = voice.osc[i].OffsetOnce(myfmod1(voice.modulated[Params::Phase1 + i] + 5));
                 }
 
                 { // Sub oscillator
-                    int _octave = std::round(params[Params::SubOct] * 4 - 2);
+                    int _octave = std::round(params.goals[Params::SubOct] * 4 - 2);
                     voice.sub.SAMPLE_RATE = samplerate;
                     voice.sub.settings.frequency = noteToFreq(voice.frequency + _octave * 12 + +_bendOffset);
                     voice.sub.settings.wtpos = voice.modulated[Params::SubOvertone];
-                    voice.sub.sample = voice.sub.OffsetOnce(0);
+                    voice.sub.sample = voice.sub.OffsetOnceClean(0);
                 }
             }
 
             double _cs[Combines * 2 + 1]{ 0, 0, 0, 0, 0, 0, 0 };
             for (int i = 0; i < Oscillators; i++)
             {
-                if (!(voice.modulated[Params::Volume1 + i] && params[Params::Enable1 + i] > 0.5)) continue;
+                if (!(voice.modulated[Params::Volume1 + i] && params.goals[Params::Enable1 + i] > 0.5)) continue;
 
                 voice.oscs[i] = voice.osc[i].sample + voice.modulated[Params::DCOff1 + i] * 2 - 1;
 
                 // Fold
-                if (params[Params::ENBFold1 + i] > 0.5)
+                if (params.goals[Params::ENBFold1 + i] > 0.5)
                     voice.oscs[i] = Shapers::fold(voice.oscs[i] * (voice.modulated[Params::Fold1 + i] * 15 + 1), voice.modulated[Params::Bias1 + i] * 2 - 1);
 
                 // Noise
-                if (params[Params::ENBNoise1 + i] > 0.5)
-                    voice.oscs[i] += voice.modulated[Params::Noise1 + i] * voice.noiself[i].Apply(voice.noisehf[i].Apply(random(), channel), channel); // Add noise
+                if (params.goals[Params::ENBNoise1 + i] > 0.5)
+                    //voice.oscs[i] += voice.modulated[Params::Noise1 + i] * voice.noiself[i].Apply(voice.noisehf[i].Apply(random(), channel), channel); // Add noise
+                    voice.oscs[i] += voice.modulated[Params::Noise1 + i] * random(); // Add noise
 
                 // Drive
-                if (params[Params::ENBDrive1 + i] > 0.5)
+                if (params.goals[Params::ENBDrive1 + i] > 0.5)
                     voice.oscs[i] = Shapers::drive(voice.oscs[i], voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
                 else
                     voice.oscs[i] = std::max(std::min(voice.oscs[i], 1.), -1.);
 
                 // Filter
-                if (!voice.filterp[i].off && params[Params::ENBFilter1 + i] > 0.5)
+                if (!voice.filterp[i].off && params.goals[Params::ENBFilter1 + i] > 0.5)
                     voice.oscs[i] = voice.filter[i].Apply(voice.oscs[i], channel); // Apply pre-combine filter
 
                 // Gain
@@ -870,7 +879,7 @@ namespace Kaixo
                 if (voice.modulated[Params::Pan1 + i] != 0.5)
                     _vs *= std::min((channel == 1 ? 2 * voice.modulated[Params::Pan1 + i] : 2 - 2 * voice.modulated[Params::Pan1 + i]), 1.); // Panning
 
-                size_t _dests = params[Params::DestA + i] * 128.;
+                size_t _dests = params.goals[Params::DestA + i] * 128.;
                 for (int j = 0; j < Combines * 2 + 1; j++)
                     if ((_dests >> j) & 1U) _cs[j] += _vs;
             }
@@ -887,21 +896,21 @@ namespace Kaixo
                     i, voice);
 
                 // Fold
-                if (params[Params::ENBFoldX + i] > 0.5)
+                if (params.goals[Params::ENBFoldX + i] > 0.5)
                     _v = Shapers::fold(_v * (voice.modulated[Params::FoldX + i] * 15 + 1), voice.modulated[Params::BiasX + i] * 2 - 1);
 
                 // Drive
-                if (params[Params::ENBDriveX + i] > 0.5)
+                if (params.goals[Params::ENBDriveX + i] > 0.5)
                     _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i]);
                 else
                     _v = std::max(std::min(_v, 1.), -1.);
 
                 _v = _v * voice.modulated[Params::GainX + i];
 
-                if (params[Params::ENBFilterX + i] > 0.5)
+                if (params.goals[Params::ENBFilterX + i] > 0.5)
                     _v = voice.cfilter[i].Apply(_v, channel);
 
-                _v = params[Params::DCX + i] > 0.5 ? voice.dcoff[i].Apply(_v, channel) : _v;
+                _v = params.goals[Params::DCX + i] > 0.5 ? voice.dcoff[i].Apply(_v, channel) : _v;
 
                 if (i == Combines - 1)
                 {
@@ -909,7 +918,7 @@ namespace Kaixo
                     break;
                 }
 
-                const size_t _dests = params[Params::DestX + i] * _mult[i];
+                const size_t _dests = params.goals[Params::DestX + i] * _mult[i];
                 for (int j = 0; j < _offsets[i]; j++)
                     if ((_dests >> j) & 1U) _cs[j + (i + 1) * 2] += _v;
             }
@@ -954,29 +963,41 @@ namespace Kaixo
         ProcessData* processData;
 
         cxxpool::thread_pool pool{ Voices };
-
+        int min = 100;
+        int max = 0;
         void Generate(ProcessData& data, size_t s) override
         {
+            if (swapBuffer.amount > max) max = swapBuffer.amount;
+            if (swapBuffer.amount < min) min = swapBuffer.amount;
+
             processData = &data;
             samples = data.processContext->projectTimeSamples;
 
             std::future<void> futures[Voices];
+            bool onMain[Voices]{ false, false, false, false, false, false };
+            int forDone = 0;
             for (int i = 0; i < Voices; i++)
-                futures[i] = pool.push([this, i]() { FillBuffer(voices[i]); });
+            {
+                if (swapBuffer.amount < 52) onMain[i] = true;
+                else if (!voices[i].env[0].Done() && forDone < 1) onMain[i] = true, forDone++;
+                else if (voices[i].env[0].Done()) onMain[i] = true;
+                else futures[i] = pool.push([this, i]() { FillBuffer(voices[i]); });
+            }
 
-            for (int i = 0; i < s; i++)
-            for (size_t param = 0; param < Params::Size; param++)
-                params[param] = ParamNames[param].smooth ? params[param] * 0.99 + paramgoals[param] * 0.01 : paramgoals[param];
-
-            for (auto& i : futures)
-                i.wait();
+            for (int i = 0; i < Voices; i++)
+                if (onMain[i]) 
+                    FillBuffer(voices[i]);
+            
+            for (int i = 0; i < Voices; i++)
+                if (!onMain[i])
+                    futures[i].wait();
         }
 
         enum CombineMode { ADD, MIN, MULT, PONG, MAX, MOD, AND, INLV, OR, XOR, Size };
 
         inline double Clip(double a, int channel)
         {
-            const size_t f = std::floor(params[Params::Clipping] * 3);
+            const size_t f = std::floor(params.goals[Params::Clipping] * 3);
             switch (f)
             {
             case 0: a = std::tanh(a) * 1.312; break;
@@ -1072,24 +1093,26 @@ namespace Kaixo
 
         inline void FillBuffer(Voice& voice)
         {
-            for (int index = 0; index < swapBuffer.amount; index++)
-            {
-                const size_t _index = std::floor(params[Params::Oversample] * 4);
-                const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
+            const size_t _index = std::floor(params.goals[Params::Oversample] * 4);
+            const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
 
-                const double samplerate = processData->processContext->sampleRate * _osa;
+            const double samplerate = processData->processContext->sampleRate * _osa;
 
+            // If envelope is done, no sound so return, but do calculate modulations
+            if (voice.env[0].Done())
+            {                
                 // Move params to modulated so we can adjust their values
-                std::memcpy(voice.modulated, params, Params::ModCount * sizeof(double));
-            
+                std::memcpy(voice.modulated, params.goals, Params::ModCount * sizeof(double));
+
                 for (int m = 0; m < Params::ModCount; m++)
                 {
                     bool edited = false;
                     for (int i = 0; i < ModAmt; i++)
                     {
                         int index = m * ModAmt + i;
+                        if (!modgoals[index]) continue;
+
                         int source = (modgoals[index] * (int)ModSources::Amount + 0.1);
-                        if (source == 0) continue;
                         edited = true;
                         double amount = modamount[index] * 2 - 1;
 
@@ -1099,7 +1122,7 @@ namespace Kaixo
                         }
                         else if (source == (int)ModSources::Key)
                         {
-                            const double _bendOffset = params[Params::PitchBend] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
+                            const double _bendOffset = params.goals[Params::PitchBend] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
                             voice.modulated[m] += (((voice.key + _bendOffset) / 127.0) * amount);
                         }
                         else if (source >= (int)ModSources::Mac1)
@@ -1113,7 +1136,7 @@ namespace Kaixo
                             int mindex = (source - (int)ModSources::Env1);
                             voice.modulated[m] += (voice.env[mindex].sample * amount);
                         }
-                        else
+                        else if (source >= (int)ModSources::LFO1)
                         {
                             int mindex = (source - (int)ModSources::LFO1);
                             voice.modulated[m] += (voice.lfo[mindex].sample * amount);
@@ -1125,11 +1148,8 @@ namespace Kaixo
                         voice.modulated[m] = constrain(voice.modulated[m], 0., 1.);
                 }
 
-                double _bendOffset = params[Params::PitchBend] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
 
-                // If envelope is done, no sound so return 0
-                if (voice.env[0].Done())
-                    continue;
+                double _bendOffset = params.goals[Params::PitchBend] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
 
                 double bpm = 128;
                 if (processData->processContext->state & ProcessContext::kTempoValid)
@@ -1137,14 +1157,46 @@ namespace Kaixo
 
                 const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
 
-                voice.deltaf = _timeMult * std::abs((voice.pressed - voice.pressedOld) / (0.001 + voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * 10 * processData->processContext->sampleRate));
-                if (voice.frequency > voice.pressed)
-                    if (voice.frequency - voice.deltaf < voice.pressed) voice.frequency = voice.pressed;
-                    else voice.frequency -= voice.deltaf;
 
-                if (voice.frequency < voice.pressed)
-                    if (voice.frequency + voice.deltaf > voice.pressed) voice.frequency = voice.pressed;
-                    else voice.frequency += voice.deltaf;
+                // Filters need to be updated, even if not voice active, because frequency is smoothed
+                // and if it doesn't update, its smoothing value is outdated.
+                for (int i = 0; i < Combines; i++)
+                {   // Combines parameters
+                    voice.dcoffp[i].f0 = 35;
+                    voice.dcoffp[i].type = FilterType::HighPass;
+                    voice.dcoffp[i].Q = 1;
+                    voice.dcoffp[i].sampleRate = samplerate;
+                    voice.dcoffp[i].RecalculateParameters();
+
+                    auto _ft = std::floor(params.goals[Params::FilterX + i] * 3); // Filter parameters
+                    voice.cfilterp[i].sampleRate = samplerate;
+                    voice.cfilterp[i].f0 = voice.modulated[Params::FreqX + i] * voice.modulated[Params::FreqX + i] * (22000 - 30) + 30;
+                    voice.cfilterp[i].Q = voice.modulated[Params::ResoX + i] * 16 + 1;
+                    voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
+                    voice.cfilterp[i].RecalculateParameters();
+                }
+
+                for (int i = 0; i < Oscillators; i++)
+                {
+                    auto _ft = std::floor(params.goals[Params::Filter1 + i] * 3); // Filter parameters
+                    voice.filterp[i].sampleRate = samplerate;
+                    voice.filterp[i].f0 = voice.modulated[Params::Freq1 + i] * voice.modulated[Params::Freq1 + i] * (22000 - 30) + 30;
+                    voice.filterp[i].Q = voice.modulated[Params::Reso1 + i] * 16 + 1;
+                    voice.filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
+                    voice.filterp[i].RecalculateParameters();
+
+                    voice.noiselfp[i].sampleRate = samplerate;
+                    voice.noiselfp[i].f0 = (std::min(voice.modulated[Params::Color1 + i] * 2, 1.)) * 21000 + 1000;
+                    voice.noiselfp[i].Q = 0.6;
+                    voice.noiselfp[i].type = FilterType::LowPass;
+                    voice.noiselfp[i].RecalculateParameters();
+
+                    voice.noisehfp[i].sampleRate = samplerate;
+                    voice.noisehfp[i].f0 = (std::max(voice.modulated[Params::Color1 + i] * 2 - 1, 0.)) * 21000 + 30;
+                    voice.noisehfp[i].Q = 0.6;
+                    voice.noisehfp[i].type = FilterType::HighPass;
+                    voice.noisehfp[i].RecalculateParameters();
+                }
 
                 for (int i = 0; i < Envelopes; i++)
                 {   // Adjust Envelope parameters and generate
@@ -1166,14 +1218,14 @@ namespace Kaixo
                 {   // Adjust lfo parameters 
                     voice.lfo[i].SAMPLE_RATE = processData->processContext->sampleRate;
 
-                    if (params[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
+                    if (params.goals[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
                     {
-                        size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
+                        size_t _type = std::floor(params.goals[Params::LFORate1 + i] * (TimesAmount - 1));
 
                         double _ps = (60. / bpm) * TimesValue[_type] * 4; // Seconds per oscillation
                         double _f = 1 / _ps; // Frequency of the oscillations
                         double _spp = _ps * processData->processContext->sampleRate; // Samples per oscillation
-                        double _phase = std::fmod(params[Params::LFORetr1 + i] > 0.5 ? samples - voice.samplesPress : samples, _spp) / _spp;
+                        double _phase = std::fmod(params.goals[Params::LFORetr1 + i] > 0.5 ? samples - voice.samplesPress : samples, _spp) / _spp;
 
                         // If playing, sync phase to samples played
                         if (processData->processContext->state & ProcessContext::kPlaying)
@@ -1182,12 +1234,12 @@ namespace Kaixo
                     }
                     else
                     {
-                        size_t _type = std::floor(params[Params::LFORate1 + i] * (TimesAmount - 1));
+                        size_t _type = std::floor(params.goals[Params::LFORate1 + i] * (TimesAmount - 1));
 
                         double _f = _timeMult * voice.modulated[Params::LFORate1 + i] * voice.modulated[Params::LFORate1 + i] * 29.9 + 0.1; // Frequency of the oscillations
                         double _ps = 1 / _f; // Seconds per oscillation
                         double _spp = _ps * processData->processContext->sampleRate; // Samples per oscillation
-                        double _phase = std::fmod(params[Params::LFORetr1 + i] > 0.5 ? samples - voice.samplesPress : samples, _spp) / _spp;
+                        double _phase = std::fmod(params.goals[Params::LFORetr1 + i] > 0.5 ? samples - voice.samplesPress : samples, _spp) / _spp;
 
                         // If playing, sync phase to samples played
                         if (processData->processContext->state & ProcessContext::kPlaying)
@@ -1200,22 +1252,6 @@ namespace Kaixo
                     voice.lfo[i].sample = voice.lfo[i].OffsetOnce(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
                 }
 
-                for (int i = 0; i < Combines; i++)
-                {   // Combines parameters
-                    voice.dcoffp[i].f0 = 35;
-                    voice.dcoffp[i].type = FilterType::HighPass;
-                    voice.dcoffp[i].Q = 1;
-                    voice.dcoffp[i].sampleRate = samplerate;
-                    voice.dcoffp[i].RecalculateParameters();
-
-                    auto _ft = std::floor(params[Params::FilterX + i] * 3); // Filter parameters
-                    voice.cfilterp[i].sampleRate = samplerate;
-                    voice.cfilterp[i].f0 = voice.modulated[Params::FreqX + i] * voice.modulated[Params::FreqX + i] * (22000 - 30) + 30;
-                    voice.cfilterp[i].Q = voice.modulated[Params::ResoX + i] * 16 + 1;
-                    voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-                    voice.cfilterp[i].RecalculateParameters();
-                }
-
                 for (int i = 0; i < Oscillators; i++)
                 {
                     voice.osc[i].SAMPLE_RATE = samplerate;
@@ -1226,12 +1262,101 @@ namespace Kaixo
                     voice.osc[i].settings.pw = voice.modulated[Params::PulseW1 + i];
                     voice.osc[i].settings.bend = voice.modulated[Params::Bend1 + i];
                     voice.osc[i].settings.shaper = voice.modulated[Params::Shaper1 + i];
-                    voice.osc[i].settings.shaperMix = voice.modulated[Params::ShaperMix1 + i] * (params[Params::ENBShaper1 + i] > 0.5);
+                    voice.osc[i].settings.shaperMix = voice.modulated[Params::ShaperMix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
                     voice.osc[i].settings.shaper2 = voice.modulated[Params::Shaper21 + i];
-                    voice.osc[i].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params[Params::ENBShaper1 + i] > 0.5);
+                    voice.osc[i].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
                     voice.osc[i].settings.shaperMorph = voice.modulated[Params::ShaperMorph1 + i];
+                }
 
-                    auto _ft = std::floor(params[Params::Filter1 + i] * 3); // Filter parameters
+                return;
+            }
+            
+            for (int index = 0; index < swapBuffer.amount; index++)
+            {
+                double ratio = index / swapBuffer.amount;
+
+                // Move params to modulated so we can adjust their values
+                for (int m = 0; m < Params::ModCount; m++)
+                {
+                    voice.modulated[m] = params[{ m, ratio }];
+                    bool edited = false;
+                    for (int i = 0; i < ModAmt; i++)
+                    {
+                        int index = m * ModAmt + i;
+                        if (!modgoals[index]) continue;
+
+                        int source = (modgoals[index] * (int)ModSources::Amount + 0.1);
+                        edited = true;
+                        double amount = modamount[index] * 2 - 1;
+
+                        if (source == (int)ModSources::Vel)
+                        {
+                            voice.modulated[m] += (voice.velocity * amount);
+                        }
+                        else if (source == (int)ModSources::Key)
+                        {
+                            const double _bendOffset = params[{ Params::PitchBend, ratio }] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
+                            voice.modulated[m] += (((voice.key + _bendOffset) / 127.0) * amount);
+                        }
+                        else if (source >= (int)ModSources::Mac1)
+                        {
+                            int mindex = (source - (int)ModSources::Mac1);
+
+                            voice.modulated[m] += (voice.modulated[Params::Macro1 + mindex] * amount);
+                        }
+                        else if (source >= (int)ModSources::Env1)
+                        {
+                            int mindex = (source - (int)ModSources::Env1);
+                            voice.modulated[m] += (voice.env[mindex].sample * amount);
+                        }
+                        else if (source >= (int)ModSources::LFO1)
+                        {
+                            int mindex = (source - (int)ModSources::LFO1);
+                            voice.modulated[m] += (voice.lfo[mindex].sample * amount);
+                        }
+
+                    }
+
+                    if (edited && ParamNames[m].constrain)
+                        voice.modulated[m] = constrain(voice.modulated[m], 0., 1.);
+                }
+
+                double _bendOffset = params[{ Params::PitchBend, ratio }] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
+
+                double bpm = 128;
+                if (processData->processContext->state & ProcessContext::kTempoValid)
+                    bpm = processData->processContext->tempo;
+
+                const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
+
+                voice.deltaf = _timeMult * std::abs((voice.pressed - voice.pressedOld) / (0.001 + voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * 10 * processData->processContext->sampleRate));
+                if (voice.frequency > voice.pressed)
+                    if (voice.frequency - voice.deltaf < voice.pressed) voice.frequency = voice.pressed;
+                    else voice.frequency -= voice.deltaf;
+
+                if (voice.frequency < voice.pressed)
+                    if (voice.frequency + voice.deltaf > voice.pressed) voice.frequency = voice.pressed;
+                    else voice.frequency += voice.deltaf;
+
+                for (int i = 0; i < Combines; i++)
+                {   // Combines parameters
+                    voice.dcoffp[i].f0 = 35;
+                    voice.dcoffp[i].type = FilterType::HighPass;
+                    voice.dcoffp[i].Q = 1;
+                    voice.dcoffp[i].sampleRate = samplerate;
+                    voice.dcoffp[i].RecalculateParameters();
+
+                    auto _ft = std::floor(params.goals[Params::FilterX + i] * 3); // Filter parameters
+                    voice.cfilterp[i].sampleRate = samplerate;
+                    voice.cfilterp[i].f0 = voice.modulated[Params::FreqX + i] * voice.modulated[Params::FreqX + i] * (22000 - 30) + 30;
+                    voice.cfilterp[i].Q = voice.modulated[Params::ResoX + i] * 16 + 1;
+                    voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
+                    voice.cfilterp[i].RecalculateParameters();
+                }
+
+                for (int i = 0; i < Oscillators; i++)
+                {
+                    auto _ft = std::floor(params.goals[Params::Filter1 + i] * 3); // Filter parameters
                     voice.filterp[i].sampleRate = samplerate;
                     voice.filterp[i].f0 = voice.modulated[Params::Freq1 + i] * voice.modulated[Params::Freq1 + i] * (22000 - 30) + 30;
                     voice.filterp[i].Q = voice.modulated[Params::Reso1 + i] * 16 + 1;
@@ -1251,10 +1376,80 @@ namespace Kaixo
                     voice.noisehfp[i].RecalculateParameters();
                 }
 
+                for (int i = 0; i < Envelopes; i++)
+                {   // Adjust Envelope parameters and generate
+                    voice.env[i].SAMPLE_RATE = processData->processContext->sampleRate;
+                    voice.env[i].settings.attack = voice.modulated[Params::Env1A + i] * voice.modulated[Params::Env1A + i] * voice.modulated[Params::Env1A + i] * 5;
+                    voice.env[i].settings.attackCurve = voice.modulated[Params::Env1AC + i] * 2 - 1;
+                    voice.env[i].settings.attackLevel = voice.modulated[Params::Env1AL + i];
+                    voice.env[i].settings.decay = voice.modulated[Params::Env1D + i] * voice.modulated[Params::Env1D + i] * voice.modulated[Params::Env1D + i] * 5;
+                    voice.env[i].settings.decayCurve = voice.modulated[Params::Env1DC + i] * 2 - 1;
+                    voice.env[i].settings.decayLevel = voice.modulated[Params::Env1DL + i];
+                    voice.env[i].settings.sustain = voice.modulated[Params::Env1S + i];
+                    voice.env[i].settings.release = voice.modulated[Params::Env1R + i] * voice.modulated[Params::Env1R + i] * voice.modulated[Params::Env1R + i] * 5;
+                    voice.env[i].settings.releaseCurve = voice.modulated[Params::Env1RC + i] * 2 - 1;
+                    voice.env[i].settings.timeMult = _timeMult;
+                    voice.env[i].Generate(0);
+                }
+
+                for (int i = 0; i < LFOs; i++)
+                {   // Adjust lfo parameters 
+                    voice.lfo[i].SAMPLE_RATE = processData->processContext->sampleRate;
+
+                    if (params.goals[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
+                    {
+                        size_t _type = std::floor(params[{ Params::LFORate1 + i, ratio }] * (TimesAmount - 1));
+
+                        double _ps = (60. / bpm) * TimesValue[_type] * 4; // Seconds per oscillation
+                        double _f = 1 / _ps; // Frequency of the oscillations
+                        double _spp = _ps * processData->processContext->sampleRate; // Samples per oscillation
+                        double _phase = std::fmod(params.goals[Params::LFORetr1 + i] > 0.5 ? samples - voice.samplesPress : samples, _spp) / _spp;
+
+                        // If playing, sync phase to samples played
+                        if (processData->processContext->state & ProcessContext::kPlaying)
+                            voice.lfo[i].phase = _phase;
+                        voice.lfo[i].settings.frequency = _f;
+                    }
+                    else
+                    {
+                        size_t _type = std::floor(params[{ Params::LFORate1 + i, ratio }] * (TimesAmount - 1));
+
+                        double _f = _timeMult * voice.modulated[Params::LFORate1 + i] * voice.modulated[Params::LFORate1 + i] * 29.9 + 0.1; // Frequency of the oscillations
+                        double _ps = 1 / _f; // Seconds per oscillation
+                        double _spp = _ps * processData->processContext->sampleRate; // Samples per oscillation
+                        double _phase = std::fmod(params.goals[Params::LFORetr1 + i] > 0.5 ? samples - voice.samplesPress : samples, _spp) / _spp;
+
+                        // If playing, sync phase to samples played
+                        if (processData->processContext->state & ProcessContext::kPlaying)
+                            voice.lfo[i].phase = _phase;
+                        voice.lfo[i].settings.frequency = _f;
+                    }
+
+                    voice.lfo[i].settings.wtpos = voice.modulated[Params::LFOPos1 + i];
+                    voice.lfo[i].settings.shaper3 = voice.modulated[Params::LFOShaper1 + i];
+                    voice.lfo[i].sample = voice.lfo[i].OffsetOnce(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
+                }
+
+                for (int i = 0; i < Oscillators; i++)
+                {
+                    voice.osc[i].SAMPLE_RATE = samplerate;
+                    voice.osc[i].settings.frequency = noteToFreq(voice.frequency + _bendOffset
+                        + voice.modulated[Params::Detune1 + i] * 4 - 2 + voice.modulated[Params::Pitch1 + i] * 48 - 24);
+                    voice.osc[i].settings.wtpos = voice.modulated[Params::WTPos1 + i];
+                    voice.osc[i].settings.sync = voice.modulated[Params::Sync1 + i];
+                    voice.osc[i].settings.pw = voice.modulated[Params::PulseW1 + i];
+                    voice.osc[i].settings.bend = voice.modulated[Params::Bend1 + i];
+                    voice.osc[i].settings.shaper = voice.modulated[Params::Shaper1 + i];
+                    voice.osc[i].settings.shaperMix = voice.modulated[Params::ShaperMix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
+                    voice.osc[i].settings.shaper2 = voice.modulated[Params::Shaper21 + i];
+                    voice.osc[i].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
+                    voice.osc[i].settings.shaperMorph = voice.modulated[Params::ShaperMorph1 + i];
+                }
+
                 if (_osa == 1) // No oversampling
                 {
-                    const double l = GenerateSample(0, *processData, samplerate, voice);
-                    const double r = GenerateSample(1, *processData, samplerate, voice);
+                    const double l = GenerateSample(0, *processData, samplerate, voice, ratio);
+                    const double r = GenerateSample(1, *processData, samplerate, voice, ratio);
                     swapBuffer.lock.lock();
                     swapBuffer.left[index] += l;
                     swapBuffer.right[index] += r;
@@ -1272,8 +1467,8 @@ namespace Kaixo
                     double _sumr = 0;
                     for (int k = 0; k < _osa; k++)
                     {
-                        double _l = GenerateSample(0, *processData, samplerate, voice);
-                        double _r = GenerateSample(1, *processData, samplerate, voice);
+                        double _l = GenerateSample(0, *processData, samplerate, voice, ratio);
+                        double _r = GenerateSample(1, *processData, samplerate, voice, ratio);
 
                         _l = voice.aaf.Apply(_l, 0);
                         _r = voice.aaf.Apply(_r, 1);

@@ -195,10 +195,52 @@ namespace Kaixo
             return s3 + s4;
         };
 
+        const static Table7 shaperl41 = [&](double x, double amt) {
+            constexpr static double steps = 4;
+
+            constexpr static std::pair<double(*)(double, double), double(*)(double, double)> funcs[(int)steps + 2]{
+                { shaper7,  shaper3 },
+                { shaper8,  shaper2 },
+                { noShaper, shaper9 },
+                { shaper0,  shaper5 },
+                { shaper6,  shaper1 },
+                { shaper6,  shaper1 },
+            };
+
+            const int i = amt * steps + 1;
+            const double r = myfmod1(amt * steps);
+            const auto& func1 = funcs[i - 1];
+            const auto& func2 = funcs[i];
+            const double s1 = func1.first(x, 1 - r) * (1 - r);
+            const double s2 = func2.first(x, r) * r;
+            return constrain(s1 + s2, 0., 1.);
+        };
+
+        const static Table7 shaperl42 = [&](double x, double amt) {
+            constexpr static double steps = 4;
+
+            constexpr static std::pair<double(*)(double, double), double(*)(double, double)> funcs[(int)steps + 2]{
+                { shaper7,  shaper3 },
+                { shaper8,  shaper2 },
+                { noShaper, shaper9 },
+                { shaper0,  shaper5 },
+                { shaper6,  shaper1 },
+                { shaper6,  shaper1 },
+            };
+
+            const int i = amt * steps + 1;
+            const double r = myfmod1(amt * steps);
+            const auto& func1 = funcs[i - 1];
+            const auto& func2 = funcs[i];
+            const double s3 = func1.second(x, 1 - r) * (1 - r);
+            const double s4 = func2.second(x, r) * r;
+            return constrain(s3 + s4, 0., 1.);
+        };
+
         double shaper4(double x, double amt, double morph)
         {
-            const double res = (1 - morph) * shaperl1.get(x, amt) + morph * shaperl2.get(x, amt);
-            return constrain(res, 0., 1.);
+            const double res = (1 - morph) * shaperl41.get(x, amt) + morph * shaperl42.get(x, amt);
+            return res;
         }
 
         double shaper24(double x, double amt, double morph)
@@ -273,12 +315,13 @@ namespace Kaixo
             {
                 for (int a = 0; a < precision + 1; a++)
                     for (int b = 0; b < precision + 1; b++)
-                        table[a + b * (precision + 1)] = l((a / (double)precision) * 10. - 5., (b / (double)precision));
+                        table[a + b * (precision + 1)] = l((a / (double)precision) * 20. - 10., (b / (double)precision));
             }
 
             inline double get(double x, double amt) const
             {
-                double v = (x + 5) * (precision / 10.);
+                x = constrain(x, -5., 5.);
+                double v = (x + 10) * (precision / 20.);
                 int a = (int)(v);
                 double r = v - a;
                 return (1 - r) * table[a + (precision + 1) * (int)(amt * precision)]
@@ -297,7 +340,7 @@ namespace Kaixo
 
         double drive(double x, double gain, double amt)
         {
-            return drivet.get(gain * x, amt);
+            //return drivet.get(gain * x, amt);
             const double _gain = gain * x;
             const double _abs = std::max(std::abs(_gain), 0.000001);
             const double _pow = (_gain / _abs) * (1 - std::exp((-_gain * _gain) / _abs));
@@ -372,25 +415,25 @@ namespace Kaixo
             }
         };
 
-        double basic(double phase, double wtpos)
+        inline double basic(double phase, double wtpos)
         {
             return basict.get(phase, wtpos);
-            double p = phase;
-            if (wtpos < 0.33)
-            {
-                const double r = wtpos * 3;
-                return triangle(p, wtpos) * r + sine(p, wtpos) * (1 - r);
-            }
-            else if (wtpos < 0.66)
-            {
-                const double r = (wtpos - 0.33) * 3;
-                return saw(p, wtpos) * r + triangle(p, wtpos) * (1 - r);
-            }
-            else
-            {
-                const double r = (wtpos - 0.66) * 2.9;
-                return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
-            }
+            //double p = phase;
+            //if (wtpos < 0.33)
+            //{
+            //    const double r = wtpos * 3;
+            //    return triangle(p, wtpos) * r + sine(p, wtpos) * (1 - r);
+            //}
+            //else if (wtpos < 0.66)
+            //{
+            //    const double r = (wtpos - 0.33) * 3;
+            //    return saw(p, wtpos) * r + triangle(p, wtpos) * (1 - r);
+            //}
+            //else
+            //{
+            //    const double r = (wtpos - 0.66) * 2.9;
+            //    return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
+            //}
         }
     
         double sub(double phase, double wtpos)
@@ -469,19 +512,19 @@ namespace Kaixo
     double f(double x, double curve)
     {
         return ftable.get(x, curve);
-        constexpr double MULT = 16;
-        const double a = curve < 0 ? (curve * MULT - 1) : curve * MULT + 1;
-        constexpr static auto b = 0.5;
-        if (a >= 0)
-        {
-            const auto pba = std::pow(b, a); //fastPow(b, a);
-            return (std::pow(b * x + b, a) - pba) / (1 - pba);
-        }
-        else
-        {
-            const auto pba = std::pow(b, -a); //fastPow(b, -a);
-            return 1 - (std::pow(b * (1 - x) + b, -a) - pba) / (1 - pba);
-        }
+        //constexpr double MULT = 16;
+        //const double a = curve < 0 ? (curve * MULT - 1) : curve * MULT + 1;
+        //constexpr static auto b = 0.5;
+        //if (a >= 0)
+        //{
+        //    const auto pba = std::pow(b, a); //fastPow(b, a);
+        //    return (std::pow(b * x + b, a) - pba) / (1 - pba);
+        //}
+        //else
+        //{
+        //    const auto pba = std::pow(b, -a); //fastPow(b, -a);
+        //    return 1 - (std::pow(b * (1 - x) + b, -a) - pba) / (1 - pba);
+        //}
     }
 
     double ADSR::Offset(double p)
@@ -534,6 +577,12 @@ namespace Kaixo
         sample = Offset(0);
     }
 
+    double Oscillator::OffsetOnceClean(double phaseoffset)
+    {
+        phase = myfmod1(phase + settings.frequency / SAMPLE_RATE);
+        return Wavetables::sub(myfmod1(phase + phaseoffset + 100000), settings.wtpos);
+    }
+
     double Oscillator::OffsetOnce(double phaseoffset)
     {
         double _s = 0;
@@ -546,7 +595,7 @@ namespace Kaixo
             const double _p1 = _ph / _d;
             const double _phase = myfmod1((_ph) / _d + phaseoffset + 1000000);
             const double _dphase = myfmod1(f(_phase, settings.bend * 2 - 1) * (settings.sync * 7 + 1) + 1000000);
-            const double _wt = settings.wavetable(_dphase, settings.wtpos);
+            const double _wt = Wavetables::basic(_dphase, settings.wtpos);
             const double _s1 = Shapers::shaper24(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
         }
@@ -557,7 +606,7 @@ namespace Kaixo
             const double _p1 = (1 - _ph) / _d;
             const double _phase = myfmod1((_ph + _pw) / _d + phaseoffset + 1000000);
             const double _dphase = myfmod1(f(_phase, settings.bend * 2 - 1) * (settings.sync * 7 + 1) + 1000000);
-            const double _wt = settings.wavetable(_dphase, settings.wtpos);
+            const double _wt = Wavetables::basic(_dphase, settings.wtpos);
             const double _s1 = Shapers::shaper24(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + _wt * (1 - settings.shaper2Mix);
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
         }

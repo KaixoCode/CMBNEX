@@ -49,7 +49,7 @@ namespace Kaixo
 #define db2lin(db) std::powf(10.0f, 0.05 * (db))
 #define lin2db(lin) (20.0f * std::log10f(static_cast<float>(lin)))
 
-    constexpr static inline double myf(double a) { a -= (int)a; return a; }
+    constexpr static inline double myf(double a) { return a - (int)a; }
 
 #define myfmod1(x) myf(x) //std::fmod(x, 1.)
 
@@ -201,6 +201,7 @@ namespace Kaixo
         double Apply(double s = 0, size_t = 0) override;
         double Offset(double phaseoffset);
         double OffsetOnce(double phaseoffset);
+        double OffsetOnceClean(double phaseoffset);
 
         float phase = 0;
     private:
