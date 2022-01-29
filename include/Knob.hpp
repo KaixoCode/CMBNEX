@@ -15,7 +15,7 @@ namespace Kaixo
     public:
         enum Type { KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP, SMALLSLIDER };
 
-        int dragIndex = -1;
+        int modDragIndex = -1;
         int modEditIndex = -1;
         int modded = 0;
         bool pressed = false;
