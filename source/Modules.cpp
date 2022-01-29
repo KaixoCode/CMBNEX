@@ -583,6 +583,12 @@ namespace Kaixo
         return Wavetables::sub(myfmod1(phase + phaseoffset + 100000), settings.wtpos);
     }
 
+    double Oscillator::OffsetOnceLFO(double phaseoffset)
+    {
+        phase = myfmod1(phase + settings.frequency / SAMPLE_RATE);
+        return Shapers::simpleshaper(Wavetables::basic(myfmod1(phase + phaseoffset + 100000), settings.wtpos), settings.shaper3);
+    }
+
     double Oscillator::OffsetOnce(double phaseoffset)
     {
         double _s = 0;

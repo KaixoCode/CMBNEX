@@ -201,6 +201,7 @@ namespace Kaixo
         double Apply(double s = 0, size_t = 0) override;
         double Offset(double phaseoffset);
         double OffsetOnce(double phaseoffset);
+        double OffsetOnceLFO(double phaseoffset);
         double OffsetOnceClean(double phaseoffset);
 
         float phase = 0;

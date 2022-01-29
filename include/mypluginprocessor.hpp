@@ -659,8 +659,14 @@ namespace Kaixo
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.readDouble(params.goals[i]);
 
+            for (int i = 0; i < Params::ModCount; i++)
+                hasmod[i] = false;
+
             for (int i = 0; i < Params::ModCount * ModAmt; i++)
             {
+                int index = std::floor(i / ModAmt);
+                hasmod[index] |= modgoals[i] > 0; // Keep track of if mod, for efficiency
+
                 streamer.readDouble(modgoals[i]);
                 streamer.readDouble(modamount[i]);
             }
@@ -697,6 +703,7 @@ namespace Kaixo
             double operator[](std::pair<size_t, double> i) { return (1 - i.second) * values[i.first] + i.second * goals[i.first]; }
         } params;
 
+        bool hasmod[Params::ModCount];
         double modgoals[Params::ModCount * ModAmt];
         double modamount[Params::ModCount * ModAmt];
     };
@@ -1106,6 +1113,7 @@ namespace Kaixo
 
                 for (int m = 0; m < Params::ModCount; m++)
                 {
+                    if (!hasmod[m]) continue;
                     bool edited = false;
                     for (int i = 0; i < ModAmt; i++)
                     {
@@ -1249,7 +1257,7 @@ namespace Kaixo
 
                     voice.lfo[i].settings.wtpos = voice.modulated[Params::LFOPos1 + i];
                     voice.lfo[i].settings.shaper3 = voice.modulated[Params::LFOShaper1 + i];
-                    voice.lfo[i].sample = voice.lfo[i].OffsetOnce(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
+                    voice.lfo[i].sample = voice.lfo[i].OffsetOnceLFO(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
                 }
 
                 for (int i = 0; i < Oscillators; i++)
@@ -1279,6 +1287,7 @@ namespace Kaixo
                 for (int m = 0; m < Params::ModCount; m++)
                 {
                     voice.modulated[m] = params[{ m, ratio }];
+                    if (!hasmod[m]) continue;
                     bool edited = false;
                     for (int i = 0; i < ModAmt; i++)
                     {
@@ -1427,7 +1436,7 @@ namespace Kaixo
 
                     voice.lfo[i].settings.wtpos = voice.modulated[Params::LFOPos1 + i];
                     voice.lfo[i].settings.shaper3 = voice.modulated[Params::LFOShaper1 + i];
-                    voice.lfo[i].sample = voice.lfo[i].OffsetOnce(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
+                    voice.lfo[i].sample = voice.lfo[i].OffsetOnceLFO(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
                 }
 
                 for (int i = 0; i < Oscillators; i++)
