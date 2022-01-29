@@ -1,3 +1,4 @@
+#pragma once
 #define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseStopWhenDoneFlag
 
 #include "base/source/fstreamer.h"
@@ -37,3 +38,9 @@ using namespace VSTGUI;
 #include <fstream>
 #include <condition_variable>
 #include <future>
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+

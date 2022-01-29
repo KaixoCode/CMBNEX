@@ -1,35 +1,45 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
-#include "ViewFactoryBase.hpp"
-#include "myplugincontroller.hpp"
-#include "DragThing.hpp"
-#include "SwitchThing.hpp"
-#include "BackgroundEffect.hpp"
+#include "Controller.hpp"
+#include "Components/BackgroundEffect.hpp"
+#include "Utils/Utils.hpp"
 
 namespace Kaixo
 {
-    class Knob : public CControl, public IDropTarget
+    class Parameter : public CControl, public IDropTarget
     {
     public:
         enum Type { KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP, SMALLSLIDER };
 
-        std::vector<std::string> parts;
         double modulation = 0;
-        bool dark = false;
-        double min = 0;
-        double max = 0;
-        double reset = 0;
-        int decimals = 1;
-        int type = 1;
-        bool modable = true;
-        bool enabled = true;
-        String name;
-        String unit;
+
+        struct Settings
+        {
+            int tag = -1; // Parameter tag
+            MyEditor* editor = nullptr; // Editor
+            IControlListener* listener = nullptr; // Control listener
+            CRect size; // Size
+
+            int type = KNOB;     // Type of knob
+            bool modable = true; // Display and enable mod behaviour
+            bool enabled = true; // Is knob enabled, changes colors
+
+            bool dark = false; // Theme
+            String name = "";  // Name to display
+
+            std::vector<String> parts = {}; // Parts of a group/multigroup
+            int vertical = false;           // Group vertical
+            double padding = 5;             // Padding between buttons
+
+            double min = 0;   // Min value 
+            double max = 0;   // Max value
+            double reset = 0; // Reset value
+            int decimals = 1; // Decimals to display
+            String unit = ""; // Unit to display after value
+
+        } settings;
 
     private:
-        MyEditor* editor;
         CColor main = MainGreen;
         CColor text = MainText;
         CColor back = KnobBack;
@@ -38,12 +48,12 @@ namespace Kaixo
         int modded = 0;
         bool pressed = false;
         CPoint pwhere;
-        String str;
+        String valueString;
 
     public:
 
-        Knob(const CRect& size, MyEditor* editor, bool dark = false);
-        ~Knob() override;
+        Parameter(Settings settings = {});
+        ~Parameter() override;
 
         double getModValue() { return constrain(modulation, 0., 1.); }
         int ModIndexPos(CPoint pos) const;
@@ -70,6 +80,6 @@ namespace Kaixo
         void drawModBoxes(CDrawContext* pContext);
         void draw(CDrawContext* pContext) override;
 
-        CLASS_METHODS(Knob, CControl)
+        CLASS_METHODS(Parameter, CControl)
     };
 }

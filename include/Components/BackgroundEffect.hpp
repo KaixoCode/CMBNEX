@@ -1,7 +1,5 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
 
 namespace Kaixo
 {

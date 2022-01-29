@@ -3,16 +3,15 @@
 
 namespace Kaixo
 {
-
-    class TestController;
+    class Controller;
     class MyEditor : public VST3Editor
     {
     public:
 
-        MyEditor(TestController* controller);
+        MyEditor(Controller* controller);
         ~MyEditor();
 
-        TestController* controller;
+        Controller* controller;
 
         ModSources modSource(int32_t param, int index);
         void modSource(int32_t param, int index, ModSources set);
@@ -24,12 +23,12 @@ namespace Kaixo
         void Init();
     };
 
-    class TestController : public EditControllerEx1, public IMidiMapping
+    class Controller : public EditControllerEx1, public IMidiMapping
     {
     public:
-        TestController() = default;
+        Controller() = default;
 
-        ~TestController () override = default;
+        ~Controller() override = default;
 
         String preset = "Default";
 
@@ -61,7 +60,7 @@ namespace Kaixo
 
         IPlugView* PLUGIN_API createView(FIDString name) override;
 
-        static FUnknown* createInstance (void*) { return static_cast<IEditController*>(new TestController); }
+        static FUnknown* createInstance (void*) { return static_cast<IEditController*>(new Controller); }
 
         tresult PLUGIN_API initialize(FUnknown* context) override
         {
@@ -230,7 +229,7 @@ namespace Kaixo
             return kResultFalse;
         }
 
-        OBJ_METHODS(TestController, EditControllerEx1)
+        OBJ_METHODS(Controller, EditControllerEx1)
         DEFINE_INTERFACES
             DEF_INTERFACE(IMidiMapping)
         END_DEFINE_INTERFACES (EditController)

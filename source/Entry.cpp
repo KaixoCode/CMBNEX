@@ -1,6 +1,6 @@
-#include "mypluginprocessor.hpp"
-#include "myplugincontroller.hpp"
-#include "myplugincids.hpp"
+#include "Processing/Processor.hpp"
+#include "Controller.hpp"
+#include "CIDs.hpp"
 #include "version.hpp"
 
 #define stringPluginName "CMBNEX"
@@ -29,7 +29,7 @@ BEGIN_FACTORY_DEF ("Kaixo",
                 CMBNEXVST3Category, // Subcategory for this Plug-in (to be changed)
                 FULL_VERSION_STR,        // Plug-in version (to be changed)
                 kVstVersionString,        // the VST 3 SDK version (do not changed this, use always this define)
-                TestProcessor::createInstance)    // function pointer called when this component should be instantiated
+                Processor::createInstance)    // function pointer called when this component should be instantiated
 
     // its kVstComponentControllerClass component
     DEF_CLASS2 (INLINE_UID_FROM_FUID (kCMBNEXControllerUID),
@@ -40,7 +40,7 @@ BEGIN_FACTORY_DEF ("Kaixo",
                 "",                        // not used here
                 FULL_VERSION_STR,        // Plug-in version (to be changed)
                 kVstVersionString,        // the VST 3 SDK version (do not changed this, use always this define)
-                TestController::createInstance)// function pointer called when this component should be instantiated
+                Controller::createInstance)// function pointer called when this component should be instantiated
 
     //----for others Plug-ins contained in this factory, put like for the first Plug-in different DEF_CLASS2---
 

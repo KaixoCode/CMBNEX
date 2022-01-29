@@ -1,11 +1,11 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
-#include "Knob.hpp"
-#include "Label.hpp"
-#include "OptionMenu.hpp"
-#include "WaveformView.hpp"
+#include "Components/Parameter.hpp"
+#include "Components/Label.hpp"
+#include "Components/BackgroundEffect.hpp"
+#include "Components/DragThing.hpp"
+#include "Components/SwitchThing.hpp"
+#include "Views/WaveformView.hpp"
 
 namespace Kaixo
 {
@@ -15,13 +15,13 @@ namespace Kaixo
         int index = 0;
 
         WaveformView* curve;
-        Knob* rate;
-        Knob* amnt;
-        Knob* posi;
-        Knob* offs;
-        Knob* shpr;
-        Knob* sync;
-        Knob* retr;
+        Parameter* rate;
+        Parameter* amnt;
+        Parameter* posi;
+        Parameter* offs;
+        Parameter* shpr;
+        Parameter* sync;
+        Parameter* retr;
 
         Label* lfo1;
         Label* lfo2;
@@ -97,20 +97,20 @@ namespace Kaixo
             onIdle();
             if (pControl == sync)
             {
-                if (sync->getValue()) rate->unit = "time";
-                else rate->unit = " Hz";
+                if (sync->getValue()) rate->settings.unit = "time";
+                else rate->settings.unit = " Hz";
                 rate->setDirty(true);
             }
         }
 
         void UpdateIndex()
         {
-            lfo1->enabled = lfo2->enabled = lfo3->enabled = lfo4->enabled = lfo5->enabled = false;
-            if (index == 0) lfo1->enabled = true;
-            if (index == 1) lfo2->enabled = true;
-            if (index == 2) lfo3->enabled = true;
-            if (index == 3) lfo4->enabled = true;
-            if (index == 4) lfo5->enabled = true;
+            lfo1->settings.enabled = lfo2->settings.enabled = lfo3->settings.enabled = lfo4->settings.enabled = lfo5->settings.enabled = false;
+            if (index == 0) lfo1->settings.enabled = true;
+            if (index == 1) lfo2->settings.enabled = true;
+            if (index == 2) lfo3->settings.enabled = true;
+            if (index == 3) lfo4->settings.enabled = true;
+            if (index == 4) lfo5->settings.enabled = true;
 
             rate->setTag(Params::LFORate1 + index);
             amnt->setTag(Params::LFOLvl1 + index);
@@ -137,13 +137,65 @@ namespace Kaixo
                 UpdateIndex();
             };
 
-            rate = new Knob{ {   5, 130,   5 + 65, 130 + 55 }, editor };
-            amnt = new Knob{ {  70, 130,  70 + 65, 130 + 55 }, editor };
-            posi = new Knob{ { 135, 130, 135 + 65, 130 + 55 }, editor };
-            offs = new Knob{ { 200, 130, 200 + 65, 130 + 55 }, editor };
-            shpr = new Knob{ { 265, 130, 265 + 65, 130 + 55 }, editor };
-            sync = new Knob{ { 282,  32, 282 + 45,  32 + 20 }, editor };
-            retr = new Knob{ { 257,  32, 257 + 20,  32 + 20 }, editor };
+            rate = new Parameter{ { 
+                .tag = Params::LFORate1 + index,
+                .editor = editor, .listener = this,
+                .size = {   5, 130,   5 + 65, 130 + 55 }, 
+                .type = Parameter::NUMBER, .name = "Rate",
+                .min = 0.1, .max = 30, .reset = 1, .decimals = 1,
+                .unit = " Hz",
+            } };
+
+            amnt = new Parameter{ { 
+                .tag = Params::LFOLvl1 + index,
+                .editor = editor, .listener = this,
+                .size = {  70, 130,  70 + 65, 130 + 55 }, 
+                .type = Parameter::NUMBER, .name = "Amount",
+                .min = -100, .max = 100, .reset = 50, .decimals = 1,
+                .unit = " %",
+            } };
+
+            posi = new Parameter{ { 
+                .tag = Params::LFOPos1 + index,
+                .editor = editor, .listener = this,
+                .size = { 135, 130, 135 + 65, 130 + 55 }, 
+                .type = Parameter::NUMBER, .name = "Pos",
+                .min = 0, .max = 100, .reset = 0, .decimals = 1,
+                .unit = " %",
+            } };
+
+            offs = new Parameter{ { 
+                .tag = Params::LFOPhase1 + index,
+                .editor = editor, .listener = this,
+                .size = { 200, 130, 200 + 65, 130 + 55 }, 
+                .type = Parameter::NUMBER ,.name = "Offset",
+                .min = 0, .max = 100, .reset = 0, .decimals = 1,
+                .unit = " %", 
+            } };
+
+            shpr = new Parameter{ { 
+                .tag = Params::LFOShaper1 + index,
+                .editor = editor, .listener = this,
+                .size = { 265, 130, 265 + 65, 130 + 55 }, 
+                .type = Parameter::NUMBER, .name = "Shaper",
+                .min = -100, .max = 100, .reset = 0, .decimals = 1,
+                .unit = " %",
+            } };
+
+            sync = new Parameter{ { 
+                .tag = Params::LFOSync1 + index,
+                .editor = editor, .listener = this,
+                .size = { 282,  32, 282 + 45,  32 + 20 }, 
+                .type = Parameter::BUTTON, .name = "Sync"
+            } };
+
+            retr = new Parameter{ { 
+                .tag = Params::LFORetr1 + index,
+                .editor = editor, .listener = this,
+                .size = { 257,  32, 257 + 20,  32 + 20 }, 
+                .type = Parameter::BUTTON, .name = "R"
+            } };
+
             curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
 
             nvd1 = new DragThing{ {   5,   5,   5 + 60,   5 + 18 } };
@@ -158,70 +210,30 @@ namespace Kaixo
             nvd4->source = ModSources::LFO4;
             nvd5->source = ModSources::LFO5;
 
-            lfo1 = new Label{ {   5,   5,   5 + 65,   5 + 20 } };
-            lfo1->fontsize = 14;
-            lfo1->center = true;
-            lfo1->enabled = true;
-            lfo1->value = "LFO 1";
-            lfo2 = new Label{ {  71,   5,  71 + 65,   5 + 20 } };
-            lfo2->fontsize = 14;
-            lfo2->center = true;
-            lfo2->enabled = false;
-            lfo2->value = "LFO 2";
-            lfo3 = new Label{ { 137,   5, 137 + 65,   5 + 20 } };
-            lfo3->fontsize = 14;
-            lfo3->center = true;
-            lfo3->enabled = false;
-            lfo3->value = "LFO 3";
-            lfo4 = new Label{ { 203,   5, 203 + 65,   5 + 20 } };
-            lfo4->fontsize = 14;
-            lfo4->center = true;
-            lfo4->enabled = false;
-            lfo4->value = "LFO 4";
-            lfo5 = new Label{ { 269,   5, 269 + 65,   5 + 20 } };
-            lfo5->fontsize = 14;
-            lfo5->center = true;
-            lfo5->enabled = false;
-            lfo5->value = "LFO 5";
+            lfo1 = new Label{ { 
+                .size = {   5,   5,   5 + 65,   5 + 20 },
+                .value = "LFO 1", .center = true, .fontsize = 14, .enabled = true,
+            } };
 
-            rate->setListener(listener);
-            amnt->setListener(listener);
-            posi->setListener(listener);
-            offs->setListener(listener);
-            shpr->setListener(listener);
-            sync->setListener(listener);
-            retr->setListener(listener);
+            lfo2 = new Label{ {
+                .size = {  71,   5,  71 + 65,   5 + 20 },
+                .value = "LFO 2", .center = true, .fontsize = 14, .enabled = false,
+            } };
 
-            rate->registerControlListener(this);
-            amnt->registerControlListener(this);
-            posi->registerControlListener(this);
-            offs->registerControlListener(this);
-            shpr->registerControlListener(this);
-            sync->registerControlListener(this);
+            lfo3 = new Label{ {
+                .size = { 137,   5, 137 + 65,   5 + 20 },
+                .value = "LFO 3", .center = true, .fontsize = 14, .enabled = false,
+            } };
 
-            rate->setTag(Params::LFORate1 + index);
-            amnt->setTag(Params::LFOLvl1 + index);
-            posi->setTag(Params::LFOPos1 + index);
-            offs->setTag(Params::LFOPhase1 + index);
-            shpr->setTag(Params::LFOShaper1 + index);
-            sync->setTag(Params::LFOSync1 + index);
-            retr->setTag(Params::LFORetr1 + index);
+            lfo4 = new Label{ {
+                .size = { 203,   5, 203 + 65,   5 + 20 },
+                .value = "LFO 4", .center = true, .fontsize = 14, .enabled = false,
+            } };
 
-            rate->name = "Rate"; amnt->name = "Amount";   posi->name = "Pos";
-            rate->min = 0.1;     amnt->min = -100;        posi->min = 0;
-            rate->max = 30;      amnt->max = 100;         posi->max = 100;
-            rate->reset = 1;     amnt->reset = 50;        posi->reset = 0;
-            rate->decimals = 1;  amnt->decimals = 1;      posi->decimals = 1;
-            rate->unit = " Hz";  amnt->unit = " %";       posi->unit = " %";
-            rate->type = 2;      amnt->type = 2;          posi->type = 2;
-
-            offs->name = "Offset"; shpr->name = "Shaper"; sync->name = "Sync"; retr->name = "R";
-            offs->min = 0;         shpr->min = -100;      sync->min = 0;       retr->min = 0;
-            offs->max = 100;       shpr->max = 100;       sync->max = 1;       retr->max = 1;
-            offs->reset = 0;       shpr->reset = 0;       sync->reset = 0;     retr->reset = 0;
-            offs->decimals = 1;    shpr->decimals = 1;    sync->decimals = 1;  retr->decimals = 1;
-            offs->unit = " %";     shpr->unit = " %";     sync->unit = "";     retr->unit = "";
-            offs->type = 2;        shpr->type = 2;        sync->type = 3;      retr->type = 3;
+            lfo5 = new Label{ {
+                .size = { 269,   5, 269 + 65,   5 + 20 },
+                .value = "LFO 5", .center = true, .fontsize = 14, .enabled = false,
+            } };
 
             addView(curve);
 

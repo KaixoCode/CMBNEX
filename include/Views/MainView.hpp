@@ -1,21 +1,18 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
-#include "Knob.hpp"
-#include "Label.hpp"
-#include "OscillatorView.hpp"
-#include "EnvelopeView.hpp"
-#include "CombineView.hpp"
-#include "LFOView.hpp"
-#include "SubOscView.hpp"
-#include "MidiView.hpp"
-#include "TopBarView.hpp"
-#include "myplugincontroller.hpp"
+#include "Views/OscillatorView.hpp"
+#include "Views/EnvelopeView.hpp"
+#include "Views/CombineView.hpp"
+#include "Views/LFOView.hpp"
+#include "Views/SubOscView.hpp"
+#include "Views/MidiView.hpp"
+#include "Views/TopBarView.hpp"
+#include "Views/ViewFactoryBase.hpp"
+#include "Controller.hpp"
 
 namespace Kaixo
 {
-    class MainPanel : public CViewContainer
+    class MainView : public CViewContainer
     {
     public:
         TopBarView* tbrv;
@@ -27,7 +24,7 @@ namespace Kaixo
         SubOscView* subo;
         BackgroundEffect* bgef;
 
-        MainPanel(const CRect& size, IControlListener* listener, MyEditor* editor)
+        MainView(const CRect& size, IControlListener* listener, MyEditor* editor)
             : CViewContainer { size }
         {
             setBackgroundColor(Background);
@@ -44,18 +41,12 @@ namespace Kaixo
             _v->setBackgroundColor(Background);
             addView(_v);
 
-            addView(bgef);
-            addView(oscp);
-            addView(cmbn);
-            addView(lfop);
-            addView(envp);
-            addView(midi);
-            addView(subo);
-            addView(tbrv);
+            addView(bgef); addView(oscp); addView(cmbn); addView(lfop); addView(envp); 
+            addView(midi); addView(subo); addView(tbrv);
         }
     };
 
-    struct MainPanelAttributes
+    struct MainViewAttributes
     {
         static inline CPoint Size = { 70, 200 };
 
@@ -65,18 +56,18 @@ namespace Kaixo
         static inline std::tuple Attributes{};
     };
 
-    class MainPanelFactory : public ViewFactoryBase<MainPanel, MainPanelAttributes>
+    class MainViewFactory : public ViewFactoryBase<MainView, MainViewAttributes>
     {
     public:
         CView* create(const UIAttributes& attributes, const IUIDescription* description) const override
         {
-            CRect _size{ CPoint{ 45, 45 }, MainPanelAttributes::Size };
+            CRect _size{ CPoint{ 45, 45 }, MainViewAttributes::Size };
             MyEditor* _editor = dynamic_cast<MyEditor*>(description->getController());
-            auto* _value = new MainPanel(_size, description->getControlListener(""), _editor);
+            auto* _value = new MainView(_size, description->getControlListener(""), _editor);
             apply(_value, attributes, description);
             return _value;
         }
     };
 
-    static inline MainPanelFactory mainPanelFactory;
+    static inline MainViewFactory mainViewFactory;
 }

@@ -1,10 +1,12 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
-#include "Knob.hpp"
-#include "Label.hpp"
-#include "OptionMenu.hpp"
+#include "Components/Parameter.hpp"
+#include "Components/Label.hpp"
+#include "Components/BackgroundEffect.hpp"
+#include "Components/DragThing.hpp"
+#include "Components/SwitchThing.hpp"
+#include "Processing/Modules.hpp"
+
 
 namespace Kaixo
 {
@@ -337,15 +339,15 @@ namespace Kaixo
         int index = 0;
 
         EnvelopeCurve* curve;
-        Knob* attk;
-        Knob* atkc;
-        Knob* attl;
-        Knob* decy;
-        Knob* dcyc;
-        Knob* decl;
-        Knob* sust;
-        Knob* rels;
-        Knob* rlsc;
+        Parameter* attk;
+        Parameter* atkc;
+        Parameter* attl;
+        Parameter* decy;
+        Parameter* dcyc;
+        Parameter* decl;
+        Parameter* sust;
+        Parameter* rels;
+        Parameter* rlsc;
 
         DragThing* nvd1;
         DragThing* nvd2;
@@ -452,12 +454,13 @@ namespace Kaixo
 
         void UpdateIndex()
         {
-            env1->enabled = env2->enabled = env3->enabled = env4->enabled = env5->enabled = false;
-            if (index == 0) env1->enabled = true;
-            if (index == 1) env2->enabled = true;
-            if (index == 2) env3->enabled = true;
-            if (index == 3) env4->enabled = true;
-            if (index == 4) env5->enabled = true;
+            env1->settings.enabled = env2->settings.enabled = env3->settings.enabled = 
+                env4->settings.enabled = env5->settings.enabled = false;
+            if (index == 0) env1->settings.enabled = true;
+            if (index == 1) env2->settings.enabled = true;
+            if (index == 2) env3->settings.enabled = true;
+            if (index == 3) env4->settings.enabled = true;
+            if (index == 4) env5->settings.enabled = true;
 
             attk->setTag(Params::Env1A + index);
             atkc->setTag(Params::Env1AC + index);
@@ -482,7 +485,7 @@ namespace Kaixo
             {
                 int _page = std::floor((where.x - getViewSize().left) / 112);
 
-                time->enabled = vlue->enabled = slpe->enabled = false;
+                time->settings.enabled = vlue->settings.enabled = slpe->settings.enabled = false;
                 switch (_page)
                 {
                 case 0:
@@ -499,7 +502,7 @@ namespace Kaixo
                     attl->setVisible(false);
                     decl->setVisible(false);
 
-                    time->enabled = true;
+                    time->settings.enabled = true;
                     break;
                 }
                 case 1:
@@ -516,7 +519,7 @@ namespace Kaixo
                     attl->setVisible(false);
                     decl->setVisible(false);
 
-                    slpe->enabled = true;
+                    slpe->settings.enabled = true;
                     break;
                 }
                 case 2:
@@ -533,7 +536,7 @@ namespace Kaixo
                     attl->setVisible(true);
                     decl->setVisible(true);
 
-                    vlue->enabled = true;
+                    vlue->settings.enabled = true;
                     break;
                 }
                 }
@@ -559,15 +562,78 @@ namespace Kaixo
                 UpdateIndex();
             };
 
-            attk = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
-            atkc = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
-            attl = new Knob{ {   5, 150,   5 + 65, 155 + 50 }, editor };
-            decy = new Knob{ {  70, 150,  70 + 65, 155 + 50 }, editor };
-            dcyc = new Knob{ {  70, 150,  70 + 65, 155 + 50 }, editor };
-            decl = new Knob{ {  70, 150,  70 + 65, 155 + 50 }, editor };
-            sust = new Knob{ { 135, 150, 135 + 65, 155 + 50 }, editor };
-            rels = new Knob{ { 200, 150, 200 + 65, 155 + 50 }, editor };
-            rlsc = new Knob{ { 200, 150, 200 + 65, 155 + 50 }, editor };
+            attk = new Parameter{ { 
+                .editor = editor,
+                .size = {   5, 150,   5 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Attack",
+                .min = 0, .max = 5000, .reset = 1, .decimals = 1,
+                .unit = " s",
+            } };
+
+            atkc = new Parameter{ {
+                .editor = editor,
+                .size = {   5, 150,   5 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Attack",
+                .min = -100, .max = 100, .reset = 0, .decimals = 1,
+                .unit = " %",
+            } };
+
+            attl = new Parameter{ {
+                .editor = editor,
+                .size = {   5, 150,   5 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Attack",
+                .min = 0, .max = 1, .reset = 0, .decimals = 1,
+                .unit = " dB",
+            } };
+
+            decy = new Parameter{ {
+                .editor = editor,
+                .size = {  70, 150,  70 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Decay",
+                .min = 0, .max = 5000, .reset = 600, .decimals = 1,
+                .unit = " s",
+            } };
+
+            dcyc = new Parameter{ {
+                .editor = editor,
+                .size = {  70, 150,  70 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Decay",
+                .min = -100, .max = 100, .reset = -50, .decimals = 1,
+                .unit = " %",
+            } };
+
+            decl = new Parameter{ {
+                .editor = editor,
+                .size = {  70, 150,  70 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Decay",
+                .min = 0, .max = 1, .reset = 1, .decimals = 1,
+                .unit = " dB",
+            } };
+
+            sust = new Parameter{ {
+                .editor = editor,
+                .size = { 135, 150, 135 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Sustain",
+                .min = 0, .max = 1, .reset = 0.5, .decimals = 1,
+                .unit = " dB",
+            } };
+
+            rels = new Parameter{ {
+                .editor = editor,
+                .size = { 200, 150, 200 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Release",
+                .min = 0, .max = 5000, .reset = 600, .decimals = 1,
+                .unit = " s",
+            } };
+
+            rlsc = new Parameter{ {
+                .editor = editor,
+                .size = { 200, 150, 200 + 65, 155 + 50 },
+                .type = Parameter::NUMBER, .name = "Release",
+                .min = -100, .max = 100, .reset = -50, .decimals = 1,
+                .unit = " %",
+            } };
+
             curve = new EnvelopeCurve{ {  5,  30, 5 + 325, 30 + 95 } };
 
             nvd1 = new DragThing{ {   5,   5,   5 + 60,   5 + 18 } };
@@ -582,47 +648,52 @@ namespace Kaixo
             nvd4->source = ModSources::Env4;
             nvd5->source = ModSources::Env5;
 
-            time = new Label{ {   5, 130,   5 + 110, 130 + 20 } };
-            time->fontsize = 14;
-            time->center = true;
-            time->enabled = true;
-            time->value = "Time";
-            slpe = new Label{ { 115, 130, 115 + 110, 130 + 20 } };
-            slpe->fontsize = 14;
-            slpe->center = true;
-            slpe->enabled = false;
-            slpe->value = "Slope";
-            vlue = new Label{ { 225, 130, 225 + 110, 130 + 20 } };
-            vlue->fontsize = 14;
-            vlue->center = true;
-            vlue->enabled = false;
-            vlue->value = "Value";
+            time = new Label{ {
+                .size = {   5, 130,   5 + 110, 130 + 20 },
+                .value = "Time", .center = true, .fontsize = 14,
+                .enabled = true,
+            } };
 
-            env1 = new Label{ {   5,   5,   5 + 65,   5 + 20 } };
-            env1->fontsize = 14;
-            env1->center = true;
-            env1->enabled = true;
-            env1->value = "Gain";
-            env2 = new Label{ {  71,   5,  71 + 65,   5 + 20 } };
-            env2->fontsize = 14;
-            env2->center = true;
-            env2->enabled = false;
-            env2->value = "Env 2";
-            env3 = new Label{ { 137,   5, 137 + 65,   5 + 20 } };
-            env3->fontsize = 14;
-            env3->center = true;
-            env3->enabled = false;
-            env3->value = "Env 3";
-            env4 = new Label{ { 203,   5, 203 + 65,   5 + 20 } };
-            env4->fontsize = 14;
-            env4->center = true;
-            env4->enabled = false;
-            env4->value = "Env 4";
-            env5 = new Label{ { 269,   5, 269 + 65,   5 + 20 } };
-            env5->fontsize = 14;
-            env5->center = true;
-            env5->enabled = false;
-            env5->value = "Env 5";
+            slpe = new Label{ {
+                .size = { 115, 130, 115 + 110, 130 + 20 },
+                .value = "Slope", .center = true, .fontsize = 14,
+                .enabled = false,
+            } };
+
+            vlue = new Label{ {
+                .size = { 225, 130, 225 + 110, 130 + 20 },
+                .value = "Value", .center = true, .fontsize = 14,
+                .enabled = false,
+            } };
+
+            env1 = new Label{ {
+                .size = {   5,   5,   5 + 65,   5 + 20 },
+                .value = "Gain", .center = true, .fontsize = 14,
+                .enabled = true,
+            } };
+
+            env2 = new Label{ {
+                .size = {  71,   5,  71 + 65,   5 + 20 },
+                .value = "Env 2", .center = true, .fontsize = 14,
+                .enabled = false,
+            } };
+
+            env3 = new Label{ {
+                .size = { 137,   5, 137 + 65,   5 + 20 },
+                .value = "Env 3", .center = true, .fontsize = 14,
+                .enabled = false,
+            } };
+            env4 = new Label{ {
+                .size = { 203,   5, 203 + 65,   5 + 20 },
+                .value = "Env 4", .center = true, .fontsize = 14,
+                .enabled = false,
+            } };
+
+            env5 = new Label{ {
+                .size = { 269,   5, 269 + 65,   5 + 20 },
+                .value = "Env 5", .center = true, .fontsize = 14,
+                .enabled = false,
+            } };
 
             attk->setListener(listener);
             atkc->setListener(listener);
@@ -659,38 +730,6 @@ namespace Kaixo
             dcyc->setVisible(false);
             decl->setVisible(false);
             rlsc->setVisible(false);
-
-            attk->name = "Attack";   atkc->name = "Attack";   attl->name = "Attack";
-            attk->min = 0;           atkc->min = -100;        attl->min = 0;
-            attk->max = 5000;        atkc->max = 100;         attl->max = 1;
-            attk->reset = 1;         atkc->reset = 0;         attl->reset = 0;
-            attk->decimals = 1;      atkc->decimals = 1;      attl->decimals = 1;
-            attk->unit = " s";       atkc->unit = " %";       attl->unit = " dB";
-            attk->type = 2;          atkc->type = 2;          attl->type = 2;
-
-            decy->name = "Decay";    dcyc->name = "Decay";    decl->name = "Decay";
-            decy->min = 1;           dcyc->min = -100;        decl->min = 0;
-            decy->max = 5000;        dcyc->max = 100;         decl->max = 1;
-            decy->reset = 600;       dcyc->reset = -50;       decl->reset = 1;
-            decy->decimals = 1;      dcyc->decimals = 1;      decl->decimals = 1;
-            decy->unit = " s";       dcyc->unit = " %";       decl->unit = " dB";
-            decy->type = 2;          dcyc->type = 2;          decl->type = 2;
-
-            rels->name = "Release";  rlsc->name = "Release";
-            rels->min = 1;           rlsc->min = -100;
-            rels->max = 5000;        rlsc->max = 100;
-            rels->reset = 600;       rlsc->reset = -100;
-            rels->decimals = 1;      rlsc->decimals = 1;
-            rels->unit = " s";       rlsc->unit = " %";
-            rels->type = 2;          rlsc->type = 2;
-
-            sust->name = "Sustain";
-            sust->min = 0;
-            sust->max = 1;
-            sust->reset = 0.5;
-            sust->decimals = 1;
-            sust->unit = " dB";
-            sust->type = 2;
 
             addView(attk);
             addView(atkc);

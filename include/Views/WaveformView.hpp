@@ -1,9 +1,9 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
-#include "Knob.hpp"
-#include "Label.hpp"
+#include "Processing/Modules.hpp"
+#include "Components/BackgroundEffect.hpp"
+#include "Components/Parameter.hpp"
+#include "Components/Label.hpp"
 
 namespace Kaixo
 {
@@ -12,7 +12,6 @@ namespace Kaixo
     public:
         using CView::CView;
 
-        double index = 0;
         double repeat = 1;
 
         bool enabled = true;

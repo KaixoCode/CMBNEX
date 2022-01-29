@@ -1,12 +1,11 @@
-#include "myplugincontroller.hpp"
-#include "myplugincids.hpp"
-#include "Knob.hpp"
+#include "Controller.hpp"
+#include "CIDs.hpp"
 
 using namespace Steinberg;
 
 namespace Kaixo 
 {
-    MyEditor::MyEditor(TestController* controller)
+    MyEditor::MyEditor(Controller* controller)
         : VST3Editor(dynamic_cast<EditController*>(controller), "view", "myplugineditor.uidesc"),
         controller(controller)
     {
@@ -127,7 +126,7 @@ namespace Kaixo
         }
     }
 
-    IPlugView* PLUGIN_API TestController::createView(FIDString name)
+    IPlugView* PLUGIN_API Controller::createView(FIDString name)
     {
         if (std::strcmp(name, ViewType::kEditor) == 0)
         {

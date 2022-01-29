@@ -1,8 +1,5 @@
 #pragma once
 #include "pch.hpp"
-#include "myplugincids.hpp"
-#include "Modules.hpp"
-#include "ViewFactoryBase.hpp"
 
 namespace Kaixo
 {
@@ -17,7 +14,6 @@ namespace Kaixo
         void dragWillBegin(IDraggingSession* session, CPoint pos) {};
         void dragMoved(IDraggingSession* session, CPoint pos) {};
         void dragEnded(IDraggingSession* session, CPoint pos, DragOperation result) { dragging = false; };
-
 
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
         {

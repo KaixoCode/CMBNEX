@@ -1,16 +1,5 @@
 #pragma once
 
-//constexpr CColor Background = CColor{ 30, 30, 30, 255 };
-//constexpr CColor MainGreen =  CColor{ 0, 179, 98, 255 };
-//constexpr CColor MainBack =  CColor{ 23, 23, 23, 255 };
-//constexpr CColor DarkBack =  CColor{ 17, 17, 17, 255 };
-//constexpr CColor ItemBack =  CColor{ 15, 15, 15, 255 };
-//constexpr CColor KnobBack =  CColor{ 40, 40, 40, 255 };
-//constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
-//constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
-//constexpr CColor OffText = CColor{ 128, 128, 128, 255 };
-//constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
-
 constexpr const char* UPDATE_MODULATION = "update modulation";
 constexpr const char* UPDATE_MODULATION_PARAM = "update modulation param";
 constexpr const char* UPDATE_MODULATION_VALUE = "update modulation value";
@@ -31,18 +20,6 @@ constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
 constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
 constexpr CColor OffText = CColor{ 100, 100, 100, 255 };
 constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
-
-//constexpr CColor Background = CColor{ 30, 30, 30, 255 };
-//constexpr CColor MainGreen = CColor{ 0, 179, 98, 255 };
-//constexpr CColor MainBack = CColor{ 15, 15, 15, 255 };
-//constexpr CColor DarkBack = CColor{  5,  5,  5, 255 };
-//constexpr CColor ItemBack = CColor{  5,  5,  5, 255 };
-//constexpr CColor KnobBack = CColor{ 30, 30, 30, 255 };
-//constexpr CColor Border = CColor{ 25, 25, 25, 255 };
-//constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
-//constexpr CColor OffText = CColor{  75,  75,  75, 255 };
-//constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
-
 
 struct ParamInfo
 {

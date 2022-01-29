@@ -1,10 +1,9 @@
 #pragma once
 #include "pch.hpp"
+#include "Utils/Utils.hpp"
 
 namespace Kaixo
 {
-#define constrain(x, y, z) std::clamp(x, y, z)
-
     enum class FilterType
     {
         Off, LowPass, HighPass, BandPass, Notch, AllPass, PeakingEQ, LowShelf, HighShelf, ITEMS
@@ -54,16 +53,23 @@ namespace Kaixo
         bool off = false;
         FilterType type = FilterType::Off;
 
-        void RecalculateParameters()
+        void RecalculateParameters(bool direct = false)
         {
             // If no changes, no update;
             if (Qb == Q && f0b == f0 && sb == sampleRate && tb == type && dbgb == dbgain)
                 return;
 
             Qb = Q;
-            if (f0 - f0b > 5) f0b += 5;
-            else if (f0 - f0b < 5) f0b -= 5;
-            else f0b = f0;
+            if (direct)
+            {
+                f0b = f0;
+            } 
+            else 
+            {
+                if (f0 - f0b > 5) f0b += 5;
+                else if (f0 - f0b < 5) f0b -= 5;
+                else f0b = f0;
+            }
             sb = sampleRate;
             tb = type;
             dbgb = dbgain;
