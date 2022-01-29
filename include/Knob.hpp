@@ -15,13 +15,6 @@ namespace Kaixo
     public:
         enum Type { KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP, SMALLSLIDER };
 
-        int modDragIndex = -1;
-        int modEditIndex = -1;
-        int modded = 0;
-        bool pressed = false;
-        CPoint pwhere;
-        String str;
-
         std::vector<std::string> parts;
         double modulation = 0;
         bool dark = false;
@@ -34,11 +27,20 @@ namespace Kaixo
         bool enabled = true;
         String name;
         String unit;
-        MyEditor* editor;
 
+    private:
+        MyEditor* editor;
         CColor main = MainGreen;
         CColor text = MainText;
         CColor back = KnobBack;
+        int modDragIndex = -1;
+        int modEditIndex = -1;
+        int modded = 0;
+        bool pressed = false;
+        CPoint pwhere;
+        String str;
+
+    public:
 
         Knob(const CRect& size, MyEditor* editor, bool dark = false);
         ~Knob() override;
