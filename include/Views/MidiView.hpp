@@ -8,9 +8,9 @@ namespace Kaixo
     class MidiView : public CViewContainer
     {
     public:
-        Parameter* tnsp, * bend, * glde, * retr, * ovsm, * pann, * time, * clip, * mac1, * mac2, * mac3, * mac4, * mac5;
-        DragThing* mcd1, * mcd2, * mcd3, * mcd4, * mcd5, * keym, * velm;
-        Label* ovsl, * rtrl, * clpl, * keyl, * vell;
+        Parameter* tnsp, * bend, * glde, * pann, * time, * clip, * mac1, * mac2, * mac3, * mac4, * mac5;
+        DragThing* mcd1, * mcd2, * mcd3, * mcd4, * mcd5, * keym, * velm, *ranm, *modm;
+        Label * clpl, * keyl, * vell, *ranl, *modl;
 
         MidiView(const CRect& size, IControlListener* listener, MyEditor* editor)
             : CViewContainer(size)
@@ -66,23 +66,8 @@ namespace Kaixo
             clip = new Parameter{ {
                 .tag = Params::Clipping,
                 .editor = editor,
-                .size = {  70, 84 + 85 + 17,  70 + 128, 84 + 20 + 85 + 17 },
+                .size = {  205, 84 + 85 + 17,  205 + 128, 84 + 20 + 85 + 17 },
                 .type = Parameter::GROUP, .parts = { "Warm", "Hard", "Clip" },
-                .padding = 4
-            } };
-
-            retr = new Parameter{ {
-                .tag = Params::Retrigger,
-                .editor = editor,
-                .size = { 200, 84 + 85 + 17, 200 + 20, 84 + 20 + 85 + 17 },
-                .type = Parameter::BUTTON, .name = "R"
-            } };
-
-            ovsm = new Parameter{ {
-                .tag = Params::Oversample, 
-                .editor = editor,
-                .size = { 225, 84 + 85 + 17, 225 + 108, 84 + 20 + 85 + 17 },
-                .type = Parameter::GROUP, .parts = { "Off", "2x", "4x", "8x" },
                 .padding = 4
             } };
 
@@ -90,7 +75,7 @@ namespace Kaixo
                 .tag = Params::Macro1,
                 .editor = editor,
                 .size = {   5, 63,   5 + 65, 63 + 88 + 10 },
-                .type = Parameter::KNOB, .name = "Macro1",
+                .type = Parameter::KNOB, .name = "Mac A",
                 .min = 0, .max = 100, .reset = 0, .decimals = 1,
                 .unit = " %"
             } };
@@ -99,7 +84,7 @@ namespace Kaixo
                 .tag = Params::Macro2,
                 .editor = editor,
                 .size = {  70, 63,  70 + 65, 63 + 88 + 10 },
-                .type = Parameter::KNOB, .name = "Macro2",
+                .type = Parameter::KNOB, .name = "Mac B",
                 .min = 0, .max = 100, .reset = 0, .decimals = 1,
                 .unit = " %"
             } };
@@ -108,7 +93,7 @@ namespace Kaixo
                 .tag = Params::Macro3,
                 .editor = editor,
                 .size = { 135, 63, 135 + 65, 63 + 88 + 10 },
-                .type = Parameter::KNOB, .name = "Macro3",
+                .type = Parameter::KNOB, .name = "Mac C",
                 .min = 0, .max = 100, .reset = 0, .decimals = 1,
                 .unit = " %"
             } };
@@ -117,7 +102,7 @@ namespace Kaixo
                 .tag = Params::Macro4,
                 .editor = editor,
                 .size = { 200, 63, 200 + 65, 63 + 88 + 10 },
-                .type = Parameter::KNOB, .name = "Macro4",
+                .type = Parameter::KNOB, .name = "Mac D",
                 .min = 0, .max = 100, .reset = 0, .decimals = 1,
                 .unit = " %"
             } };
@@ -126,7 +111,7 @@ namespace Kaixo
                 .tag = Params::Macro5,
                 .editor = editor,
                 .size = { 265, 63, 265 + 65, 63 + 88 + 10 },
-                .type = Parameter::KNOB, .name = "Macro5",
+                .type = Parameter::KNOB, .name = "Mac E",
                 .min = 0, .max = 100, .reset = 0, .decimals = 1,
                 .unit = " %"
             } };
@@ -139,9 +124,13 @@ namespace Kaixo
 
             keym = new DragThing{ {  5, 67 + 85 + 17,   5 + 60, 67 + 15 + 85 + 17 } };
             velm = new DragThing{ {  5, 88 + 85 + 17,   5 + 60, 88 + 15 + 85 + 17 } };
+            ranm = new DragThing{ {  5 + 65, 67 + 85 + 17,   5 + 65 + 60, 67 + 15 + 85 + 17 } };
+            modm = new DragThing{ {  5 + 65, 88 + 85 + 17,   5 + 65 + 60, 88 + 15 + 85 + 17 } };
 
             keym->source = ModSources::Key;
             velm->source = ModSources::Vel;
+            ranm->source = ModSources::Ran;
+            modm->source = ModSources::Mod;
 
             mcd1->source = ModSources::Mac1;
             mcd2->source = ModSources::Mac2;
@@ -158,32 +147,32 @@ namespace Kaixo
                 .size = { 11, 87 + 85 + 17,  11 + 60, 87 + 20 + 85 + 17 },
                 .value = "Velocity", .center = false, .fontsize = 14,
             } };
+
+            ranl = new Label{ {
+                .size = { 11 + 65, 66 + 85 + 17,  11 + 65 + 60, 66 + 20 + 85 + 17 },
+                .value = "Random", .center = false, .fontsize = 14,
+            } };
             
-            ovsl = new Label{ {
-                .size = { 226, 64 + 85 + 17, 226 + 90, 64 + 20 + 85 + 17 },
-                .value = "Oversample", .center = false, .fontsize = 14,
+            modl = new Label{ {
+                .size = { 11 + 65, 87 + 85 + 17,  11 + 65 + 60, 87 + 20 + 85 + 17 },
+                .value = "Mod", .center = false, .fontsize = 14,
             } };
             
             clpl = new Label{ {
-                .size = {  71, 64 + 85 + 17,  71 + 65, 64 + 20 + 85 + 17 },
+                .size = {  206, 64 + 85 + 17,  206 + 65, 64 + 20 + 85 + 17 },
                 .value = "Clipping", .center = false, .fontsize = 14,
             } };
-            
-            rtrl = new Label{ {
-                .size = { 201, 64 + 85 + 17, 201 + 20, 64 + 20 + 85 + 17 },
-                .value = "Rtr", .center = false, .fontsize = 14,
-            } };
 
-            addView(tnsp); addView(bend); addView(glde); addView(retr); addView(ovsm); addView(pann); 
+            addView(tnsp); addView(bend); addView(glde); addView(pann); 
             addView(time); addView(clip); addView(mac1); addView(mac2); addView(mac3); addView(mac4); 
             addView(mac5); addView(mcd1); addView(mcd2); addView(mcd3); addView(mcd4); addView(mcd5);
-            addView(ovsl); addView(rtrl); addView(clpl); addView(keyl); addView(vell); addView(keym);
-            addView(velm);
+            addView(clpl); addView(keyl); addView(vell); addView(keym);
+            addView(velm); addView(ranl); addView(modl); addView(ranm); addView(modm);
         }
 
         ~MidiView()
         {
-            tnsp->forget(); bend->forget(); glde->forget(); retr->forget(); ovsm->forget(); 
+            tnsp->forget(); bend->forget(); glde->forget(); 
             pann->forget(); time->forget(); clip->forget(); mac1->forget(); mac2->forget(); 
             mac3->forget(); mac4->forget(); mac5->forget();
         }

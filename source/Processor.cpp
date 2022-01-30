@@ -10,8 +10,43 @@ namespace Kaixo
         modulationThread.join();
     }
 
+
+    void Processor::TriggerVoice(int voice, int pitch, int velocity)
+    {
+        voices[voice].rand = random() * 0.5 + 0.5;
+        voices[voice].velocity = velocity;
+        voices[voice].frequency = voices[lastPressedVoice].frequency;
+        voices[voice].pressedOld = voices[lastPressedVoice].frequency;
+        voices[voice].pressed = pitch;
+        voices[voice].key = pitch;
+        lastPressedVoice = voice;
+
+        if (params.goals[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
+        {
+            for (int i = 0; i < Oscillators; i++)
+                voices[voice].osc[i].phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
+            for (int i = 0; i < LFOs; i++)
+                voices[voice].lfo[i].phase = 0;
+            voices[voice].sub.phase = 0;
+            voices[voice].samplesPress = projectTimeSamples;
+        }
+
+        for (int i = 0; i < Envelopes; i++)
+        {
+            voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;
+            voices[voice].env[i].Gate(true);
+        }
+    }
+
     void Processor::NotePress(Vst::Event& event)
     {
+        if (params.goals[Params::Voices] < 0.5)
+        {
+            m_MonoNotePresses.push_back(event.noteOn.pitch);
+            TriggerVoice(0, event.noteOn.pitch, event.noteOn.velocity);
+            return;
+        }
+
         // Release the longest held note
         if (m_Available.size() == 0)
         {
@@ -35,34 +70,52 @@ namespace Kaixo
             // Set voice to note
             m_Notes[voice] = event.noteOn.pitch;
             {
-                voices[voice].velocity = event.noteOn.velocity;
-                voices[voice].frequency = voices[lastPressedVoice].frequency;
-                voices[voice].pressedOld = voices[lastPressedVoice].frequency;
-                voices[voice].pressed = event.noteOn.pitch + event.noteOn.tuning * 0.01;
-                voices[voice].key = event.noteOn.pitch;
-                lastPressedVoice = voice;
-
-                if (params.goals[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
-                {
-                    for (int i = 0; i < Oscillators; i++)
-                        voices[voice].osc[i].phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
-                    for (int i = 0; i < LFOs; i++)
-                        voices[voice].lfo[i].phase = 0;
-                    voices[voice].sub.phase = 0;
-                    voices[voice].samplesPress = projectTimeSamples;
-                }
-
-                for (int i = 0; i < Envelopes; i++)
-                {
-                    voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;
-                    voices[voice].env[i].Gate(true);
-                }
+                TriggerVoice(voice, event.noteOn.pitch, event.noteOn.velocity);
             }
         }
     }
 
+    void Processor::ReleaseVoice(int voice, int pitch, int velocity)
+    {
+        for (int i = 0; i < Envelopes; i++)
+            voices[voice].env[i].Gate(false);
+    }
+
     void Processor::NoteRelease(Vst::Event& event)
     {
+        // If monophonic
+        if (params.goals[Params::Voices] < 0.5)
+        {
+            // If we released a note that isn't currently producing sound (because monophonic)
+            // we will remove it from the notepresses
+            if (voices[0].pressed != event.noteOff.pitch)
+            {
+                m_MonoNotePresses.remove(event.noteOff.pitch);
+            }
+            else
+            {
+                // Otherwise we'll remove the released note from the stack
+                m_MonoNotePresses.pop_back();
+
+                // And if notes remain on the stack, we'll trigger that one again.
+                if (!m_MonoNotePresses.empty())
+                    TriggerVoice(0, m_MonoNotePresses.back(), voices[0].velocity);
+
+                // Otherwise release the voice
+                else
+                    ReleaseVoice(0, event.noteOff.pitch, event.noteOff.velocity);
+            }
+        }
+        else
+        {
+            // If not monophonic, empty note stack
+            m_MonoNotePresses.clear();
+        }
+
+        // Even if monophonic, we'll check the other notes in case
+        // it was switched to monophonic while notes were being held,
+        // this will then release those voices once the note is released.
+
         // Find the note in the pressed notes per voice
         while (true)
         {
@@ -73,10 +126,7 @@ namespace Kaixo
                 int voice = std::distance(m_Notes.begin(), it);
 
                 // Set note to -1 and emplace to available.
-                {
-                    for (int i = 0; i < Envelopes; i++)
-                        voices[voice].env[i].Gate(false);
-                }
+                ReleaseVoice(voice, event.noteOff.pitch, event.noteOff.velocity);
                 m_Notes[voice] = -1;
                 m_Available.emplace(m_Available.begin(), voice);
 
@@ -256,27 +306,42 @@ namespace Kaixo
         processData = &data; // Store the process data, so it's accessible everywhere.
         projectTimeSamples = data.processContext->projectTimeSamples; // Store project time samples
 
-        // Divide voices among worker threads and main thread
-        std::future<void> futures[Voices];
-        bool onMain[Voices]{ false, false, false, false, false, false };
-        int forDone = 0;
-        for (int i = 0; i < Voices; i++)
+        // If monophonic, only generate 1st voice.
+        if (params.goals[Params::Voices] < 0.5)
         {
-            if (swapBuffer.amount < 52) onMain[i] = true; // If buffer < 52, do work on main thread always
-            else if (!voices[i].env[0].Done() && forDone < 1) onMain[i] = true, forDone++; // Always do 1 voice on main thread
-            else if (voices[i].env[0].Done()) onMain[i] = true; // If no generating, do on main thread
-            else futures[i] = voiceThreadPool.push([this, i]() { GenerateVoice(voices[i]); }); // Otherwise send work to threadpool
+            GenerateVoice(voices[0]);
         }
 
-        // Generate everything that was selected for main thread right here.
-        for (int i = 0; i < Voices; i++)
-            if (onMain[i])
+        // If no threading, do everything on main thread
+        else if (params.goals[Params::Threading] < 0.5)
+        {
+            for (int i = 0; i < Voices; i++)
                 GenerateVoice(voices[i]);
+        }
+        else
+        {
+            // Divide voices among worker threads and main thread
+            std::future<void> futures[Voices];
+            bool onMain[Voices]{ false, false, false, false, false, false };
+            int forDone = 0;
+            for (int i = 0; i < Voices; i++)
+            {
+                if (swapBuffer.amount < 52) onMain[i] = true; // If buffer < 52, do work on main thread always
+                else if (!voices[i].env[0].Done() && forDone < 1) onMain[i] = true, forDone++; // Always do 1 voice on main thread
+                else if (voices[i].env[0].Done()) onMain[i] = true; // If no generating, do on main thread
+                else futures[i] = voiceThreadPool.push([this, i]() { GenerateVoice(voices[i]); }); // Otherwise send work to threadpool
+            }
 
-        // Wait on threadpool.
-        for (int i = 0; i < Voices; i++)
-            if (!onMain[i])
-                futures[i].wait();
+            // Generate everything that was selected for main thread right here.
+            for (int i = 0; i < Voices; i++)
+                if (onMain[i])
+                    GenerateVoice(voices[i]);
+
+            // Wait on threadpool.
+            for (int i = 0; i < Voices; i++)
+                if (!onMain[i])
+                    futures[i].wait();
+        }
     }
 
     inline double Processor::Clip(double a, int channel)
@@ -357,7 +422,15 @@ namespace Kaixo
                 edited = true; // Since we had a goal, we're gonna edit.
 
                 double amount = modamount[index] * 2 - 1; // Calculate mod amount
-                if (source == (int)ModSources::Vel)
+                if (source == (int)ModSources::Ran)
+                {   // Random * amount
+                    voice.modulated[m] += (voice.rand * amount);
+                }
+                else if (source == (int)ModSources::Mod)
+                {   // Modwheel * amount
+                    voice.modulated[m] += (params[{ Params::ModWheel, ratio }] * amount);
+                }
+                else if (source == (int)ModSources::Vel)
                 {   // Velocity * amount
                     voice.modulated[m] += (voice.velocity * amount);
                 }
@@ -413,14 +486,14 @@ namespace Kaixo
             voice.dcoffp[i].type = FilterType::HighPass;
             voice.dcoffp[i].Q = 1;
             voice.dcoffp[i].sampleRate = voice.samplerate;
-            voice.dcoffp[i].RecalculateParameters();
+            voice.dcoffp[i].RecalculateParameters(ratio == 1);
 
             auto _ft = std::floor(params.goals[Params::FilterX + i] * 3); // Filter parameters
             voice.cfilterp[i].sampleRate = voice.samplerate;
             voice.cfilterp[i].f0 = voice.modulated[Params::FreqX + i] * voice.modulated[Params::FreqX + i] * (22000 - 30) + 30;
             voice.cfilterp[i].Q = voice.modulated[Params::ResoX + i] * 16 + 1;
             voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-            voice.cfilterp[i].RecalculateParameters();
+            voice.cfilterp[i].RecalculateParameters(ratio == 1);
         }
 
         for (int i = 0; i < Envelopes; i++)
@@ -484,19 +557,19 @@ namespace Kaixo
             voice.filterp[i].f0 = voice.modulated[Params::Freq1 + i] * voice.modulated[Params::Freq1 + i] * (22000 - 30) + 30;
             voice.filterp[i].Q = voice.modulated[Params::Reso1 + i] * 16 + 1;
             voice.filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-            voice.filterp[i].RecalculateParameters();
+            voice.filterp[i].RecalculateParameters(ratio == 1);
 
             voice.noiselfp[i].sampleRate = voice.samplerate;
             voice.noiselfp[i].f0 = (std::min(voice.modulated[Params::Color1 + i] * 2, 1.)) * 21000 + 1000;
             voice.noiselfp[i].Q = 0.6;
             voice.noiselfp[i].type = FilterType::LowPass;
-            voice.noiselfp[i].RecalculateParameters();
+            voice.noiselfp[i].RecalculateParameters(ratio == 1);
 
             voice.noisehfp[i].sampleRate = voice.samplerate;
             voice.noisehfp[i].f0 = (std::max(voice.modulated[Params::Color1 + i] * 2 - 1, 0.)) * 21000 + 30;
             voice.noisehfp[i].Q = 0.6;
             voice.noisehfp[i].type = FilterType::HighPass;
-            voice.noisehfp[i].RecalculateParameters();
+            voice.noisehfp[i].RecalculateParameters(ratio == 1);
 
             voice.osc[i].SAMPLE_RATE = voice.samplerate;
             voice.osc[i].settings.frequency = noteToFreq(voice.frequency + _bendOffset
@@ -534,6 +607,8 @@ namespace Kaixo
         {
             double ratio = index / swapBuffer.amount;
 
+            double gain = params[{ Params::GlobalGain, ratio }];
+
             CalculateModulation(voice, ratio);
             UpdateComponentParameters(voice, ratio);
 
@@ -542,8 +617,8 @@ namespace Kaixo
                 const double l = GenerateSample(0, *processData, voice, ratio);
                 const double r = GenerateSample(1, *processData, voice, ratio);
                 swapBuffer.lock.lock();
-                swapBuffer.left[index] += l;
-                swapBuffer.right[index] += r;
+                swapBuffer.left[index] += l * gain;
+                swapBuffer.right[index] += r * gain;
                 swapBuffer.lock.unlock();
             }
             else // Oversampling
@@ -568,8 +643,8 @@ namespace Kaixo
                     _sumr += _r;
                 }
                 swapBuffer.lock.lock();
-                swapBuffer.left[index] += _suml / _osa;
-                swapBuffer.right[index] += _sumr / _osa;
+                swapBuffer.left[index] += gain * _suml / _osa;
+                swapBuffer.right[index] += gain * _sumr / _osa;
                 swapBuffer.lock.unlock();
             }
         }

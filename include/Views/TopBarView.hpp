@@ -128,6 +128,9 @@ namespace Kaixo
             }
         };
 
+        Parameter* ovsm, *voic, * retr, *gain, *thrd;
+        Label* ovsl, *vcel, *rtrl, *thdl;
+
         Overlay* ovrl;
 
         Button* bSave;
@@ -142,7 +145,7 @@ namespace Kaixo
         {
             setBackgroundColor({ 0, 0, 0, 0 });
             addView(new BackgroundEffect{ { 0, 0, getWidth(), getHeight() } });
-            bInit = new Button{ { 492, 10, 492 + 37, 10 + 25 } };
+            bInit = new Button{ { 297, 10, 297 + 37, 10 + 25 } };
             bInit->text = "Init";
             bInit->press = [this]() {
                 this->editor->controller->Init();
@@ -150,7 +153,7 @@ namespace Kaixo
             };                  
             bInit->p = true;
             
-            bSave = new Button{ { 437, 10, 437 + 50, 10 + 25 } };
+            bSave = new Button{ { 242, 10, 242 + 50, 10 + 25 } };
             bSave->text = "Save";
             bSave->press = [this]() {
                 selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile);
@@ -162,7 +165,7 @@ namespace Kaixo
                 selector->forget();
             };          
             
-            nameDisplay = new NameDisplay{ { 200, 5, 200 + 335, 5 + 35 }, editor->controller->preset };
+            nameDisplay = new NameDisplay{ { 5, 5, 5 + 335, 5 + 35 }, editor->controller->preset };
             nameDisplay->press = [this]() {
                 loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
                 loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
@@ -176,10 +179,100 @@ namespace Kaixo
             ovrl = new Overlay{ { 0, 0, getWidth(), getHeight() } };
             ovrl->setMouseEnabled(false);
 
+            double x = 377;
+            double padding = 2;
+
+            gain = new Parameter{ {
+                .tag = Params::GlobalGain,
+                .editor = editor,
+                .size = { x,   4,  x + 65,   4 + 35 },
+                .type = Parameter::SLIDER, .modable = false, .name = "Global",
+                .min = 0, .max = 1, .reset = 0.5, .decimals = 1,
+                .unit = " dB",
+            } };
+
+            x += 65 + padding + 5;
+
+            voic = new Parameter{ {
+                .tag = Params::Voices,
+                .editor = editor,
+                .size = { x, 23, x + 88, 23 + 16 },
+                .type = Parameter::GROUP, .parts = { "Mono", "Poly" },
+                .padding = 4
+            } };
+
+            vcel = new Label{ {
+                .size = { x + 1, 5, x + 1 + 90, 5 + 25 },
+                .value = "Voicing", .center = false, .fontsize = 14,
+            } };
+
+            x += 88 + padding + 1;
+
+            retr = new Parameter{ {
+                .tag = Params::Retrigger,
+                .editor = editor,
+                .size = { x, 23, x + 16, 23 + 16 },
+                .type = Parameter::BUTTON, .name = "R"
+            } };
+
+            rtrl = new Label{ {
+                .size = { x - 1, 5, x - 1 + 90, 5 + 25 },
+                .value = "Rtr", .center = false, .fontsize = 14,
+            } };
+            
+            x += 16 + padding + 5;
+
+            ovsm = new Parameter{ {
+                .tag = Params::Oversample,
+                .editor = editor,
+                .size = { x, 23, x + 93, 23 + 16 },
+                .type = Parameter::GROUP, .parts = { "1x", "2x", "4x", "8x" },
+                .padding = 4
+            } };
+
+            ovsl = new Label{ {
+                .size = { x, 5, x + 90, 5 + 25 },
+                .value = "Quality", .center = false, .fontsize = 14,
+            } };
+
+            x += 93 + padding;
+
+            thrd = new Parameter{ {
+                .tag = Params::Threading,
+                .editor = editor,
+                .size = { x, 23, x + 73, 23 + 16 },
+                .type = Parameter::GROUP, .parts = { "Off", "On" },
+                .padding = 4
+            } };
+
+            thdl = new Label{ {
+                .size = { x + 1, 5, x + 1 + 90, 5 + 25 },
+                .value = "Threading", .center = false, .fontsize = 14,
+            } };
+   
+
             addView(nameDisplay);
             addView(bSave);
             addView(bInit);
-            addView(ovrl);
+            //addView(ovrl);
+
+            addView(thdl);
+            addView(thrd);
+            addView(rtrl);
+            addView(ovsl);
+            addView(vcel);
+            addView(ovsm);
+            addView(voic);
+            addView(retr);
+            addView(gain);
+        }
+
+        ~TopBarView()
+        {
+            ovsm->forget();
+            voic->forget();
+            retr->forget();
+            gain->forget();
         }
     };
 }

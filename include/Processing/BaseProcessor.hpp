@@ -183,13 +183,9 @@ namespace Kaixo
             return kResultOk;
         }
 
-        String preset = "default";
-
         tresult PLUGIN_API setState(IBStream* state) override
         {
             IBStreamer streamer(state, kLittleEndian);
-
-            preset = streamer.readStr8();
 
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.readDouble(params.goals[i]);
@@ -212,8 +208,6 @@ namespace Kaixo
         tresult PLUGIN_API getState(IBStream* state) override
         {
             IBStreamer streamer(state, kLittleEndian);
-
-            streamer.writeStr8(preset);
 
             for (size_t i = 0; i < Params::Size; i++)
                 streamer.writeDouble(params.goals[i]);

@@ -129,9 +129,173 @@ namespace Kaixo
     IPlugView* PLUGIN_API Controller::createView(FIDString name)
     {
         if (std::strcmp(name, ViewType::kEditor) == 0)
-        {
             return new MyEditor(this);
-        }
+
         return 0;
+    }
+
+    tresult PLUGIN_API Controller::notify(IMessage* message)
+    {   // Receive modulation updates
+        if (FIDStringsEqual(message->getMessageID(), UPDATE_MODULATION))
+        {
+            // Get the values from the message
+            int64 param; double val;
+            message->getAttributes()->getInt(UPDATE_MODULATION_PARAM, param);
+            message->getAttributes()->getFloat(UPDATE_MODULATION_VALUE, val);
+
+            // Update the wakeupcalls.
+            std::lock_guard _(lock);
+            for (auto& i : wakeupCalls)
+            {
+                if (param == std::get<0>(i) && std::get<1>(i) != val)
+                {
+                    std::get<1>(i).get() = val;
+                    std::get<2>(i).get() = true;
+                }
+            }
+
+            return kResultOk;
+        }
+
+        return EditControllerEx1::notify(message);
+    }
+
+    tresult PLUGIN_API Controller::initialize(FUnknown* context)
+    {
+        tresult result = EditControllerEx1::initialize(context);
+        if (result != kResultOk) return result;
+
+        // Initialize all the normal parameters
+        for (size_t i = 0; i < Params::Size; i++)
+        {
+            wchar_t name[32];
+            int c = 0;
+            for (; c < std::strlen(ParamNames[i].name); c++)
+                name[c] = ParamNames[i].name[c];
+            name[c] = '\0';
+            parameters.addParameter(name, nullptr, ParamNames[i].step, ParamNames[i].reset, ParamNames[i].flags, i);
+        }
+
+        // Initialize the modulation parameters
+        for (int i = 0; i < Params::ModCount * ModAmt; i++)
+        {
+            // Construct the modulation parameter names as: Mod + mod index + ParamName
+            int index = i % ModAmt;
+            std::string s1 = "Mod" + std::to_string(index) + ParamNames[i / ModAmt].name;
+            std::string s2 = "ModAmt" + std::to_string(index) + ParamNames[i / ModAmt].name;
+
+            // Copy it over to a wide string for the parameter.
+            wchar_t name1[64];
+            int c1 = 0;
+            for (; c1 < s1.size(); c1++)
+                name1[c1] = s1[c1];
+            name1[c1] = '\0';
+            wchar_t name2[64];
+            int c2 = 0;
+            for (; c2 < s2.size(); c2++)
+                name2[c2] = s2[c2];
+            name2[c2] = '\0';
+
+            // Add the parameters as hidden and readonly.
+            parameters.addParameter(name1, nullptr, 0, 0.0, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly, Params::Size + i * 2 + 0); // source
+            parameters.addParameter(name2, nullptr, 0, 0.5, ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly, Params::Size + i * 2 + 1); // amount
+        }
+
+        return result;
+    }
+
+    void Controller::Init()
+    {   // Default preset
+        preset = "default";
+
+        for (int i = 0; i < Params::ModCount * ModAmt; i++)
+        {   // First reset all modulations
+            int index = i * 2 + Params::Size;
+            beginEdit(index);
+            setParamNormalized(index, 0);
+            performEdit(index, 0);
+            endEdit(index);
+            beginEdit(index + 1);
+            setParamNormalized(index + 1, 0.5);
+            performEdit(index + 1, 0.5);
+            endEdit(index + 1);
+        }
+
+        for (size_t i = 0; i < Params::Size; i++)
+        {   // Reset all normal parameters
+            beginEdit(i);
+            performEdit(i, ParamNames[i].reset);
+            if (auto p = getParameterObject(i))
+            {   // Use parameter object so we can call 'changed' to always update the ui.
+                p->setNormalized(ParamNames[i].reset);
+                p->changed();
+            }
+            endEdit(i);
+        }
+    }
+
+
+    tresult PLUGIN_API Controller::setComponentState(IBStream* state)
+    {
+        if (!state) return kResultFalse;
+
+        IBStreamer streamer(state, kLittleEndian);
+
+        // Layout of state is:
+        // - preset name
+        // - Normal parameters
+        // - Modulation
+
+        for (size_t i = 0; i < Params::Size; i++)
+        {   // Read all parameters
+            double value = 0.f;
+            if (streamer.readDouble(value) == kResultFalse) return kResultFalse;
+            setParamNormalized(i, value);
+        }
+
+        for (int i = 0; i < Params::ModCount * ModAmt; i++)
+        {   // Read all modulations
+            double value = 0.f;
+            if (streamer.readDouble(value) == kResultFalse) return kResultFalse;
+            setParamNormalized(i * 2 + Params::Size, value);
+            double value2 = 0.f;
+            if (streamer.readDouble(value2) == kResultFalse) return kResultFalse;
+            setParamNormalized(i * 2 + Params::Size + 1, value2);
+        }
+
+        return kResultOk;
+    }
+
+    tresult PLUGIN_API Controller::setState(IBStream* state)
+    {
+        IBStreamer streamer(state, kLittleEndian);
+
+        preset = streamer.readStr8();
+
+        return kResultOk;
+    }
+
+    tresult PLUGIN_API Controller::getState(IBStream* state)
+    {
+        IBStreamer streamer(state, kLittleEndian);
+
+        streamer.writeStr8(preset);
+
+        return kResultOk;
+    }
+
+    tresult PLUGIN_API Controller::getMidiControllerAssignment(int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id)
+    {
+        if (busIndex == 0 && midiControllerNumber == ControllerNumbers::kPitchBend)
+        {
+            id = Params::PitchBend;
+            return kResultTrue;
+        }
+        if (busIndex == 0 && midiControllerNumber == ControllerNumbers::kCtrlModWheel)
+        {
+            id = Params::ModWheel;
+            return kResultTrue;
+        }
+        return kResultFalse;
     }
 }

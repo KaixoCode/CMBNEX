@@ -9,39 +9,10 @@ namespace Kaixo
     class CombineToggle : public CViewContainer
     {
     public:
-        Label* ftrl = nullptr; // Filter title
-        Parameter* enbr = nullptr; // Enable Filter
-        Parameter* fltr = nullptr; // Filter type
-        Parameter* freq = nullptr; // Filter Frequency  
-        Parameter* reso = nullptr; // Filter Resonance  
+        Label* ftrl, * fldl, * drvl, * dcol, * outl;
 
-        Parameter* addm = nullptr;
-        Parameter* minm = nullptr;
-        Parameter* mulm = nullptr;
-        Parameter* ponm = nullptr;
-        Parameter* maxm = nullptr;
-        Parameter* modm = nullptr;
-        Parameter* andm = nullptr;
-        Parameter* inlm = nullptr;
-        Parameter* orrm = nullptr;
-        Parameter* xorm = nullptr;
-
-        Label* fldl = nullptr;
-        Parameter* enbf = nullptr;
-        Parameter* fold = nullptr;
-        Parameter* bias = nullptr;
-
-        Label* drvl = nullptr;
-        Parameter* enbd = nullptr;
-        Parameter* driv = nullptr;
-        Parameter* dgai = nullptr;
-
-        Parameter* dest = nullptr;
-
-        Parameter* dcof = nullptr;
-
-        Label* dcol = nullptr;
-        Label* outl = nullptr;
+        Parameter* enbr, * fltr, * freq, * reso, * addm, * minm, * mulm, * ponm, * maxm, * modm, * andm, * inlm, * orrm, * xorm, 
+            * enbf, * fold, * bias, * enbd, * driv, * dgai, * dest, * dcof;
 
         int index = 0;
 
@@ -68,13 +39,12 @@ namespace Kaixo
                 } };
 
                 dest = new Parameter{ {
+                    .tag = Params::DestX,
                     .editor = editor,
                     .size = { 384 + x,  83, 384 + 20 + x,  83 + 97 + 24 },
                     .type = Parameter::MULTIGROUP,
                     .parts = { "III", "IV", "V", "VI", "O" }, .vertical = true, .padding = 4,
                 } };
-
-                dest->setListener(listener); dest->setTag(Params::DestX);
             }
             else if (index == 1)
             {
@@ -88,13 +58,12 @@ namespace Kaixo
                 } };
 
                 dest = new Parameter{ {
+                    .tag = Params::DestY,
                     .editor = editor,
                     .size = { 384 + x, 131, 384 + 20 + x, 131 + 49 + 24 },
                     .type = Parameter::MULTIGROUP,
                     .parts = { "V", "VI", "O" }, .vertical = true, .padding = 4,
                 } };
-
-                dest->setListener(listener); dest->setTag(Params::DestY);
             }
             else if (index == 2)
             {

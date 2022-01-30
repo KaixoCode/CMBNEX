@@ -44,6 +44,7 @@ namespace Kaixo
             double pressedOld = 0;
             double deltaf = 0;
             double velocity = 1;
+            double rand = 0;
 
             Oscillator sub;
 
@@ -77,6 +78,7 @@ namespace Kaixo
         int lastPressedVoice = 0;
         bool doModulationSync = true;
 
+        std::list<int> m_MonoNotePresses;
         std::array<int, Voices> m_Notes{ -1, -1, -1, -1, -1, -1 };
         std::vector<int> m_Pressed;
         std::vector<int> m_Available{ 0, 1, 2, 3, 4, 5 };
@@ -91,6 +93,8 @@ namespace Kaixo
 
         // Midi event handlers
         void Event(Vst::Event& event) override;
+        void TriggerVoice(int voice, int pitch, int velocity);
+        void ReleaseVoice(int voice, int pitch, int velocity);
         void NotePress(Vst::Event& event);
         void NoteRelease(Vst::Event& event);
 

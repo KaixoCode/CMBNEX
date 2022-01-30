@@ -14,7 +14,9 @@ namespace Kaixo
     }
 
     Parameter::~Parameter()
-    {
+    {   // If a parameter gets destroyed we know the entire frame 
+        // is closed, so we clear all wakeup calls. This is done here
+        // because this is the only place we can do this in time.
         if (settings.editor->controller->wakeupCalls.empty()) return;
         std::lock_guard _(settings.editor->controller->lock);
         settings.editor->controller->wakeupCalls.clear();
@@ -368,18 +370,17 @@ namespace Kaixo
     void Parameter::drawSlider(CDrawContext* pContext)
     {
         auto a = getViewSize();
-        auto v = getValueNormalized() * (getWidth() - 4);
+        auto v = getValueNormalized() * (getWidth() - 1);
         auto w1 = pContext->getStringWidth(valueString);
 
         pContext->setLineWidth(1);
-        pContext->setFrameColor(Border);
         pContext->setFillColor(back);
         a.top += 20;
         a.left += 1;
-        pContext->drawRect(a, kDrawFilledAndStroked);
-        a.left -= 1;
-        a.top -= 1;
-        a.inset({ 2, 2 });
+        pContext->drawRect(a, kDrawFilled);
+        //a.left -= 1;
+        //a.top -= 1;
+        //a.inset({ 2, 2 });
 
         pContext->setFillColor(main);
         if (settings.min == -settings.max)
@@ -407,8 +408,8 @@ namespace Kaixo
         a = getViewSize();
         a.top += 20;
         a.inset({ 2, 2 });
-        pContext->drawString(valueString, { a.getCenter().x - w1 / 2, a.getCenter().y + 4 }, true);
-        pContext->drawString(settings.name, { a.left, a.getTopCenter().y - 8 }, true);
+        pContext->drawString(valueString, { a.getCenter().x - w1 / 2, a.getCenter().y + 6 }, true);
+        pContext->drawString(settings.name, { a.left, a.getTopCenter().y - 7 }, true);
     }
 
     void Parameter::drawNumber(CDrawContext* pContext)
@@ -736,9 +737,11 @@ namespace Kaixo
 
             std::string _v = std::to_string((int)settings.editor->modSource(getTag(), i));
             pContext->setFontColor(main);
-            if (settings.editor->modSource(getTag(), i) == ModSources::Vel) _v = (char)('V');
+            if (settings.editor->modSource(getTag(), i) == ModSources::Ran) _v = (char)('R');
+            else if (settings.editor->modSource(getTag(), i) == ModSources::Mod) _v = (char)('M');
+            else if (settings.editor->modSource(getTag(), i) == ModSources::Vel) _v = (char)('V');
             else if (settings.editor->modSource(getTag(), i) == ModSources::Key) _v = (char)('K');
-            else if (settings.editor->modSource(getTag(), i) >= ModSources::Mac1) _v = (char)('P' + (int)settings.editor->modSource(getTag(), i) - (int)ModSources::Mac1);
+            else if (settings.editor->modSource(getTag(), i) >= ModSources::Mac1) _v = (char)('A' + (int)settings.editor->modSource(getTag(), i) - (int)ModSources::Mac1);
             else if (settings.editor->modSource(getTag(), i) >= ModSources::Env1) _v = std::to_string((int)settings.editor->modSource(getTag(), i) - (int)ModSources::Env1 + 1);
             else if (settings.editor->modSource(getTag(), i) >= ModSources::LFO1) _v = std::to_string((int)settings.editor->modSource(getTag(), i) - (int)ModSources::LFO1 + 1);
             else pContext->setFontColor(OffText);

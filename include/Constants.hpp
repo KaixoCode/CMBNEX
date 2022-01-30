@@ -66,25 +66,25 @@ enum Params
     Freq1,        Freq2,        Freq3,        Freq4,
     Reso1,        Reso2,        Reso3,        Reso4,
 
-    GainX,    GainY,    GainZ,
-    PreGainX, PreGainY, PreGainZ,
-    FreqX,    FreqY,    FreqZ,
-    ResoX,    ResoY,    ResoZ,
-    MixX,     MixY,     MixZ,
-    FoldX,    FoldY,    FoldZ,
-    BiasX,    BiasY,    BiasZ,
+    GainX,      GainY,      GainZ,
+    PreGainX,   PreGainY,   PreGainZ,
+    FreqX,      FreqY,      FreqZ,
+    ResoX,      ResoY,      ResoZ,
+    MixX,       MixY,       MixZ,
+    FoldX,      FoldY,      FoldZ,
+    BiasX,      BiasY,      BiasZ,
     DriveGainX, DriveGainY, DriveGainZ,
-    DriveAmtX, DriveAmtY, DriveAmtZ,
-    AddMixX,  AddMixY,  AddMixZ,
-    MinMixX,  MinMixY,  MinMixZ,
-    MultMixX, MultMixY, MultMixZ,
-    PongMixX, PongMixY, PongMixZ,
-    MaxMixX,  MaxMixY,  MaxMixZ,
-    ModMixX,  ModMixY,  ModMixZ,
-    AndMixX,  AndMixY,  AndMixZ,
-    InlvMixX, InlvMixY, InlvMixZ,
-    OrMixX,   OrMixY,   OrMixZ,
-    XOrMixX,  XOrMixY,  XOrMixZ,
+    DriveAmtX,  DriveAmtY,  DriveAmtZ,
+    AddMixX,    AddMixY,    AddMixZ,
+    MinMixX,    MinMixY,    MinMixZ,
+    MultMixX,   MultMixY,   MultMixZ,
+    PongMixX,   PongMixY,   PongMixZ,
+    MaxMixX,    MaxMixY,    MaxMixZ,
+    ModMixX,    ModMixY,    ModMixZ,
+    AndMixX,    AndMixY,    AndMixZ,
+    InlvMixX,   InlvMixY,   InlvMixZ,
+    OrMixX,     OrMixY,     OrMixZ,
+    XOrMixX,    XOrMixY,    XOrMixZ,
 
     SubGain, SubOvertone,
 
@@ -122,10 +122,10 @@ enum Params
 
     Clipping, Oversample, Retrigger,
 
-    FilterX, FilterY, FilterZ,
-    DCX,     DCY,     DCZ,
-    ENBFoldX, ENBFoldY, ENBFoldZ,
-    ENBDriveX, ENBDriveY, ENBDriveZ,
+    FilterX,    FilterY,    FilterZ,
+    DCX,        DCY,        DCZ,
+    ENBFoldX,   ENBFoldY,   ENBFoldZ,
+    ENBDriveX,  ENBDriveY,  ENBDriveZ,
     ENBFilterX, ENBFilterY, ENBFilterZ,
 
     DestA, DestB, DestC, DestD, DestX, DestY,
@@ -133,7 +133,7 @@ enum Params
     LFOSync1, LFOSync2, LFOSync3, LFOSync4, LFOSync5,
     LFORetr1, LFORetr2, LFORetr3, LFORetr4, LFORetr5,
 
-    PitchBend,
+    PitchBend, Voices, Threading, GlobalGain, ModWheel,
 
     Size
 };
@@ -146,7 +146,7 @@ enum class ModSources
     LFO1, LFO2, LFO3, LFO4, LFO5, 
     Env1, Env2, Env3, Env4, Env5, 
     Mac1, Mac2, Mac3, Mac4, Mac5,
-    Key, Vel,
+    Key, Vel, Mod, Ran,
     Amount,
     //Osc1, Osc2, Osc3, Osc4,
 };
@@ -254,6 +254,10 @@ constexpr ParamInfo ParamNames[]
     { "LFO 1 Retrigger", 1 }, { "LFO 2 Retrigger", 1 }, { "LFO 3 Retrigger", 1 }, { "LFO 4 Retrigger", 1 }, { "LFO 5 Retrigger", 1 },
 
     { "Pitch Bend", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
+    { "Voices", 1, false, true, false, 0, ParameterInfo::kIsHidden },
+    { "Threading", 1, false, true, false, 0, ParameterInfo::kIsHidden },
+    { "Global Gain", 0.5 },
+    { "Mod Wheel", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
 };
 
 constexpr static const char* TimesString[]{

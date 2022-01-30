@@ -42,7 +42,7 @@ namespace Kaixo
                 return table[(int)(Size.size * (val - Size.begin) / (Size.end - Size.begin))];
         }
 
-        double table[Size.size + 1];
+        float table[Size.size + 1];
     };
 
     template<TableAxis Width, TableAxis Height>
@@ -98,12 +98,12 @@ namespace Kaixo
             }
         }
 
-        double table[(Width.size + 1) * (Height.size + 1)];
+        float table[(Width.size + 1) * (Height.size + 1)];
     };
 
     // Convert note number to frequency, uses lookup table 
     // to be more efficient and fast.
-    constexpr TableAxis note2freqd{ .size = 10000, .begin = -100, .end = 135, .constrained = true };
+    constexpr TableAxis note2freqd{ .size = 100000, .begin = -100, .end = 135, .constrained = true };
     const static inline LookupTable<note2freqd> note2freqt = [](double note) { return (440. / 32.) * pow(2, ((note - 9) / 12.0)); };
     inline double noteToFreq(double note) { return note2freqt.get(note); }
 
