@@ -138,7 +138,7 @@ namespace Kaixo
             for (int i = 0; i < Oscillators; i++)
             {   // Oscillator generate
                 if (voice.modulated[Params::Volume1 + i] && params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                    voice.osc[i].sample = voice.osc[i].OffsetOnce(myfmod1(voice.modulated[Params::Phase1 + i] + 5));
+                    voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5));
                 else
                 {
                     voice.osc[i].sample = 0;
@@ -175,7 +175,7 @@ namespace Kaixo
                 voice.sub.SAMPLE_RATE = voice.samplerate;
                 voice.sub.settings.frequency = noteToFreq(voice.frequency + _octave * 12 + _bendOffset);
                 voice.sub.settings.wtpos = voice.modulated[Params::SubOvertone];
-                voice.sub.sample = voice.sub.OffsetOnceClean(0);
+                voice.sub.sample = voice.sub.OffsetClean(0);
             }
         }
 
@@ -474,7 +474,7 @@ namespace Kaixo
 
             voice.lfo[i].settings.wtpos = voice.modulated[Params::LFOPos1 + i];
             voice.lfo[i].settings.shaper3 = voice.modulated[Params::LFOShaper1 + i];
-            voice.lfo[i].sample = voice.lfo[i].OffsetOnceLFO(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
+            voice.lfo[i].sample = voice.lfo[i].OffsetSimple(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
         }
 
         for (int i = 0; i < Oscillators; i++)
