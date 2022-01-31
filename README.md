@@ -5,7 +5,7 @@
 If you run into any crashes/bugs, or you have feedback/questions, contact me over on Discord: `@Kaixo#0001`.
 
 I am making this synth publicly available for free, because I can't be bothered to go through the trouble
-of settings up an entire webshop for this. But it would be awesome if you would consider donating!
+of setting up an entire webshop for this. But it would be awesome if you would consider donating!
 
 [![paypal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/kaixo1/10)
 
