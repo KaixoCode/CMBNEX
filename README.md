@@ -1,5 +1,12 @@
-# CMBNEX
 
+# CMBNEX
+[![paypal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/kaixo1/10)
+
+![image](https://kaixo.me/assets/CMBNEX.png)
+
+If you run into any crashes/bugs, or you have feedback/questions, contact me over on Discord: `@Kaixo#0001`.
+
+## What is CMBNEX?
 CMBNEX Is a 4 oscillator synth that revolves around waveshaping and combining sound using several algorithms. 
 
 ### Oscillators and Waveshaping
@@ -30,5 +37,3 @@ in case this causes any issues.
 ### Presets
 When you press the preset name in the top bar you can select a preset file (.cmbnex). You can save a preset by clicking the Save button.
 The Init button will reset the entire plugin back to the default preset, be careful, this is irreversable!
-
-![image](https://kaixo.me/assets/CMBNEX.png)
