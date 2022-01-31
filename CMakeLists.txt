@@ -38,7 +38,7 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 if(SMTG_ADD_VSTGUI)
     target_sources(${PRJ_NAME}
         PRIVATE
-            resource/myplugineditor.uidesc
+            resource/CMBNEX.uidesc
     )
     target_link_libraries(${PRJ_NAME}
         PRIVATE
@@ -46,7 +46,7 @@ if(SMTG_ADD_VSTGUI)
     )
     smtg_target_add_plugin_resources(${PRJ_NAME}
         RESOURCES
-            "resource/myplugineditor.uidesc"
+            "resource/CMBNEX.uidesc"
     )
 endif(SMTG_ADD_VSTGUI)
 # -------------------

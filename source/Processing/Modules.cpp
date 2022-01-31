@@ -285,7 +285,7 @@ namespace Kaixo
             // Apply the main waveshaper, taking into account mix
             const double _s1 = 
                 Shapers::mainWaveShaper(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + // Shaper mix
-                _wt * (1 - settings.shaper2Mix); // Clean mix
+                _wt * (1 - settings.shaper2Mix); // Clean mix 
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.
             _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
@@ -320,9 +320,6 @@ namespace Kaixo
         }
 
         // Increment phase according to the frequency
-        //phase = phase + settings.frequency / SAMPLE_RATE;
-        //if (phase > 1) phase -= 1;
-
         phase = myfmod1(phase + settings.frequency / SAMPLE_RATE);
 
         return _s; // Our resulting value is returned!
