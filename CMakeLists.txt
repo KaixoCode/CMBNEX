@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14.0)
 set (CMAKE_CXX_STANDARD 20)
 
 # Find VST SDK
-set(vst3sdk_SOURCE_DIR C:/Users/Jeroen/source/repos/VST_SDK/vst3sdk)
+set(vst3sdk_SOURCE_DIR "../VST_SDK/vst3sdk")
 if(NOT vst3sdk_SOURCE_DIR)
     message(FATAL_ERROR "Path to VST3 SDK is empty!")
 endif()
