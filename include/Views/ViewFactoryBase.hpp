@@ -149,6 +149,5 @@ namespace Kaixo
         {
             return val.operator const Steinberg::char8 *();
         }
-
     };
 }

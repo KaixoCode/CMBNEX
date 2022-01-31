@@ -2,7 +2,6 @@
 
 namespace Kaixo
 {
-
     Parameter::Parameter(Settings settings)
         : CControl(settings.size), settings(settings)
     {
@@ -409,7 +408,7 @@ namespace Kaixo
         a.top += 20;
         a.inset({ 2, 2 });
         pContext->drawString(valueString, { a.getCenter().x - w1 / 2, a.getCenter().y + 6 }, true);
-        pContext->drawString(settings.name, { a.left, a.getTopCenter().y - 7 }, true);
+        pContext->drawString(settings.name, { a.left, a.getTopCenter().y - 9 }, true);
     }
 
     void Parameter::drawNumber(CDrawContext* pContext)
@@ -475,7 +474,8 @@ namespace Kaixo
         a.top += 1;
         a.left += 1;
         bool pressed = getValue() > 0.5;
-        BackgroundEffect::draw(pContext, a, 0, settings.dark, true, pressed, 0, settings.enabled);
+        BackgroundEffect::draw(pContext, { .size = a, .pressed = pressed, .dark = settings.dark, 
+            .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
         pContext->setFontColor(getValue() > 0.5 ? text : OffText);
         pContext->drawString(settings.name, { a.getCenter().x - w2 / 2, a.getCenter().y + 6 }, true);
     }
@@ -504,8 +504,8 @@ namespace Kaixo
 
                 pContext->setFillColor(pressed ? main : back);
                 pContext->setFontColor(pressed ? text : OffText);
-
-                BackgroundEffect::draw(pContext, { a.left, _y, a.right, _y + _h - settings.padding - 1 }, 0, settings.dark, true, pressed, 0, settings.enabled);
+                BackgroundEffect::draw(pContext, { .size = { a.left, _y, a.right, _y + _h - settings.padding - 1 }, .pressed = pressed, 
+                    .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x - _w / 2, _y + 6 + (_h - settings.padding - 1) / 2 }, true);
 
                 _y += _h;
@@ -526,7 +526,9 @@ namespace Kaixo
 
                 pContext->setFillColor(pressed ? main : back);
                 pContext->setFontColor(pressed ? text : OffText);
-                BackgroundEffect::draw(pContext, { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, 0, settings.dark, true, pressed, 0, settings.enabled);
+                BackgroundEffect::draw(pContext, { .size = { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, .pressed = pressed,
+                    .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
+
                 pContext->drawString(_n, { _x + (_w - settings.padding - 2) / 2 - _sw / 2, _y + 6 }, true);
 
                 _x += _w;
@@ -620,7 +622,9 @@ namespace Kaixo
 
                 pContext->setFillColor(_set ? main : back);
                 pContext->setFontColor(_set ? text : OffText);
-                BackgroundEffect::draw(pContext, { a.left, _y, a.right, _y + _h - settings.padding - 1 }, 0, settings.dark, true, _set, 0, settings.enabled);
+
+                BackgroundEffect::draw(pContext, { .size = { a.left, _y, a.right, _y + _h - settings.padding - 1 }, .pressed = _set,
+                    .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x - _w / 2, _y + 6 + (_h - settings.padding - 1) / 2 }, true);
 
                 _y += _h;
@@ -640,7 +644,8 @@ namespace Kaixo
 
                 pContext->setFillColor(_set ? main : back);
                 pContext->setFontColor(_set ? text : OffText);
-                BackgroundEffect::draw(pContext, { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, 0, settings.dark, true, _set, 0, settings.enabled);
+                BackgroundEffect::draw(pContext, { .size = { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, .pressed = _set,
+                    .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x + (_w - settings.padding - 2) / 2 - _sw / 2, _y + 6 }, true);
 
                 _x += _w;
@@ -737,11 +742,11 @@ namespace Kaixo
 
             std::string _v = std::to_string((int)settings.editor->modSource(getTag(), i));
             pContext->setFontColor(main);
-            if (settings.editor->modSource(getTag(), i) == ModSources::Ran) _v = (char)('R');
-            else if (settings.editor->modSource(getTag(), i) == ModSources::Mod) _v = (char)('M');
-            else if (settings.editor->modSource(getTag(), i) == ModSources::Vel) _v = (char)('V');
-            else if (settings.editor->modSource(getTag(), i) == ModSources::Key) _v = (char)('K');
-            else if (settings.editor->modSource(getTag(), i) >= ModSources::Mac1) _v = (char)('A' + (int)settings.editor->modSource(getTag(), i) - (int)ModSources::Mac1);
+            if (settings.editor->modSource(getTag(), i) == ModSources::Ran) _v = (char)('r');
+            else if (settings.editor->modSource(getTag(), i) == ModSources::Mod) _v = (char)('m');
+            else if (settings.editor->modSource(getTag(), i) == ModSources::Vel) _v = (char)('v');
+            else if (settings.editor->modSource(getTag(), i) == ModSources::Key) _v = (char)('k');
+            else if (settings.editor->modSource(getTag(), i) >= ModSources::Mac1) _v = (char)('P' + (int)settings.editor->modSource(getTag(), i) - (int)ModSources::Mac1);
             else if (settings.editor->modSource(getTag(), i) >= ModSources::Env1) _v = std::to_string((int)settings.editor->modSource(getTag(), i) - (int)ModSources::Env1 + 1);
             else if (settings.editor->modSource(getTag(), i) >= ModSources::LFO1) _v = std::to_string((int)settings.editor->modSource(getTag(), i) - (int)ModSources::LFO1 + 1);
             else pContext->setFontColor(OffText);

@@ -3,50 +3,22 @@
 
 namespace Kaixo
 {
+    // Simple drag source for a modulation source.
     class DragThing : public CView, public IDragCallback
     {
     public:
         using CView::CView;
 
-        ModSources source;
+        ModSources source; // Mod source of this drag thing
 
-        bool dragging = false;
+        bool dragging = false; // Currently dragging, don't edit manually!
         void dragWillBegin(IDraggingSession* session, CPoint pos) {};
         void dragMoved(IDraggingSession* session, CPoint pos) {};
         void dragEnded(IDraggingSession* session, CPoint pos, DragOperation result) { dragging = false; };
 
-        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
-        {
-            return kMouseEventHandled;
-        }
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override;
+        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override;
 
-        CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override
-        {
-            if (!dragging && getViewSize().pointInside(where))
-            {
-                dragging = true;
-                int* _data = new int[1];
-                _data[0] = (int)source;
-                doDrag(DragDescription{ CDropSource::create((void*)_data, sizeof(int) * 1, IDataPackage::Type::kBinary) }, this);
-                return kMouseEventHandled;
-            }
-
-            return kMouseEventNotHandled;
-        }
-
-        void draw(CDrawContext* pContext) override
-        {
-            constexpr CColor back = KnobBack;
-            constexpr CColor brdr = Border;
-            auto a = getViewSize();
-            pContext->setLineWidth(1);
-            a.top += 1;
-            a.left += 1;
-            pContext->setFillColor({ 255, 255, 255, 16 });
-            pContext->drawRect(a, kDrawFilled);
-            a.right = a.left + 3;
-            pContext->setFillColor(MainGreen);
-            pContext->drawRect(a, kDrawFilled);
-        }
+        void draw(CDrawContext* pContext) override;
     };
 }

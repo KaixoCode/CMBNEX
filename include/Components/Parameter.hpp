@@ -6,12 +6,13 @@
 
 namespace Kaixo
 {
+    // Parameter ccontrol.
     class Parameter : public CControl, public IDropTarget
     {
     public:
         enum Type { KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP, SMALLSLIDER };
 
-        double modulation = 0;
+        double modulation = 0; // Current modulation value (auto updated from Processor)
 
         struct Settings
         {
@@ -55,20 +56,24 @@ namespace Kaixo
         Parameter(Settings settings = {});
         ~Parameter() override;
 
+        // Get modulation value
         double getModValue() { return constrain(modulation, 0., 1.); }
-        int ModIndexPos(CPoint pos) const;
+        int ModIndexPos(CPoint pos) const; // Converts pos to mod index
 
+        // Drag/drop methods
         DragOperation onDragEnter(DragEventData data) override;
         DragOperation onDragMove(DragEventData data) override;
         void onDragLeave(DragEventData data) override;
         bool onDrop(DragEventData data) override;
 
+        // Mouse methods
         CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override;
         CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons) override;
         CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons) override;
 
-        void UpdateUnitText();
+        void UpdateUnitText(); // Update the unit text
 
+        // Draw methods
         void drawKnob(CDrawContext* pContext);
         void drawSlider(CDrawContext* pContext);
         void drawNumber(CDrawContext* pContext);

@@ -1,5 +1,6 @@
-#include "Processing/Processor.hpp"
+#include "Processing/Modules.hpp"
 #include "Controller.hpp"
+#include "Processing/Processor.hpp"
 #include "CIDs.hpp"
 #include "version.hpp"
 

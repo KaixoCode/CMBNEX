@@ -234,7 +234,6 @@ namespace Kaixo
         }
     }
 
-
     tresult PLUGIN_API Controller::setComponentState(IBStream* state)
     {
         if (!state) return kResultFalse;

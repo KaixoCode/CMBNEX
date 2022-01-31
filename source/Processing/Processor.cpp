@@ -10,8 +10,7 @@ namespace Kaixo
         modulationThread.join();
     }
 
-
-    void Processor::TriggerVoice(int voice, int pitch, int velocity)
+    void Processor::TriggerVoice(int voice, int pitch, double velocity)
     {
         voices[voice].rand = random() * 0.5 + 0.5;
         voices[voice].velocity = velocity;
@@ -75,7 +74,7 @@ namespace Kaixo
         }
     }
 
-    void Processor::ReleaseVoice(int voice, int pitch, int velocity)
+    void Processor::ReleaseVoice(int voice, int pitch, double velocity)
     {
         for (int i = 0; i < Envelopes; i++)
             voices[voice].env[i].Gate(false);
@@ -95,7 +94,8 @@ namespace Kaixo
             else
             {
                 // Otherwise we'll remove the released note from the stack
-                m_MonoNotePresses.pop_back();
+                if (!m_MonoNotePresses.empty())
+                    m_MonoNotePresses.pop_back();
 
                 // And if notes remain on the stack, we'll trigger that one again.
                 if (!m_MonoNotePresses.empty())
@@ -295,10 +295,11 @@ namespace Kaixo
         _res += _cs[Combines * 2];
 
         // Apply global panning
-        _res *= std::min((channel == 1 ? 2 * voice.modulated[Params::Panning] : 2 - 2 * voice.modulated[Params::Panning]), 1.); // Panning
+        //_res *= std::min((channel == 1 ? 2 * voice.modulated[Params::Panning] : 2 - 2 * voice.modulated[Params::Panning]), 1.); // Panning
 
         // Clip sample, apply gain envelope and return.
-        return Clip(voice.env[0].Apply(_res, channel), channel); // Envelope 0 is gain
+        //return Clip(voice.env[0].Apply(_res, channel) * params[{ Params::GlobalGain, ratio }], channel); // Envelope 0 is gain
+        return voice.env[0].Apply(_res, channel) * voice.modulated[Params::GlobalGain] * 2;
     }
 
     void Processor::Generate(ProcessData& data, size_t s)
@@ -346,12 +347,12 @@ namespace Kaixo
 
     inline double Processor::Clip(double a, int channel)
     {   // Determine clipping mode
-        const size_t f = std::floor(params.goals[Params::Clipping] * 3);
-        switch (f)
-        {
-        case 0: a = std::tanh(a) * 1.312; break; // Warm, simple tanh curve
-        case 1: a = (1.99 * a) / (1 + std::abs(a)); break; // hard is x/abs(x) type curve
-        }
+        //const size_t f = std::floor(params.goals[Params::Clipping] * 3);
+        //switch (f)
+        //{
+        //case 0: a = std::tanh(a) * 1.312; break; // Warm, simple tanh curve
+        //case 1: a = (1.99 * a) / (1 + std::abs(a)); break; // hard is x/abs(x) type curve
+        //}
         return constrain(a, -1., 1.); // Always constrain value.
     }
 
@@ -607,8 +608,6 @@ namespace Kaixo
         {
             double ratio = index / swapBuffer.amount;
 
-            double gain = params[{ Params::GlobalGain, ratio }];
-
             CalculateModulation(voice, ratio);
             UpdateComponentParameters(voice, ratio);
 
@@ -617,8 +616,8 @@ namespace Kaixo
                 const double l = GenerateSample(0, *processData, voice, ratio);
                 const double r = GenerateSample(1, *processData, voice, ratio);
                 swapBuffer.lock.lock();
-                swapBuffer.left[index] += l * gain;
-                swapBuffer.right[index] += r * gain;
+                swapBuffer.left[index] += l;
+                swapBuffer.right[index] += r;
                 swapBuffer.lock.unlock();
             }
             else // Oversampling
@@ -643,8 +642,8 @@ namespace Kaixo
                     _sumr += _r;
                 }
                 swapBuffer.lock.lock();
-                swapBuffer.left[index] += gain * _suml / _osa;
-                swapBuffer.right[index] += gain * _sumr / _osa;
+                swapBuffer.left[index] += _suml / _osa;
+                swapBuffer.right[index] += _sumr / _osa;
                 swapBuffer.lock.unlock();
             }
         }

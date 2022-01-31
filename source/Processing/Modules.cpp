@@ -2,6 +2,178 @@
 
 namespace Kaixo
 {
+    constexpr TableAxis note2freqd{ .size = 100000, .begin = -100, .end = 135, .constrained = true };
+    const LookupTable<note2freqd> note2freqt = [](double note) { return (440. / 32.) * pow(2, ((note - 9) / 12.0)); };
+    double noteToFreq(double note) { return note2freqt.get(note); }
+
+    namespace Shapers
+    {
+        // Interpolating shapers lookup table axis.
+        constexpr TableAxis shaperx{ .size = 5000, .begin = -1, .end = 1, .constrained = true };
+        constexpr TableAxis shapery{ .size = 1000, .begin = 0, .end = 1 };
+
+        // Wave shaper 0% morph lookup table
+        const LookupTable<shaperx, shapery> ws0m = [&](double x, double amt) {
+            constexpr static double steps = 4;
+
+            constexpr static double(*funcs[(int)steps + 2])(double, double){
+                shaper7, shaper8, noShaper, shaper0, shaper6, shaper6,
+            };
+
+            const int i = amt * 4 + 1;
+            const double r = myfmod1(amt * 4);
+            const auto& func1 = funcs[i - 1];
+            const auto& func2 = funcs[i];
+            const double s1 = func1(x, 1 - r) * (1 - r);
+            const double s2 = func2(x, r) * r;
+            return s1 + s2;
+        };
+
+        // Wave shaper 100% morph lookup table
+        const LookupTable<shaperx, shapery> ws100m = [&](double x, double amt) {
+            constexpr static double steps = 4;
+
+            constexpr static double(*funcs[(int)steps + 2])(double, double){
+                shaper3, shaper2, shaper9, shaper5, shaper1, shaper1,
+            };
+
+            const int i = amt * steps + 1;
+            const double r = myfmod1(amt * steps);
+            const auto& func1 = funcs[i - 1];
+            const auto& func2 = funcs[i];
+            const double s3 = func1(x, 1 - r) * (1 - r);
+            const double s4 = func2(x, r) * r;
+            return s3 + s4;
+        };
+
+        // Phase shaper 0% morph lookup table
+        const LookupTable<shaperx, shapery> ps0m = [&](double x, double amt) {
+            constexpr static double steps = 4;
+
+            constexpr static double(*funcs[(int)steps + 2])(double, double){
+                shaper7, shaper8, noShaper, shaper0, shaper6, shaper6,
+            };
+
+            const int i = amt * steps + 1;
+            const double r = myfmod1(amt * steps);
+            const auto& func1 = funcs[i - 1];
+            const auto& func2 = funcs[i];
+            const double s1 = func1(x, 1 - r) * (1 - r);
+            const double s2 = func2(x, r) * r;
+            return constrain(s1 + s2, 0., 1.);
+        };
+
+        // Phase shaper 100% morph lookup table
+        const LookupTable<shaperx, shapery> ps100m = [&](double x, double amt) {
+            constexpr static double steps = 4;
+
+            constexpr static double(*funcs[(int)steps + 2])(double, double){
+                shaper3, shaper2, shaper9, shaper5, shaper1, shaper1,
+            };
+
+            const int i = amt * steps + 1;
+            const double r = myfmod1(amt * steps);
+            const auto& func1 = funcs[i - 1];
+            const auto& func2 = funcs[i];
+            const double s3 = func1(x, 1 - r) * (1 - r);
+            const double s4 = func2(x, r) * r;
+            return constrain(s3 + s4, 0., 1.);
+        };
+
+        double mainWaveShaper(double x, double amt, double morph)
+        {   // Interpolate between 0% and 100% morph tables, since a 3d lookup would use too much memory
+            return (1 - morph) * ws0m.get(x, amt) + morph * ws100m.get(x, amt);
+        }
+
+        double mainPhaseShaper(double x, double amt, double morph)
+        {   // Interpolate between 0% and 100% morph tables, since a 3d lookup would use too much memory
+            return (1 - morph) * ps0m.get(x, amt) + morph * ps100m.get(x, amt);
+        }
+
+        // Wavefolder lookup table
+        const LookupTable <
+            TableAxis{ .size = 100000, .begin = -4, .end = 4 }
+        > foldt = [](double x) {
+            constexpr static double b = 4;
+            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        };
+
+        double fold(double x, double bias)
+        {
+            //return foldt.get(myfmod1((x + bias) * 0.25) * 4);
+            constexpr static double b = 4;
+            x += bias;
+            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        }
+
+        // Drive lookup table, 1d.
+        const LookupTable <
+            TableAxis{ .size = 100000, .begin = -10, .end = 10, .constrained = true }
+        > drivet = [](double x) {
+            const double _abs = std::max(std::abs(x), 0.000001);
+            const double _pow = (x / _abs) * (1 - std::exp((-x * x) / _abs));
+            return _pow;
+        };
+
+        double drive(double x, double gain, double amt)
+        {   // Drive table is 1d, interpolate between constrained value.
+            const double _gain = gain * x;
+            return drivet.get(_gain) * amt + (constrain(_gain, -1., 1.)) * (1 - amt);
+        }
+
+        // Power curve lookup table, interpolate x-axis once again to prevent aliasing.
+        const LookupTable <
+            TableAxis{ .size = 1000, .begin = 0, .end = 1, .interpolate = true },
+            TableAxis{ .size = 1000, .begin = -1, .end = 1 }
+        > powerCurvet = [](double x, double curve) {
+            constexpr double MULT = 16;
+            const double a = curve < 0 ? (curve * MULT - 1) : curve * MULT + 1;
+            constexpr static auto b = 0.5;
+            if (a >= 0)
+            {
+                const auto pba = std::pow(b, a);
+                return (std::pow(b * x + b, a) - pba) / (1 - pba);
+            }
+            else
+            {
+                const auto pba = std::pow(b, -a);
+                return 1 - (std::pow(b * (1 - x) + b, -a) - pba) / (1 - pba);
+            }
+        };
+
+        double powerCurve(double x, double curve) { return powerCurvet.get(x, curve); }
+    }
+
+    namespace Wavetables
+    {
+        // Lookup for basic wavetable, interpolate x-axis, since that's the phase
+        // and that needs to be smooth to avoid aliasing.
+        const LookupTable <
+            TableAxis{ .size = 1000, .begin = 0, .end = 1, .interpolate = true },
+            TableAxis{ .size = 1000, .begin = 0, .end = 1 }
+        > basict = [](double phase, double wtpos) {
+            double p = phase;
+            if (wtpos < 0.33)
+            {
+                const double r = wtpos * 3;
+                return triangle(p, wtpos) * r + sine(p, wtpos) * (1 - r);
+            }
+            else if (wtpos < 0.66)
+            {
+                const double r = (wtpos - 0.33) * 3;
+                return saw(p, wtpos) * r + triangle(p, wtpos) * (1 - r);
+            }
+            else
+            {
+                const double r = (wtpos - 0.66) * 2.9;
+                return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
+            }
+        };
+
+        // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
+        double basic(double phase, double wtpos) { return basict.get(phase, wtpos); }
+    }
+
     // ADSR
     void ADSR::Generate(size_t c)
     {   // Only generate on channel == 0
@@ -148,8 +320,10 @@ namespace Kaixo
         }
 
         // Increment phase according to the frequency
-        phase = phase + settings.frequency / SAMPLE_RATE;
-        if (phase > 1) phase -= 1;
+        //phase = phase + settings.frequency / SAMPLE_RATE;
+        //if (phase > 1) phase -= 1;
+
+        phase = myfmod1(phase + settings.frequency / SAMPLE_RATE);
 
         return _s; // Our resulting value is returned!
     }

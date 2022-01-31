@@ -32,5 +32,5 @@
 #define stringFileDescription    "CMBNEX VST3"
 #endif
 #define stringCompanyName        "Kaixo\0"
-#define stringLegalCopyright    "Copyright(c) 2021 Kaixo."
+#define stringLegalCopyright    "Copyright(c) 2022 Kaixo."
 #define stringLegalTrademarks    "VST is a trademark of Steinberg Media Technologies GmbH"

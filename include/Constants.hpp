@@ -105,7 +105,9 @@ enum Params
     Env1RC,  Env2RC,  Env3RC,  Env4RC,  Env5RC,
 
     Transpose, Bend, Glide,
-    Panning, Time,
+    //Panning, 
+    GlobalGain,
+    Time,
     
     ModCount,
 
@@ -120,7 +122,8 @@ enum Params
 
     SubOct,
 
-    Clipping, Oversample, Retrigger,
+    //Clipping, 
+    Oversample, Retrigger,
 
     FilterX,    FilterY,    FilterZ,
     DCX,        DCY,        DCZ,
@@ -133,7 +136,7 @@ enum Params
     LFOSync1, LFOSync2, LFOSync3, LFOSync4, LFOSync5,
     LFORetr1, LFORetr2, LFORetr3, LFORetr4, LFORetr5,
 
-    PitchBend, Voices, Threading, GlobalGain, ModWheel,
+    PitchBend, Voices, Threading, ModWheel,
 
     Size
 };
@@ -143,17 +146,18 @@ constexpr size_t ModAmt = 4;
 enum class ModSources 
 {
     None, 
-    LFO1, LFO2, LFO3, LFO4, LFO5, 
-    Env1, Env2, Env3, Env4, Env5, 
-    Mac1, Mac2, Mac3, Mac4, Mac5,
-    Key, Vel, Mod, Ran,
+    LFO1, LFO2, LFO3, LFO4, LFO5, // 1-5
+    Env1, Env2, Env3, Env4, Env5, // 1-5
+    Mac1, Mac2, Mac3, Mac4, Mac5, // a, b, c, d, e
+    Key, Vel, Mod, Ran, // K, V, M, R
     Amount,
-    //Osc1, Osc2, Osc3, Osc4,
+    //Osc1, Osc2, Osc3, Osc4, // A, B, C, D
+    //Cmb1, Cmb2, Cmb3, // X, Y, Z
 };
 
 constexpr ParamInfo ParamNames[]
 {
-    { "Macro 1", 0 }, { "Macro 2", 0 }, { "Macro 3", 0 }, { "Macro 4", 0 }, { "Macro 5", 0 },
+    { "Macro P", 0 }, { "Macro Q", 0 }, { "Macro R", 0 }, { "Macro S", 0 }, { "Macro T", 0 },
 
     { "A Gain", 1 },           { "B Gain", 0 },           { "C Gain", 0 },           { "D Gain", 0 },
     { "A Pitch", 0.5, 1, 0 },  { "B Pitch", 0.5, 1, 0 },  { "C Pitch", 0.5, 1, 0 },  { "D Pitch", 0.5, 1, 0 },
@@ -224,7 +228,9 @@ constexpr ParamInfo ParamNames[]
     { "Gain R Slope", .25 },   { "Env 2 R Slope", .25 },    { "Env 3 R Slope", .25 },    { "Env 4 R Slope", .25 },    { "Env 5 R Slope", .25 },
 
     { "Transpose", 0.5, true, false, true }, { "Bend", 0.0416666 }, { "Glide", 0, false, true, false },
-    { "Pan", 0.5 }, { "Time", 0.5 },
+    //{ "Pan", 0.5 }, 
+    { "Global Gain", 0.5 },
+    { "Time", 0.5 },
 
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
 
@@ -239,7 +245,8 @@ constexpr ParamInfo ParamNames[]
 
     { "Octave", 0.5, false, true, true, 4 },
 
-    { "Clipping", 1 }, { "Oversample", 0.25 }, { "Retrigger", 1 },
+    //{ "Clipping", 1 }, 
+    { "Oversample", 0.25 }, { "Retrigger", 1 },
 
     { "Filter X", 0 }, { "Filter Y", 0 }, { "Filter Z", 0 },
     { "DC X", 0 },     { "DC Y", 0 },     { "DC Z", 0 },
@@ -256,7 +263,6 @@ constexpr ParamInfo ParamNames[]
     { "Pitch Bend", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
     { "Voices", 1, false, true, false, 0, ParameterInfo::kIsHidden },
     { "Threading", 1, false, true, false, 0, ParameterInfo::kIsHidden },
-    { "Global Gain", 0.5 },
     { "Mod Wheel", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
 };
 
