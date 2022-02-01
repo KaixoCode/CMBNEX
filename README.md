@@ -18,8 +18,8 @@ CMBNEX Is a 4 oscillator synth that revolves around waveshaping and combining so
 The main oscillators all contain a variety of parameters to make complex and unique wave shapes. The Waveshaper
 section contains 9 unique waveshaping algorithms. SHP-X will transform the phase, and SHP-Y will transform the level.
 With Morph at 0% the SHP-X and SHP-Y both morph between 4 softer waveshapers, but by turning up the Morph it will
-interpolate with 5 sharper waveshapers. At 100% Morph only the sharp waveshapers are present.
-The result will then be sent to the specified outputs, which can either be a Combiner, or the main output ('o'). 
+interpolate with 5 sharper waveshapers. At 100% Morph only the sharp waveshapers are present. 
+The output of the oscillator can be sent to Combiners and the main output ('o'). 
 
 ### Combiners
 A Combiner has 2 inputs, marked with roman numerals. Those inputs will be combined using several algorithms. 
