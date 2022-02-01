@@ -34,22 +34,15 @@ target_include_directories(${PRJ_NAME} PRIVATE
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PRJ_NAME})
 
-#- VSTGUI Wanted ----
-if(SMTG_ADD_VSTGUI)
-    target_sources(${PRJ_NAME}
-        PRIVATE
-            resource/CMBNEX.uidesc
-    )
-    target_link_libraries(${PRJ_NAME}
-        PRIVATE
-            vstgui_support
-    )
-    smtg_target_add_plugin_resources(${PRJ_NAME}
-        RESOURCES
-            "resource/CMBNEX.uidesc"
-    )
-endif(SMTG_ADD_VSTGUI)
-# -------------------
+target_sources(${PRJ_NAME}
+    PRIVATE
+        resource/CMBNEX.uidesc
+)
+
+smtg_target_add_plugin_resources(${PRJ_NAME}
+    RESOURCES
+        "resource/CMBNEX.uidesc"
+)
 
 smtg_target_add_plugin_snapshots (${PRJ_NAME}
     RESOURCES
@@ -59,6 +52,7 @@ smtg_target_add_plugin_snapshots (${PRJ_NAME}
 target_link_libraries(${PRJ_NAME}
     PRIVATE
         sdk
+        vstgui_support
 )
 
 if(SMTG_MAC)
@@ -91,3 +85,27 @@ target_precompile_headers(${PRJ_NAME} PUBLIC
   "${SRC}include/pch.hpp"
 )
 
+option(CMBNEX_BUILD_TESTS "Build CMBNEX tests")
+
+if(CMBNEX_BUILD_TESTS)
+file(GLOB_RECURSE TEST_SOURCE
+  "${SRC}tests/*.cpp"
+  "${SRC}tests/*.hpp"
+  "${SRC}source/Processing/*.cpp"
+  "${SRC}include/Processing/*.hpp"
+)
+
+add_executable(${PRJ_NAME}Tests
+  ${TEST_SOURCE}
+)
+
+target_compile_definitions(${PRJ_NAME}Tests PUBLIC CMBNEX_TESTS)
+
+target_include_directories(${PRJ_NAME}Tests PUBLIC
+  ${SRC}include
+)
+
+target_link_libraries(${PRJ_NAME}Tests PRIVATE
+  sdk
+)
+endif(CMBNEX_BUILD_TESTS)

@@ -6,7 +6,7 @@ using namespace Steinberg;
 namespace Kaixo 
 {
     MyEditor::MyEditor(Controller* controller)
-        : VST3Editor(dynamic_cast<EditController*>(controller), "view", "myplugineditor.uidesc"),
+        : VST3Editor(dynamic_cast<EditController*>(controller), "view", "CMBNEX.uidesc"),
         controller(controller)
     {
         CView::idleRate = 60;

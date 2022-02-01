@@ -2,11 +2,12 @@
 #include "pch.hpp"
 #include "CIDs.hpp"
 #include "Modules.hpp"
-#include "Components/Parameter.hpp"
 #include "Utils/ThreadPool.hpp"
 #include "Utils/Utils.hpp"
-#include "Views/MainView.hpp"
 #include "Processing/BaseProcessor.hpp"
+#ifndef CMBNEX_TESTS
+#include "Views/MainView.hpp"
+#endif
 
 namespace Kaixo
 {

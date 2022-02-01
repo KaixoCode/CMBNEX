@@ -11,16 +11,19 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
+#include "pluginterfaces/base/smartpointer.h"
+
+#ifndef CMBNEX_TESTS
 #include "vstgui/plugin-bindings/vst3editor.h"
 #include "vstgui/vstgui.h"
 #include "vstgui/vstgui_uidescription.h"
 #include "vstgui/uidescription/detail/uiviewcreatorattributes.h"
 #include "vstgui/uidescription/uiviewfactory.h"
-#include "pluginterfaces/base/smartpointer.h"
+using namespace VSTGUI;
+#endif 
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
-using namespace VSTGUI;
 
 #include "Constants.hpp"
 
@@ -41,6 +44,7 @@ using namespace VSTGUI;
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
 #endif
 

@@ -4,6 +4,7 @@ constexpr const char* UPDATE_MODULATION = "update modulation";
 constexpr const char* UPDATE_MODULATION_PARAM = "update modulation param";
 constexpr const char* UPDATE_MODULATION_VALUE = "update modulation value";
 
+#ifndef CMBNEX_TESTS
 constexpr CColor Background = CColor{ 15, 15, 15, 255 };
 constexpr CColor MainGreen =  CColor{ 0, 179, 98, 255 };
 constexpr CColor MainBack =  CColor{ 25, 25, 25, 255 };
@@ -20,6 +21,7 @@ constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
 constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
 constexpr CColor OffText = CColor{ 100, 100, 100, 255 };
 constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
+#endif 
 
 struct ParamInfo
 {
