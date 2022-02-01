@@ -187,7 +187,7 @@ namespace Kaixo
         {
             for (int i = 0; i < Oscillators; i++)
             {   // Oscillator generate
-                if (voice.modulated[Params::Volume1 + i] && params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
+                if (params.goals[Params::Volume1 + i] && params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
                     voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5));
                 else
                 {
@@ -294,11 +294,7 @@ namespace Kaixo
         // Add the signals that were sent directly to output.
         _res += _cs[Combines * 2];
 
-        // Apply global panning
-        //_res *= std::min((channel == 1 ? 2 * voice.modulated[Params::Panning] : 2 - 2 * voice.modulated[Params::Panning]), 1.); // Panning
-
         // Clip sample, apply gain envelope and return.
-        //return Clip(voice.env[0].Apply(_res, channel) * params[{ Params::GlobalGain, ratio }], channel); // Envelope 0 is gain
         return voice.env[0].Apply(_res, channel) * voice.modulated[Params::GlobalGain] * 2;
     }
 
@@ -345,17 +341,6 @@ namespace Kaixo
         }
     }
 
-    inline double Processor::Clip(double a, int channel)
-    {   // Determine clipping mode
-        //const size_t f = std::floor(params.goals[Params::Clipping] * 3);
-        //switch (f)
-        //{
-        //case 0: a = std::tanh(a) * 1.312; break; // Warm, simple tanh curve
-        //case 1: a = (1.99 * a) / (1 + std::abs(a)); break; // hard is x/abs(x) type curve
-        //}
-        return constrain(a, -1., 1.); // Always constrain value.
-    }
-
     inline double Processor::Combine(double a, double b, int index, Voice& voice)
     {   // Calculate all the combines
         const auto mmin = voice.modulated[Params::MinMixX + index] ? voice.modulated[Params::MinMixX + index] * CombineSingle(a, b, MIN) : 0;
@@ -379,7 +364,7 @@ namespace Kaixo
         return voice.modulated[Params::MixX + index] * 2 * (1 / multiplier) * (mmin + mult + pong + mmax + mmod + mand + inlv + mmor + mxor + madd) + (1 - voice.modulated[Params::MixX + index]) * (a + b);
     }
 
-    inline double Processor::CombineSingle(double a, double b, int mode)
+    double Processor::CombineSingle(double a, double b, int mode)
     {   // Calculate a couple helper values
         const uint64_t _a = std::bit_cast<uint64_t>(a);
         const uint64_t _b = std::bit_cast<uint64_t>(b);
@@ -462,6 +447,7 @@ namespace Kaixo
                 voice.modulated[m] = constrain(voice.modulated[m], 0., 1.);
         }
     }
+
     void Processor::UpdateComponentParameters(Voice& voice, double ratio)
     {   // Get BPM from process context if valid, otherwise just use 128
         double bpm = (processData->processContext->state & ProcessContext::kTempoValid) ? processData->processContext->tempo : 128;
@@ -533,8 +519,6 @@ namespace Kaixo
             }
             else
             {
-                size_t _type = std::floor(params[{ Params::LFORate1 + i, ratio }] * (TimesAmount - 1));
-
                 double _f = _timeMult * voice.modulated[Params::LFORate1 + i] * voice.modulated[Params::LFORate1 + i] * 29.9 + 0.1; // Frequency of the oscillations
                 double _ps = 1 / _f; // Seconds per oscillation
                 double _spp = _ps * processData->processContext->sampleRate; // Samples per oscillation

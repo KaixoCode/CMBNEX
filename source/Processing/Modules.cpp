@@ -259,6 +259,10 @@ namespace Kaixo
 
     double Oscillator::Offset(double phaseoffset)
     {
+        // Increment phase according to the frequency
+        double phase = this->phase;
+        this->phase = myfmod1(this->phase + settings.frequency / SAMPLE_RATE);
+
         double _s = 0;
         const double _pw = settings.pw * 2 - 1;
 
@@ -271,7 +275,7 @@ namespace Kaixo
 
             // Pulse width calculations
             const double _d = std::max(0.000001, 1 - _pw); // Calculate phase divisor for pulse width.
-            const double _p1 = _ph / _d; // When this is > 1, we're past 1 oscillation, remainder returns 0.
+            if (_ph / _d > 1) return 0; // When this is > 1, we're past 1 oscillation, remainder returns 0.
 
             // Here we apply the phase divisor to the phase, and also use the phase offset. Always fmod 1.
             const double _phase = myfmod1((_ph) / _d + phaseoffset + 1000000);
@@ -280,7 +284,7 @@ namespace Kaixo
             const double _dphase = myfmod1(Shapers::powerCurve(_phase, settings.bend * 2 - 1) * (settings.sync * 7 + 1) + 1000000);
 
             // Finally we can take the value of the wavetable at the calculated phase.
-            const double _wt = Wavetables::basic(_dphase, settings.wtpos);
+            const double _wt = Wavetables::basic(_dphase, settings.wtpos); 
 
             // Apply the main waveshaper, taking into account mix
             const double _s1 = 
@@ -288,7 +292,7 @@ namespace Kaixo
                 _wt * (1 - settings.shaper2Mix); // Clean mix 
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.
-            _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
+            _s = Shapers::simpleshaper(_s1, settings.shaper3);
         }
         else
         {   // Apply phase shaper, taking into account mix
@@ -298,7 +302,7 @@ namespace Kaixo
 
             // Since pulse width < 0 here, we do 1 + _pw here.
             const double _d = std::max(0.000001, 1 + _pw); // Calculate phase divisor for pulse width.
-            const double _p1 = (1 - _ph) / _d;  // When this is > 1, we're past 1 oscillation, remainder returns 0.
+            if ((1 - _ph) / _d > 1) return 0;  // When this is > 1, we're past 1 oscillation, remainder returns 0.
 
             // Here we apply the phase divisor to the phase, we need to add the pulse width because start of the waveshape
             // will be 0, not the end, so we need to offset by that amount. Also use the phase offset. Always fmod 1.
@@ -316,11 +320,8 @@ namespace Kaixo
                 _wt * (1 - settings.shaper2Mix); // Clean mix
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.
-            _s = _p1 > 1 ? 0 : Shapers::simpleshaper(_s1, settings.shaper3);
+            _s = Shapers::simpleshaper(_s1, settings.shaper3);
         }
-
-        // Increment phase according to the frequency
-        phase = myfmod1(phase + settings.frequency / SAMPLE_RATE);
 
         return _s; // Our resulting value is returned!
     }

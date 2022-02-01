@@ -111,8 +111,7 @@ namespace Kaixo
         void CalculateModulation(Voice& voice, double ratio);
         void UpdateComponentParameters(Voice& voice, double ratio);
 
-        double Clip(double a, int channel);
         double Combine(double a, double b, int index, Voice& voice);
-        double CombineSingle(double a, double b, int mode);
+        static double CombineSingle(double a, double b, int mode);
     };
 }

@@ -365,8 +365,20 @@ namespace Kaixo
             if (buttons.isDoubleClick())
             {
                 viewWave ^= true;
-                if (viewWave) wfrm->setViewSize({ 5, 5, getWidth() - 5, getHeight() - 2 }), enbl->setVisible(false);
-                else wfrm->setViewSize({ 140, 35, 140 + 87, 35 + 75 }), enbl->setVisible(true);
+                if (viewWave) 
+                    wfrm->setViewSize({ 5, 5, getWidth() - 5, getHeight() - 5 }), 
+                    enbl->setVisible(false), 
+                    pann->setVisible(false), 
+                    volm->setVisible(false), 
+                    tune->setVisible(false), 
+                    detn->setVisible(false);
+                else 
+                    wfrm->setViewSize({ 140, 35, 140 + 87, 35 + 75 }), 
+                    enbl->setVisible(true), 
+                    pann->setVisible(true), 
+                    volm->setVisible(true), 
+                    tune->setVisible(true), 
+                    detn->setVisible(true);
             }
         }
 

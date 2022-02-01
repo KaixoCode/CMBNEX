@@ -8,6 +8,7 @@ namespace Kaixo
         a.inset({ settings.sides != 1 ? settings.edge : 0, settings.sides != 2 ? settings.edge : 0 });
 
         bool corner = !settings.button;
+        corner = false;
 
         constexpr static auto MainGreenC = MainGreen;
         constexpr static auto MainGreenB = CColor{
