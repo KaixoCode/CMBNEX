@@ -47,7 +47,33 @@ namespace Kaixo
             double values[Params::Size];
             double goals[Params::Size];
 
-            double operator[](std::pair<size_t, double> i) { return (1 - i.second) * values[i.first] + i.second * goals[i.first]; }
+            //double* persample[Params::Size];
+            //uint64_t size = 0, amount = 0;
+
+            //ParamList() { std::fill_n(persample, Params::Size, nullptr); }
+            
+            //void resize(uint64_t s)
+            //{
+            //    amount = s;
+            //    if (s > size)
+            //    {
+            //        size = s;
+            //        for (int i = 0; i < Params::Size; i++)
+            //        {
+            //            delete[] persample[i], persample[i] = new double[size];
+            //        }
+            //    }
+            //
+            //    for (int i = 0; i < Params::Size; i++)                    
+            //        for (int j = 0; j < size; j++)
+            //            persample[i][j] = goals[i];
+            //}
+
+            inline double operator[](std::pair<size_t, double> i) {
+                //uint64_t index = i.second * amount;
+                //return persample[i.first][index];
+                return (1 - i.second) * values[i.first] + i.second * goals[i.first]; 
+            }
         } params;
 
         bool hasmod[Params::ModCount]; // Array of bools to tell if param has a modulation (for efficiency)

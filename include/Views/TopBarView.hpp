@@ -2,6 +2,7 @@
 #include "pch.hpp"
 #include "Components/Parameter.hpp"
 #include "Components/Label.hpp"
+#include "Views/PresetView.hpp"
 
 namespace Kaixo
 {
@@ -63,6 +64,7 @@ namespace Kaixo
         
         CMessageResult notify(CBaseObject* sender, IdStringPtr message) override;
 
-        TopBarView(const CRect& size, IControlListener* listener, MyEditor* editor);
+        PresetView* prst;
+        TopBarView(const CRect& size, IControlListener* listener, MyEditor* editor, PresetView* prst);
     };
 }

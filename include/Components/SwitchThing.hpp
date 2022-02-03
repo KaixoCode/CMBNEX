@@ -4,7 +4,7 @@
 namespace Kaixo
 {
     // Switch thing for LFO/Env, switches when pressed and drag/drop hover
-    class SwitchThing : public CView, public IDropTarget
+    class SwitchThing : public CView, public VSTGUI::IDropTarget
     {
     public:
         SwitchThing(const CRect& r)

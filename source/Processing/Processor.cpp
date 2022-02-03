@@ -365,7 +365,8 @@ namespace Kaixo
     }
 
     double Processor::CombineSingle(double a, double b, int mode)
-    {   // Calculate a couple helper values
+    {
+        // Calculate a couple helper values
         const uint64_t _a = std::bit_cast<uint64_t>(a);
         const uint64_t _b = std::bit_cast<uint64_t>(b);
         const uint64_t _as = a * 4294967296;
@@ -373,7 +374,7 @@ namespace Kaixo
         switch (mode) { // Switch to the combine mode and calculate result
         case AND:  return 1.5 * (std::bit_cast<double>(_a & _b));
         case OR: { double _ab = 0.3 * (std::bit_cast<double>(_a | _b)); if (std::isnan(_ab)) _ab = 0; return _ab; } // Special case for 'OR' because it can potentially generate NANs
-        case XOR:  return 0.5 * (((_as ^ _bs) % (2 * 4294967296)) / 4294967296. - 1.0);
+        case XOR:  return 0.5 * ((_as ^ _bs) / 4294967296. - 1);
         case PONG: return 1.2 * (a > 0 ? a : b < 0 ? b : 0); break;
         case INLV: return 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)));
         case MIN:  return 1.4 * (std::min(a, b));
@@ -590,7 +591,7 @@ namespace Kaixo
         // Generate the necessary sample amount
         for (int index = 0; index < swapBuffer.amount; index++)
         {
-            double ratio = index / swapBuffer.amount;
+            double ratio = index / (double)swapBuffer.amount;
 
             CalculateModulation(voice, ratio);
             UpdateComponentParameters(voice, ratio);

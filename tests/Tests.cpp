@@ -233,8 +233,13 @@ void SampleFlow()
 	combiner += 1 /* unspecified */; // Filter again.
 }
 
+#include "Utils/Utils.hpp"
+
 int main()
 {
 	TestAlgorithmRanges();
+
+	constexpr auto val1 = Kaixo::Constexpr::pow(2, 2.);
+
 	return 0;
 }

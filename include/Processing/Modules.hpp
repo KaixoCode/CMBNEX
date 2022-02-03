@@ -22,10 +22,15 @@ namespace Kaixo
     template<TableAxis Size>
     struct LookupTable<Size>
     {
-        constexpr LookupTable(auto&& powerCurve)
+        constexpr static void CreateTable(auto&& fun, auto& table)
         {   // Fill the table using the provided function.
             for (int i = 0; i < Size.size + 1; i++)
-                table[i] = powerCurve((i / (double)Size.size) * (Size.end - Size.begin) + Size.begin);
+                table[i] = fun((i / (double)Size.size) * (Size.end - Size.begin) + Size.begin);
+        }
+
+        constexpr LookupTable(auto&& fun)
+        {
+            CreateTable(std::move(fun), table);
         }
 
         constexpr double get(double val) const
@@ -42,19 +47,24 @@ namespace Kaixo
                 return table[(int)(Size.size * (val - Size.begin) / (Size.end - Size.begin))];
         }
 
-        float table[Size.size + 1];
+        std::array<float, Size.size + 1> table;
     };
 
     template<TableAxis Width, TableAxis Height>
     struct LookupTable<Width, Height>
     {
-        constexpr LookupTable(auto&& powerCurve)
+        constexpr static void CreateTable(auto&& fun, auto& table)
         {   // Fill table
             for (int i = 0; i < Width.size + 1; i++)
                 for (int j = 0; j < Height.size + 1; j++)
                     table[i + j * (Width.size + 1)] = // Convert 2d index to 1d index, and calculate correct argument
-                    powerCurve((i / (double)Width.size) * (Width.end - Width.begin) + Width.begin, // values using the range
-                      (j / (double)Height.size) * (Height.end - Height.begin) + Height.begin); // provided in the TableAxis
+                    fun((i / (double)Width.size) * (Width.end - Width.begin) + Width.begin, // values using the range
+                        (j / (double)Height.size) * (Height.end - Height.begin) + Height.begin); // provided in the TableAxis
+        }
+
+        constexpr LookupTable(auto&& fun)
+        {
+            CreateTable(std::move(fun), table);
         }
 
         constexpr double get(double x, double y) const
@@ -98,7 +108,7 @@ namespace Kaixo
             }
         }
 
-        float table[(Width.size + 1) * (Height.size + 1)];
+        std::array<float, (Width.size + 1)* (Height.size + 1)> table;
     };
 
     // Convert note number to frequency, uses lookup table to be more efficient and fast.

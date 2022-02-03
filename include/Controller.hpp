@@ -3,6 +3,30 @@
 
 namespace Kaixo
 {
+    class UserSettings
+    {
+
+        static std::filesystem::path SettingsPath()
+        {
+            std::filesystem::path _path;
+#ifdef WIN32
+            TCHAR szPath[MAX_PATH];
+            // Get path for each computer, non-user specific and non-roaming data.
+            if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, szPath)))
+            {
+                // Append product-specific path
+                _path = szPath;
+                _path = _path / "Kaixo" / "CMBNEX" / "settings";
+            }
+#endif
+            if (!std::filesystem::exists(_path))
+                std::filesystem::create_directory(_path);
+
+            return _path;
+        }
+    };
+
+
     class Controller;
 
     // Plugin view

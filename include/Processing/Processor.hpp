@@ -22,7 +22,7 @@ namespace Kaixo
         constexpr static auto LFOs = 5;
         constexpr static auto Oscillators = 4;
         constexpr static auto Combines = 3;
-        constexpr static auto Voices = 6;
+        constexpr static auto Voices = 16;
 
         // Combiner modes
         enum CombineMode { ADD, MIN, MULT, PONG, MAX, MOD, AND, INLV, OR, XOR, Size };
@@ -80,9 +80,9 @@ namespace Kaixo
         bool doModulationSync = true; // Gets set to false at end to stop modulation sync thread.
 
         std::list<int> m_MonoNotePresses; // Stack to keep track of key pressed in mono mode.
-        std::array<int, Voices> m_Notes{ -1, -1, -1, -1, -1, -1 }; // Notes pressed for each voice
+        std::array<int, Voices> m_Notes{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }; // Notes pressed for each voice
         std::vector<int> m_Pressed; // Current voices busy
-        std::vector<int> m_Available{ 0, 1, 2, 3, 4, 5 }; // Available voices
+        std::vector<int> m_Available{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }; // Available voices
 
         ProcessData* processData; // Process data given by DAW.
 

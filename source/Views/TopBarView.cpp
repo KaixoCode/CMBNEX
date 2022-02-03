@@ -88,8 +88,8 @@ namespace Kaixo
         }
     }
 
-    TopBarView::TopBarView(const CRect& size, IControlListener* listener, MyEditor* editor)
-        : CViewContainer(size), editor(editor)
+    TopBarView::TopBarView(const CRect& size, IControlListener* listener, MyEditor* editor, PresetView* prst)
+        : CViewContainer(size), editor(editor), prst(prst)
     {
         setBackgroundColor({ 0, 0, 0, 0 });
         addView(new BackgroundEffect{ {.size = { 0, 0, getWidth(), getHeight() } } });
@@ -115,13 +115,14 @@ namespace Kaixo
 
         nameDisplay = new NameDisplay{ { 200, 5, 200 + 335, 5 + 35 }, editor->controller->preset };
         nameDisplay->press = [this]() {
-            loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
-            loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            loader->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            loader->setDefaultSaveName("Preset.cmbnex");
-            loader->setTitle("Choose An Audio File");
-            loader->run(this);
-            loader->forget();
+            this->prst->setVisible(true);
+            //loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
+            //loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            //loader->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            //loader->setDefaultSaveName("Preset.cmbnex");
+            //loader->setTitle("Choose An Audio File");
+            //loader->run(this);
+            //loader->forget();
         };
 
         ovrl = new Overlay{ { 0, 0, getWidth(), getHeight() } };

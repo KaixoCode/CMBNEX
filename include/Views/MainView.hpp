@@ -8,6 +8,7 @@
 #include "Views/MidiView.hpp"
 #include "Views/TopBarView.hpp"
 #include "Views/ViewFactoryBase.hpp"
+#include "Views/PresetView.hpp"
 #include "Controller.hpp"
 
 namespace Kaixo
@@ -15,6 +16,7 @@ namespace Kaixo
     class MainView : public CViewContainer
     {
     public:
+        PresetView* prst;
         TopBarView* tbrv;
         OscillatorPart* oscp;
         CombinePart* cmbn;

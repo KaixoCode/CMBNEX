@@ -3,7 +3,7 @@
 namespace Kaixo
 {
     constexpr TableAxis note2freqd{ .size = 100000, .begin = -100, .end = 135, .constrained = true };
-    const LookupTable<note2freqd> note2freqt = [](double note) { return (440. / 32.) * pow(2, ((note - 9) / 12.0)); };
+    const LookupTable<note2freqd> note2freqt = [](double note) { return (440. / 32.) * std::pow(2, ((note - 9) / 12.0)); };
     double noteToFreq(double note) { return note2freqt.get(note); }
 
     namespace Shapers
@@ -14,9 +14,9 @@ namespace Kaixo
 
         // Wave shaper 0% morph lookup table
         const LookupTable<shaperx, shapery> ws0m = [&](double x, double amt) {
-            constexpr static double steps = 4;
+            constexpr double steps = 4;
 
-            constexpr static double(*funcs[(int)steps + 2])(double, double){
+            constexpr double(*funcs[(int)steps + 2])(double, double){
                 shaper7, shaper8, noShaper, shaper0, shaper6, shaper6,
             };
 
@@ -31,9 +31,9 @@ namespace Kaixo
 
         // Wave shaper 100% morph lookup table
         const LookupTable<shaperx, shapery> ws100m = [&](double x, double amt) {
-            constexpr static double steps = 4;
+            constexpr double steps = 4;
 
-            constexpr static double(*funcs[(int)steps + 2])(double, double){
+            constexpr double(*funcs[(int)steps + 2])(double, double){
                 shaper3, shaper2, shaper9, shaper5, shaper1, shaper1,
             };
 
@@ -48,9 +48,9 @@ namespace Kaixo
 
         // Phase shaper 0% morph lookup table
         const LookupTable<shaperx, shapery> ps0m = [&](double x, double amt) {
-            constexpr static double steps = 4;
+            constexpr double steps = 4;
 
-            constexpr static double(*funcs[(int)steps + 2])(double, double){
+            constexpr double(*funcs[(int)steps + 2])(double, double){
                 shaper7, shaper8, noShaper, shaper0, shaper6, shaper6,
             };
 
@@ -65,9 +65,9 @@ namespace Kaixo
 
         // Phase shaper 100% morph lookup table
         const LookupTable<shaperx, shapery> ps100m = [&](double x, double amt) {
-            constexpr static double steps = 4;
+            constexpr double steps = 4;
 
-            constexpr static double(*funcs[(int)steps + 2])(double, double){
+            constexpr double(*funcs[(int)steps + 2])(double, double){
                 shaper3, shaper2, shaper9, shaper5, shaper1, shaper1,
             };
 
@@ -91,12 +91,12 @@ namespace Kaixo
         }
 
         // Wavefolder lookup table
-        const LookupTable <
-            TableAxis{ .size = 100000, .begin = -4, .end = 4 }
-        > foldt = [](double x) {
-            constexpr static double b = 4;
-            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
-        };
+        //const LookupTable <
+        //    TableAxis{ .size = 100000, .begin = -4, .end = 4 }
+        //> foldt = [](double x) {
+        //    constexpr static double b = 4;
+        //    return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        //};
 
         double fold(double x, double bias)
         {
@@ -128,7 +128,7 @@ namespace Kaixo
         > powerCurvet = [](double x, double curve) {
             constexpr double MULT = 16;
             const double a = curve < 0 ? (curve * MULT - 1) : curve * MULT + 1;
-            constexpr static auto b = 0.5;
+            constexpr auto b = 0.5;
             if (a >= 0)
             {
                 const auto pba = std::pow(b, a);

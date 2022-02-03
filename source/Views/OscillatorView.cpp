@@ -501,7 +501,7 @@ namespace Kaixo
             .editor = editor,
             .size{   5,  16 ,   5 + 60,  21 + 80 + 10 },
             .type = Parameter::KNOB, .name = "Detune",
-            .min = -200, .max = 200, .reset = 0, .decimals = 0,
+            .min = -200, .max = 200, .reset = 0, .decimals = 1,
             .unit = " ct",
         } };
 

@@ -1,6 +1,13 @@
 #pragma once
 #define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseStopWhenDoneFlag
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#include <shlobj.h>
+#endif
+
 #include "base/source/fstreamer.h"
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
@@ -42,9 +49,4 @@ using namespace Steinberg::Vst;
 #include <condition_variable>
 #include <future>
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
-#endif
 

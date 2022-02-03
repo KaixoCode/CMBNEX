@@ -148,7 +148,7 @@ constexpr size_t ModAmt = 4;
 enum class ModSources 
 {
     None, 
-    LFO1, LFO2, LFO3, LFO4, LFO5, // 1-5
+    LFO1, LFO2, LFO3, LFO4, LFO5, // 1-5 
     Env1, Env2, Env3, Env4, Env5, // 1-5
     Mac1, Mac2, Mac3, Mac4, Mac5, // a, b, c, d, e
     Key, Vel, Mod, Ran, // K, V, M, R

@@ -35,24 +35,62 @@ namespace Kaixo
         // Process parameter changes
         if (data.inputParameterChanges)
         {
+            //params.resize(data.numSamples);
+
             int32 numParamsChanged = data.inputParameterChanges->getParameterCount();
             for (int32 index = 0; index < numParamsChanged; index++)
             {
                 if (auto* paramQueue = data.inputParameterChanges->getParameterData(index))
                 {
-                    ParamValue end;
-                    int32 sampleOffset;
-                    int32 numPoints = paramQueue->getPointCount();
-                    if (paramQueue->getPoint(numPoints - 1, sampleOffset, end) != kResultTrue) continue;
                     auto param = paramQueue->getParameterId();
 
                     // Normal parameter, just assign it to the goal so we can interpolate to this value.
                     if (param < Params::Size)
+                    {
+                        //ParamValue value;
+                        //int32 sampleOffset;
+                        //int32 numPoints = paramQueue->getPointCount();
+                        //int prevOff = 0;
+                        //double prevValue = params.goals[param];
+                        //for (int i = 0; i < numPoints; i++)
+                        //{
+                        //    if (paramQueue->getPoint(i, sampleOffset, value) != kResultTrue) continue;
+                        //    //if (numPoints == 1 && sampleOffset == 0)
+                        //    //    sampleOffset = data.numSamples;
+                        //    
+                        //    for (int j = prevOff; j < sampleOffset; j++)
+                        //    {
+                        //        double ratio = (j - prevOff) / (double)(sampleOffset - prevOff);
+                        //        double curVal = prevValue * (1 - ratio) + value * ratio;
+                        //        params.persample[param][j] = curVal;
+                        //    }
+                        //    prevOff = sampleOffset;
+                        //    prevValue = value;
+                        //}
+                        //
+                        //for (int j = prevOff; j < data.numSamples; j++)
+                        //{
+                        //    params.persample[param][j] = value;
+                        //}
+                        //
+                        //params.goals[param] = value;
+
+                        ParamValue end;
+                        int32 sampleOffset;
+                        int32 numPoints = paramQueue->getPointCount();
+                        if (paramQueue->getPoint(numPoints - 1, sampleOffset, end) != kResultTrue) continue;
                         params.goals[param] = end;
+
+                    }
 
                     // Otherwise it's part of a modulation.
                     else
                     {
+                        ParamValue end;
+                        int32 sampleOffset;
+                        int32 numPoints = paramQueue->getPointCount();
+                        if (paramQueue->getPoint(numPoints - 1, sampleOffset, end) != kResultTrue) continue;
+
                         // Adjust value and check if it's a goal or amount.
                         param -= Params::Size;
                         if (param % 2 == 0)

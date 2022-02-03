@@ -7,7 +7,7 @@
 namespace Kaixo
 {
     // Parameter ccontrol.
-    class Parameter : public CControl, public IDropTarget
+    class Parameter : public CControl, public VSTGUI::IDropTarget
     {
     public:
         enum Type { KNOB = 0, SLIDER, NUMBER, BUTTON, GROUP, INTERPOLATE, MULTIGROUP, SMALLSLIDER };

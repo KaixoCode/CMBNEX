@@ -286,6 +286,12 @@ namespace Kaixo
             std::string _format = std::format("{:." + std::to_string((int)settings.decimals + (val >= 100 || val <= -100 ? -1 : 0)) + "f}", val);
             valueString = _format.c_str() + settings.unit;
         }
+        else if (settings.unit == " ct") // Special case for percentage: round to 1 less decimals when > 100
+        {
+            if (settings.decimals == 0 && std::round(val) == 0) val = 0;
+            std::string _format = std::format("{:." + std::to_string((int)settings.decimals + (val >= 100 || val <= -100 ? -1 : 0)) + "f}", val);
+            valueString = _format.c_str() + settings.unit;
+        }
         else
         {
             if (settings.decimals == 0 && std::round(val) == 0) val = 0;

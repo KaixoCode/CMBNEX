@@ -206,7 +206,7 @@ namespace Kaixo
 
     void Controller::Init()
     {   // Default preset
-        preset = "default";
+        preset = "default"; 
 
         for (int i = 0; i < Params::ModCount * ModAmt; i++)
         {   // First reset all modulations
