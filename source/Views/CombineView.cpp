@@ -338,7 +338,7 @@ namespace Kaixo
             .editor = editor,
             .size = {  35,  7,  35 + 65,  7 + 53 },
             .type = Parameter::NUMBER, .name = "Pre-Gain",
-            .min = 0, .max = 1, .reset = 1, .decimals = 1,
+            .min = 0, .max = 2, .reset = 1, .decimals = 1,
             .unit = " dB",
         } };
 
@@ -356,7 +356,7 @@ namespace Kaixo
             .editor = editor,
             .size = { 165,  7, 165 + 65,  7 + 53 },
             .type = Parameter::NUMBER, .name = "Gain",
-            .min = 0, .max = 1, .reset = 1, .decimals = 1,
+            .min = 0, .max = 2, .reset = 1, .decimals = 1,
             .unit = " dB",
         } };
 

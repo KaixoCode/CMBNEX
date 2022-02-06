@@ -11,7 +11,6 @@ namespace Kaixo
     // use the lock to access the buffer to make it threadsafe.
     struct Buffer
     {
-        std::mutex lock;
         float* left = nullptr;
         float* right = nullptr;
         size_t size = 0;
@@ -23,7 +22,7 @@ namespace Kaixo
             delete[] left;
         }
 
-        void resize(size_t s)
+        void prepare(size_t s)
         {
             if (s > size)
             {
@@ -33,6 +32,10 @@ namespace Kaixo
                 left = new float[size];
                 right = new float[size];
             }
+
+            amount = s;
+            for (int i = 0; i < amount; i++)
+                left[i] = right[i] = 0;
         }
     };
 

@@ -48,5 +48,7 @@ using namespace Steinberg::Vst;
 #include <fstream>
 #include <condition_variable>
 #include <future>
+#include <complex>
+#include <cassert>
 
 

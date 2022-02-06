@@ -131,6 +131,7 @@ namespace Kaixo
 
         // All these shapers are arbitrary wave shapers pulled out of thin air
         // for the sake of creating weird harmonic content.
+        // 1.2 * cos(159x)^2 + sin(59 + 132 * amt * x - 7.8)^3 + sin(59 + 132 * amt * x - 7.8) * cos(159x)
         inline double shaper1(double x, double amt)
         {
             const double cos1 = std::cos(159 * x);
@@ -139,6 +140,7 @@ namespace Kaixo
             return constrain(res, -1., 1.) * amt;
         }
 
+        // cos((amt * 518 + 22) * x^2) * 0.64 * (0.64 * x)^5 + sin(10 * x^2) + x^7
         inline double shaper2(double x, double amt)
         {
             const double cos1 = std::cos((amt * 518 + 22) * x * x);
@@ -275,17 +277,17 @@ namespace Kaixo
     namespace Wavetables
     {
         // Simple wavetables
-        inline double sine(double phase, double wtpos) { return std::sin(phase * std::numbers::pi_v<double> *2); };
-        inline double saw(double phase, double wtpos) { return phase * 2 - 1; };
-        inline double square(double phase, double wtpos) { return std::floor(phase + 0.5) * 2. - 1.; };
-        inline double triangle(double phase, double wtpos) { return 4 * std::abs(0.5 - phase) - 1; }
+        double sine(double phase, double f);
+        double saw(double phase, double f);
+        double square(double phase, double f);
+        double triangle(double phase, double f);
 
         // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
-        double basic(double phase, double wtpos);
+        double basic(double phase, double wtpos, double f);
 
         inline double sub(double phase, double wtpos)
         {   // Sub wavetable uses the simple shaper to add additional harmonics as its wtpos
-            return Shapers::simpleshaper(sine(phase, wtpos), -wtpos * 0.5 + 0.5);
+            return Shapers::simpleshaper(sine(phase, 0), -wtpos * 0.5 + 0.5);
         }
     }
 
@@ -326,10 +328,10 @@ namespace Kaixo
 
         double sample = 0;
 
-    private:
         double m_Down = 0;
         double m_Phase = -1;
         bool m_Gate = false;
+        bool m_SustainPhase = false;
     };
 
     // Specialized oscillator with several 

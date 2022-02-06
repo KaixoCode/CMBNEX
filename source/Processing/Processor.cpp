@@ -32,7 +32,7 @@ namespace Kaixo
 
         for (int i = 0; i < Envelopes; i++)
         {
-            voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;
+            voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;            
             voices[voice].env[i].Gate(true);
         }
     }
@@ -187,7 +187,7 @@ namespace Kaixo
         {
             for (int i = 0; i < Oscillators; i++)
             {   // Oscillator generate
-                if (params.goals[Params::Volume1 + i] && params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
+                if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
                     voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5));
                 else
                 {
@@ -255,8 +255,8 @@ namespace Kaixo
 
             // Do combine, apply pre-gain
             double _v = Combine(
-                _cs[i * 2] * voice.modulated[Params::PreGainX + i],
-                _cs[i * 2 + 1] * voice.modulated[Params::PreGainX + i],
+                _cs[i * 2] * voice.modulated[Params::PreGainX + i] * 2,
+                _cs[i * 2 + 1] * voice.modulated[Params::PreGainX + i] * 2,
                 i, voice);
 
             // Fold
@@ -270,7 +270,7 @@ namespace Kaixo
                 _v = std::max(std::min(_v, 1.), -1.);
 
             // Volume
-            _v = _v * voice.modulated[Params::GainX + i];
+            _v = _v * voice.modulated[Params::GainX + i] * 2;
 
             // Filter
             if (!voice.cfilterp[i].off && params.goals[Params::ENBFilterX + i] > 0.5)
@@ -302,6 +302,10 @@ namespace Kaixo
     {
         processData = &data; // Store the process data, so it's accessible everywhere.
         projectTimeSamples = data.processContext->projectTimeSamples; // Store project time samples
+
+        // Prepare buffers
+        for (auto& i : voices)
+            i.buffer.prepare(s);
 
         // If monophonic, only generate 1st voice.
         if (params.goals[Params::Voices] < 0.5)
@@ -339,6 +343,12 @@ namespace Kaixo
                 if (!onMain[i])
                     futures[i].wait();
         }
+
+        // Finally, sum all voices
+        for (auto& i : voices)
+            for (int j = 0; j < s; j++)
+                swapBuffer.left[j] += i.buffer.left[j],
+                swapBuffer.right[j] += i.buffer.right[j];
     }
 
     inline double Processor::Combine(double a, double b, int index, Voice& voice)
@@ -374,7 +384,7 @@ namespace Kaixo
         switch (mode) { // Switch to the combine mode and calculate result
         case AND:  return 1.5 * (std::bit_cast<double>(_a & _b));
         case OR: { double _ab = 0.3 * (std::bit_cast<double>(_a | _b)); if (std::isnan(_ab)) _ab = 0; return _ab; } // Special case for 'OR' because it can potentially generate NANs
-        case XOR:  return 0.5 * ((_as ^ _bs) / 4294967296. - 1);
+        case XOR:  return 1.7 * (((_as ^ _bs) % 4294967296) / 4294967296. - 0.5);
         case PONG: return 1.2 * (a > 0 ? a : b < 0 ? b : 0); break;
         case INLV: return 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)));
         case MIN:  return 1.4 * (std::min(a, b));
@@ -600,18 +610,20 @@ namespace Kaixo
             {
                 const double l = GenerateSample(0, *processData, voice, ratio);
                 const double r = GenerateSample(1, *processData, voice, ratio);
-                swapBuffer.lock.lock();
-                swapBuffer.left[index] += l;
-                swapBuffer.right[index] += r;
-                swapBuffer.lock.unlock();
+                voice.buffer.left[index] += l;
+                voice.buffer.right[index] += r;
             }
             else // Oversampling
             {
-                voice.aafp.sampleRate = voice.samplerate;
-                voice.aafp.f0 = processData->processContext->sampleRate * 0.4;
-                voice.aafp.Q = 0.6;
-                voice.aafp.type = FilterType::LowPass;
-                voice.aafp.RecalculateParameters();
+                voice.aafp1.sampleRate = voice.samplerate;
+                voice.aafp1.f0 = std::min(22000., voice.samplerate * 0.4);
+                voice.aafp2.sampleRate = voice.samplerate;
+                voice.aafp2.f0 = std::min(22000., voice.samplerate * 0.4);
+                //voice.aafp.f0 = processData->processContext->sampleRate * 0.4;
+                //voice.aafp.Q = 0.6;
+                //voice.aafp.type = FilterType::LowPass;
+                voice.aafp1.RecalculateParameters();
+                voice.aafp2.RecalculateParameters();
 
                 double _suml = 0;
                 double _sumr = 0;
@@ -620,16 +632,14 @@ namespace Kaixo
                     double _l = GenerateSample(0, *processData, voice, ratio);
                     double _r = GenerateSample(1, *processData, voice, ratio);
 
-                    _l = voice.aaf.Apply(_l, 0);
-                    _r = voice.aaf.Apply(_r, 1);
+                    _l = voice.aaf1.Apply(_l, voice.aafp1);
+                    _r = voice.aaf2.Apply(_r, voice.aafp2);
 
                     _suml += _l;
                     _sumr += _r;
                 }
-                swapBuffer.lock.lock();
-                swapBuffer.left[index] += _suml / _osa;
-                swapBuffer.right[index] += _sumr / _osa;
-                swapBuffer.lock.unlock();
+                voice.buffer.left[index] += _suml / _osa;
+                voice.buffer.right[index] += _sumr / _osa;
             }
         }
     }

@@ -54,7 +54,7 @@
 				"SelectedRow": "0"
 			},
 			"VST3Editor": {
-				"Path": "C:\\Users\\Jeroen\\source\\repos\\VstTest\\Test\\resource\\myplugineditor.uidesc"
+				"Path": "C:\\Users\\Jeroen\\source\\repos\\VstTest\\Test\\resource\\CMBNEX.uidesc"
 			}
 		},
 		"templates": {
@@ -81,18 +81,6 @@
 							"origin": "0, 0",
 							"size": "1085, 726",
 							"transparent": "false",
-							"wants-focus": "false"
-						}
-					},
-					"CView": {
-						"attributes": {
-							"bitmap": "logo",
-							"class": "CView",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "745, 5",
-							"size": "335, 90",
-							"transparent": "true",
 							"wants-focus": "false"
 						}
 					}

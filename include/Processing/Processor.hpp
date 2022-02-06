@@ -30,6 +30,10 @@ namespace Kaixo
         // Single voice contains all components.
         struct Voice
         {
+            Voice() {
+                std::fill_n(modulated, Params::ModCount, 0.);
+            }
+            Buffer buffer;
             double samplerate = 44100;
 
             double samplesPress = 0; // Samples passed since start of project when voice activated
@@ -68,8 +72,10 @@ namespace Kaixo
             StereoEqualizer<2, BiquadFilter> dcoff[Combines]{ dcoffp[0], dcoffp[1], dcoffp[2] };
 
             // Anti-aliasing filter
-            BiquadParameters aafp;
-            StereoEqualizer<2, BiquadFilter> aaf{ aafp };
+            EllipticParameters aafp1;
+            EllipticParameters aafp2;
+            EllipticFilter aaf1;
+            EllipticFilter aaf2;
         };
 
         Voice voices[Voices]; // All the voices

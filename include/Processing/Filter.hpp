@@ -149,6 +149,256 @@ namespace Kaixo
         double y[3]{ 0, 0, 0 }, x[3]{ 0, 0, 0 };
     };
 
+    class EllipticParameters
+    {
+        void ellipticIntegralK(double k, double& K, double& Kp)
+        {
+            constexpr int M = 4;
+
+            K = std::numbers::pi_v<double> / 2;
+            auto lastK = k;
+
+            for (int i = 0; i < M; ++i)
+            {
+                lastK = std::pow(lastK / (1 + std::sqrt(1 - std::pow(lastK, 2.0))), 2.0);
+                K *= 1 + lastK;
+            }
+
+            Kp = std::numbers::pi_v<double> / 2;
+            auto last = std::sqrt(1 - k * k);
+
+            for (int i = 0; i < M; ++i)
+            {
+                last = std::pow(last / (1.0 + std::sqrt(1.0 - std::pow(last, 2.0))), 2.0);
+                Kp *= 1 + last;
+            }
+        }
+        
+        std::complex<double> asne(std::complex<double> w, double k) noexcept
+        {
+            constexpr int M = 4;
+
+            double ke[M + 1];
+            double* kei = ke;
+            *kei = k;
+
+            for (int i = 0; i < M; ++i)
+            {
+                auto next = std::pow(*kei / (1.0 + std::sqrt(1.0 - std::pow(*kei, 2.0))), 2.0);
+                *++kei = next;
+            }
+
+            std::complex<double> last = w;
+
+            for (int i = 1; i <= M; ++i)
+                last = 2.0 * last / ((1.0 + ke[i]) * (1.0 + std::sqrt(1.0 - std::pow(ke[i - 1] * last, 2.0))));
+
+            return 2.0 / std::numbers::pi_v<double> * std::asin(last);
+        }
+
+        std::complex<double> sne(std::complex<double> u, double k) noexcept
+        {
+            constexpr int M = 4;
+
+            double ke[M + 1];
+            double* kei = ke;
+            *kei = k;
+
+            for (int i = 0; i < M; ++i)
+            {
+                auto next = std::pow(*kei / (1 + std::sqrt(1 - std::pow(*kei, 2.0))), 2.0);
+                *++kei = next;
+            }
+
+            // NB: the spurious cast to double here is a workaround for a very odd link-time failure
+            std::complex<double> last = std::sin(u * (double)(std::numbers::pi_v<double> / 2));
+
+            for (int i = M - 1; i >= 0; --i)
+                last = (1.0 + ke[i + 1]) / (1.0 / last + ke[i + 1] * last);
+
+            return last;
+        }
+
+        std::complex<double> cde(std::complex<double> u, double k) noexcept
+        {
+            constexpr int M = 4;
+
+            double ke[M + 1];
+            double* kei = ke;
+            *kei = k;
+
+            for (int i = 0; i < M; ++i)
+            {
+                auto next = std::pow(*kei / (1.0 + std::sqrt(1.0 - std::pow(*kei, 2.0))), 2.0);
+                *++kei = next;
+            }
+
+            // NB: the spurious cast to double here is a workaround for a very odd link-time failure
+            std::complex<double> last = std::cos(u * (double)(std::numbers::pi_v<double> / 2));
+
+            for (int i = M - 1; i >= 0; --i)
+                last = (1.0 + ke[i + 1]) / (1.0 / last + ke[i + 1] * last);
+
+            return last;
+        }
+
+        float passbandAmplitudedB = -1;
+        float stopbandAmplitudedB = -80;
+        float normalisedTransitionWidth = 0.001;
+
+        float pf0 = 0;
+        float psampleRate = 0;
+    public:
+        float f0 = 20000;
+        float sampleRate = 44100;
+        FilterType type = FilterType::LowPass;
+
+        struct Coeficients
+        {
+            int order = 1;
+            double b[4];
+            double a[4];
+
+            double state[4];
+        };
+
+        std::vector<Coeficients> coeficients;
+
+        void RecalculateParameters()
+        {
+            if (!(pf0 != f0 || psampleRate != sampleRate))
+                return;
+
+            pf0 = f0;
+            psampleRate = sampleRate;
+            assert(0 < sampleRate);
+            assert(0 < f0 && f0 <= sampleRate * 0.5);
+            assert(0 < normalisedTransitionWidth && normalisedTransitionWidth <= 0.5);
+            assert(-20 < passbandAmplitudedB && passbandAmplitudedB < 0);
+            assert(-300 < stopbandAmplitudedB && stopbandAmplitudedB < -20);
+
+            auto normalisedFrequency = f0 / sampleRate;
+
+            auto fp = normalisedFrequency - normalisedTransitionWidth / 2;
+            assert(0.0 < fp && fp < 0.5);
+
+            auto fs = normalisedFrequency + normalisedTransitionWidth / 2;
+            assert(0.0 < fs && fs < 0.5);
+
+            double Ap = passbandAmplitudedB;
+            double As = stopbandAmplitudedB;
+            auto Gp = db2lin(Ap);
+            auto Gs = db2lin(As);
+            auto epsp = std::sqrt(1.0 / (Gp * Gp) - 1.0);
+            auto epss = std::sqrt(1.0 / (Gs * Gs) - 1.0);
+
+            auto omegap = std::tan(std::numbers::pi_v<double> * fp);
+            auto omegas = std::tan(std::numbers::pi_v<double> * fs);
+            constexpr auto halfPi = std::numbers::pi_v<double> / 2;
+
+            auto k = omegap / omegas;
+            auto k1 = epsp / epss;
+
+            int N;
+
+            double K, Kp, K1, K1p;
+
+            ellipticIntegralK(k, K, Kp);
+            ellipticIntegralK(k1, K1, K1p);
+
+            N = std::round(std::ceil((K1p * K) / (K1 * Kp)));
+            
+            const int r = N % 2;
+            const int L = (N - r) / 2;
+            const double H0 = std::pow(Gp, 1.0 - r);
+
+            std::vector<std::complex<double>> pa, za;
+            pa.reserve(L);
+            za.reserve(L);
+            std::complex<double> j(0, 1);
+
+            auto v0 = -j * (asne(j / epsp, k1) / (double)N);
+
+            if (r == 1)
+                pa.push_back(omegap * j * sne(j * v0, k));
+
+            for (int i = 1; i <= L; ++i)
+            {
+                auto ui = (2 * i - 1.0) / (double)N;
+                auto zetai = cde(ui, k);
+
+                pa.push_back(omegap * j * cde(ui - j * v0, k));
+                za.push_back(omegap * j / (k * zetai));
+            }
+            
+            std::vector<std::complex<double>> p, z, g;
+            p.reserve(L + 1);
+            z.reserve(L + 1);
+            g.reserve(L + 1);
+
+            if (r == 1)
+            {
+                p.push_back((1.0 + pa[0]) / (1.0 - pa[0]));
+                g.push_back(0.5 * (1.0 - p[0]));
+            }
+
+            for (int i = 0; i < L; ++i)
+            {
+                p.push_back((1.0 + pa[i + r]) / (1.0 - pa[i + r]));
+                z.push_back(za.size() == 0 ? -1.0 : (1.0 + za[i]) / (1.0 - za[i]));
+                g.push_back((1.0 - p[i + r]) / (1.0 - z[i]));
+            }
+
+            coeficients.clear();
+
+            if (r == 1)
+            {
+                auto b0 = static_cast<double> (H0 * std::real(g[0]));
+                auto b1 = b0;
+                auto a1 = static_cast<double> (-std::real(p[0]));
+
+                coeficients.push_back({ .order = 1, .b = { b0, b1 }, .a = { 1.0, a1 } });
+            }
+
+            for (int i = 0; i < L; ++i)
+            {
+                auto gain = std::pow(std::abs(g[i + r]), 2.0);
+
+                auto b0 = static_cast<double> (gain);
+                auto b1 = static_cast<double> (std::real(-z[i] - std::conj(z[i])) * gain);
+                auto b2 = static_cast<double> (std::real(z[i] * std::conj(z[i])) * gain);
+                                      
+                auto a1 = static_cast<double> (std::real(-p[i + r] - std::conj(p[i + r])));
+                auto a2 = static_cast<double> (std::real(p[i + r] * std::conj(p[i + r])));
+
+                coeficients.push_back({ .order = 2, .b = { b0, b1, b2 }, .a = { 1.0, a1, a2 } });
+            }
+        }
+    };
+
+    class EllipticFilter
+    {
+    public:
+        using Params = EllipticParameters;
+
+        double Apply(double s, Params& p)
+        {
+            double res = s;
+            for (auto& c : p.coeficients)
+            {
+                auto output = (c.b[0] * res) + c.state[0];
+
+                for (size_t j = 0; j < c.order - 1; ++j)
+                    c.state[j] = (c.b[j + 1] * res) - (c.a[j + 1] * output) + c.state[j + 1];
+
+                c.state[c.order - 1] = (c.b[c.order] * res) - (c.a[c.order] * output);
+                res = output;
+            }
+
+            return res;
+        }
+    };
+
     // Simple stereo equalizer, applies a distinct filter on each channel.
     template<size_t N, class F, class P = F::Params>
     class StereoEqualizer
@@ -165,6 +415,12 @@ namespace Kaixo
                 s = m_Filters[channel].Apply(s, m_Params);
 
             return s;
+        }
+
+        void Reset()
+        {
+            for (auto& i : m_Filters)
+                i.Reset();
         }
 
         P& m_Params;

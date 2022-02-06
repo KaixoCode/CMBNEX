@@ -21,7 +21,7 @@ namespace Kaixo
 		PresetView(const CRect& size, IControlListener* listener, MyEditor* editor)
 			: CViewContainer(size)
 		{
-			setBackgroundColor({ 0, 0, 0, 80 });
+			setBackgroundColor({ 0, 0, 0, 128 });
 			auto a = getViewSize();
 			addView(new BackgroundEffect{ {.size{ a.inset(100, 100) } } });
 		}

@@ -191,8 +191,8 @@ constexpr ParamInfo ParamNames[]
     { "A Freq", 1 },           { "B Freq", 1 },           { "C Freq", 1 },           { "D Freq", 1 },
     { "A Reso", 0 },           { "B Reso", 0 },           { "C Reso", 0 },           { "D Reso", 0 },
 
-    { "X Gain", 1 },     { "Y Gain", 1 },     { "Z Gain", 1 },
-    { "X Pre-Gain", 1 }, { "Y Pre-Gain", 1 }, { "Z Pre-Gain", 1 },
+    { "X Gain", 0.5 },     { "Y Gain", 0.5 },     { "Z Gain", 0.5 },
+    { "X Pre-Gain", 0.5 }, { "Y Pre-Gain", 0.5 }, { "Z Pre-Gain", 0.5 },
     { "X Freq", 1 },     { "Y Freq", 1 },     { "Z Freq", 1 },
     { "X Reso", 0 },     { "Y Reso", 0 },     { "Z Reso", 0 },
     { "X Mix", 1 },      { "Y Mix", 1 },      { "Z Mix", 1 },

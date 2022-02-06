@@ -13,6 +13,14 @@
 
 namespace Kaixo
 {
+    class ImageDraw : public CView
+    {
+    public:
+        ImageDraw(const CRect& size) : CView(size) {}
+
+        void draw(CDrawContext* pContext);
+        
+    };
     class MainView : public CViewContainer
     {
     public:
@@ -25,6 +33,7 @@ namespace Kaixo
         MidiView* midi;
         SubOscView* subo;
         BackgroundEffect* bgef;
+        ImageDraw* imgd;
 
         MainView(const CRect& size, IControlListener* listener, MyEditor* editor);
     };

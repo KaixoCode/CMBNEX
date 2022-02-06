@@ -131,10 +131,7 @@ namespace Kaixo
         }
 
         // Prepare the swap buffer with amount of samples, fill with 0s
-        swapBuffer.resize(data.numSamples);
-        swapBuffer.amount = data.numSamples;
-        for (int i = 0; i < data.numSamples; i++)
-            swapBuffer.left[i] = swapBuffer.right[i] = 0;
+        swapBuffer.prepare(data.numSamples);
         Generate(data, data.numSamples); // Call generate to fill buffer
 
         // Then assign the buffer to the output, depending on process mode
@@ -171,20 +168,28 @@ namespace Kaixo
     tresult PLUGIN_API Instrument::setState(IBStream* state)
     {
         IBStreamer streamer(state, kLittleEndian);
-
-        for (size_t i = 0; i < Params::Size; i++)
-            streamer.readDouble(params.goals[i]);
-
-        for (int i = 0; i < Params::ModCount; i++)
-            hasmod[i] = false;
-
-        for (int i = 0; i < Params::ModCount * ModAmt; i++)
+        
+        // While we can read parameter name
+        while (char8* name = streamer.readStr8())
         {
-            int index = std::floor(i / ModAmt);
-            hasmod[index] |= modgoals[i] > 0; // Keep track of if mod, for efficiency
-
-            streamer.readDouble(modgoals[i]);
-            streamer.readDouble(modamount[i]);
+            for (size_t i = 0; i < Params::Size; i++)
+            {   // Find parameter
+                if (std::strcmp(ParamNames[i].name, name) == 0)
+                {   // Apply value
+                    streamer.readDouble(params.goals[i]);
+                    if (i < Params::ModCount) // If modable
+                    {   // Set mod goals + amount
+                        hasmod[i] = false;
+                        for (int j = 0; j < ModAmt; j++)
+                        {   // Keep track of if mod, for efficiency
+                            hasmod[i] |= modgoals[(i * ModAmt + j)] > 0;
+                            streamer.readDouble(modgoals[(i * ModAmt + j)]);
+                            streamer.readDouble(modamount[(i * ModAmt + j)]);
+                        }
+                    }
+                    break;
+                }
+            }
         }
 
         return kResultOk;
@@ -195,12 +200,18 @@ namespace Kaixo
         IBStreamer streamer(state, kLittleEndian);
 
         for (size_t i = 0; i < Params::Size; i++)
-            streamer.writeDouble(params.goals[i]);
-
-        for (int i = 0; i < Params::ModCount * ModAmt; i++)
         {
-            streamer.writeDouble(modgoals[i]);
-            streamer.writeDouble(modamount[i]);
+            // First write parameter name, to identify.
+            streamer.writeStr8(ParamNames[i].name);
+            streamer.writeDouble(params.goals[i]); // Set value
+            if (i < Params::ModCount) // If modable
+            {   // Add mod amount + goals
+                for (int j = 0; j < ModAmt; j++)
+                {
+                    streamer.writeDouble(modgoals[(i * ModAmt + j)]);
+                    streamer.writeDouble(modamount[(i * ModAmt + j)]);
+                }
+            }
         }
 
         return kResultOk;

@@ -240,26 +240,30 @@ namespace Kaixo
 
         IBStreamer streamer(state, kLittleEndian);
 
-        // Layout of state is:
-        // - preset name
-        // - Normal parameters
-        // - Modulation
-
-        for (size_t i = 0; i < Params::Size; i++)
-        {   // Read all parameters
-            double value = 0.f;
-            if (streamer.readDouble(value) == kResultFalse) return kResultFalse;
-            setParamNormalized(i, value);
-        }
-
-        for (int i = 0; i < Params::ModCount * ModAmt; i++)
-        {   // Read all modulations
-            double value = 0.f;
-            if (streamer.readDouble(value) == kResultFalse) return kResultFalse;
-            setParamNormalized(i * 2 + Params::Size, value);
-            double value2 = 0.f;
-            if (streamer.readDouble(value2) == kResultFalse) return kResultFalse;
-            setParamNormalized(i * 2 + Params::Size + 1, value2);
+        // While we can read parameter name
+        while (char8* name = streamer.readStr8())
+        {
+            for (size_t i = 0; i < Params::Size; i++)
+            {   // Find parameter
+                if (std::strcmp(ParamNames[i].name, name) == 0)
+                {   // Apply value
+                    double value = 0.f;
+                    streamer.readDouble(value);
+                    setParamNormalized(i, value);
+                    if (i < Params::ModCount) // If modable
+                    {   // Set mod goals + amount
+                        for (int j = 0; j < ModAmt; j++)
+                        {
+                            double value = 0.f;
+                            streamer.readDouble(value);
+                            setParamNormalized((i * ModAmt + j) * 2 + Params::Size, value);
+                            streamer.readDouble(value);
+                            setParamNormalized((i * ModAmt + j) * 2 + Params::Size + 1, value);
+                        }
+                    }
+                    break;
+                }
+            }
         }
 
         return kResultOk;
