@@ -24,8 +24,8 @@ namespace Kaixo
             const double r = myfmod1(amt * 4);
             const auto& func1 = funcs[i - 1];
             const auto& func2 = funcs[i];
-            const double s1 = func1(x, 1 - r) * (1 - r);
-            const double s2 = func2(x, r) * r;
+            const double s1 = func1(x, 1 - r);
+            const double s2 = func2(x, r);
             return s1 + s2;
         };
 
@@ -41,8 +41,8 @@ namespace Kaixo
             const double r = myfmod1(amt * steps);
             const auto& func1 = funcs[i - 1];
             const auto& func2 = funcs[i];
-            const double s3 = func1(x, 1 - r) * (1 - r);
-            const double s4 = func2(x, r) * r;
+            const double s3 = func1(x, 1 - r);
+            const double s4 = func2(x, r);
             return s3 + s4;
         };
 
@@ -58,8 +58,8 @@ namespace Kaixo
             const double r = myfmod1(amt * steps);
             const auto& func1 = funcs[i - 1];
             const auto& func2 = funcs[i];
-            const double s1 = func1(x, 1 - r) * (1 - r);
-            const double s2 = func2(x, r) * r;
+            const double s1 = func1(x, 1 - r);
+            const double s2 = func2(x, r);
             return constrain(s1 + s2, 0., 1.);
         };
 
@@ -75,8 +75,8 @@ namespace Kaixo
             const double r = myfmod1(amt * steps);
             const auto& func1 = funcs[i - 1];
             const auto& func2 = funcs[i];
-            const double s3 = func1(x, 1 - r) * (1 - r);
-            const double s4 = func2(x, r) * r;
+            const double s3 = func1(x, 1 - r);
+            const double s4 = func2(x, r);
             return constrain(s3 + s4, 0., 1.);
         };
 
@@ -160,7 +160,6 @@ namespace Kaixo
         > sawt = [](double phase, double f) {
             constexpr static int harmonics[]{ 
                 1024, 1024, 
-                1024, 1024,
                 1024, 1024, 
                 1024, 1024, 
                 1024, 1024, 
@@ -174,28 +173,28 @@ namespace Kaixo
                 12,   8, 
                 6,    4,
                 3,    2, 
-                1,    1 
+                1,    1,
+                1,    1,
             };
             const double h = harmonics[(int)f];
 
             constexpr static auto generator = [](double phase, int harmonics) {
                 double out = 0;
-                for (int k = 1; k <= harmonics / 2.; k++)
+                for (int k = 1; k <= harmonics; k++)
                     out += (std::pow(-1, k) / k) * std::sin(2 * std::numbers::pi_v<double> * k * phase);
                 return out * (-2 / std::numbers::pi_v<double>);
             };
 
-            return constrain(generator(phase, h), -1, 1);
+            return constrain(generator(phase, h) * 0.90, -1, 1);
         };
 
-        double saw(double phase, double f) { return sawt.get(phase, (std::log(f) / std::log(2)) * 2); };
+        double saw(double phase, double f) { return sawt.get(phase, (std::log(f) / std::numbers::ln2_v<double>) * 2); };
 
         const LookupTable <
             TableAxis{ .size = 2048, .begin = 0, . end = 1, .interpolate = true },
             TableAxis{ .size = 32, .begin = 0, .end = 32, .constrained = true }
         > squaret = [](double phase, double f) {
             constexpr static int harmonics[]{
-                4096, 4096,
                 4096, 4096,
                 4096, 4096,
                 4096, 4096,
@@ -211,6 +210,7 @@ namespace Kaixo
                 6,    4,
                 3,    2,
                 1,    1,
+                1,    1,
             };
             const double h = harmonics[(int)f];
 
@@ -221,11 +221,46 @@ namespace Kaixo
                 return out * (4 / std::numbers::pi_v<double>);
             };
 
-            return constrain(generator(phase, h), -1, 1);
+            return constrain(generator(phase, h) * 0.82, -1, 1);
         };
 
-        double square(double phase, double f) { return squaret.get(phase, (std::log(f) / std::log(2)) * 2); };
-        double triangle(double phase, double f) { return 4 * std::abs(0.5 - phase) - 1; }
+        double square(double phase, double f) { return squaret.get(phase, (std::log(f) / std::numbers::ln2_v<double>) * 2); };
+
+        const LookupTable <
+            TableAxis{ .size = 2048, .begin = 0, . end = 1, .interpolate = true },
+            TableAxis{ .size = 32, .begin = 0, .end = 32, .constrained = true }
+        > trianglet = [](double phase, double f) {
+            constexpr static int harmonics[]{
+                4096, 4096,
+                4096, 4096,
+                4096, 4096,
+                2048, 2048,
+                1024, 1024,
+                768,  512,
+                384,  256,
+                192,  128,
+                96,   64,
+                48,   32,
+                24,   16,
+                12,   8,
+                6,    4,
+                3,    2,
+                1,    1,
+                1,    1,
+            };
+            const double h = harmonics[(int)f];
+
+            constexpr static auto generator = [](double phase, int harmonics) {
+                double out = 0;
+                for (int k = 1; k <= harmonics / 2.; k++)
+                    out += std::pow(-1, k) * std::sin(2 * std::numbers::pi_v<double> * (2 * k - 1) * phase) / std::pow(2 * k - 1, 2);
+                return out * (8 / (std::numbers::pi_v<double> * std::numbers::pi_v<double>));
+            };
+
+            return constrain(generator(myfmod1(phase + 0.5), h) * 0.95, -1, 1);
+        };
+
+        double triangle(double phase, double f) { return trianglet.get(phase, (std::log(f) / std::numbers::ln2_v<double>) * 2); }
 
         // Lookup for basic wavetable, interpolate x-axis, since that's the phase
         // and that needs to be smooth to avoid aliasing.
@@ -267,7 +302,7 @@ namespace Kaixo
             }
             else
             {
-                const double r = (wtpos - 0.66) * 2.9;
+                const double r = (wtpos - 0.66) * 3;
                 return square(p, f) * r + saw(p, f) * (1 - r);
             }
             //return basict.get(phase, wtpos);
