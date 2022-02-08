@@ -2,7 +2,7 @@
 # CMBNEX
 
 ### What is CMBNEX?
-CMBNEX Is a 4 oscillator synth that revolves around waveshaping and combining sound using several algorithms. 
+CMBNEX Is a 4 oscillator VST3 synth with a unique tuneable 2 dimensional waveshaper and 3 combiners that use several algorithms to combine incoming signals. All parameters have 4 slots for internal modulation from several modulation sources like envelopes, LFOs, and macros.
 
 ![image](https://kaixo.me/assets/CMBNEX/CMBNEX.png)
 
