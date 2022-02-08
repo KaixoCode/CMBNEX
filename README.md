@@ -9,7 +9,7 @@ of setting up an entire webshop for this. But it would be awesome if you would c
 
 [![paypal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/kaixo1/10)
 
-![image](https://kaixo.me/assets/CMBNEX.png)
+![image](https://kaixo.me/assets/CMBNEX/CMBNEX.png)
 
 ## What is CMBNEX?
 CMBNEX Is a 4 oscillator synth that revolves around waveshaping and combining sound using several algorithms. 
