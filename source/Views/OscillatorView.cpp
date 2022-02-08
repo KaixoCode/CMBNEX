@@ -12,7 +12,7 @@ namespace Kaixo
 
         addView(new BackgroundEffect{ {.size = { 0, 5 + y, getWidth(), getHeight() - 5 - y } } });
 
-        CColor brdclr = MainBack;
+        CColor brdclr = Colors::MainBack;
         
         switch (index) {
         case 0: addView(new BackgroundEffect{ {.size = { 0, 0, getWidth() / 2 - 2, 8 }, .sides = 2 } }); break;

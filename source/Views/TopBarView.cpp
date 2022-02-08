@@ -50,7 +50,7 @@ namespace Kaixo
         auto a = getViewSize();
         bgef.draw(pContext);
         pContext->setFont(pContext->getFont(), 14);
-        pContext->setFontColor(MainText);
+        pContext->setFontColor(Colors::MainText);
         double off = bgef.settings.pressed ? 1 : 0;
         pContext->drawString(text, { a.left + 8 + off, a.getCenter().y + 3 + off });
     }
@@ -66,7 +66,7 @@ namespace Kaixo
         auto a = getViewSize();
         BackgroundEffect::draw(pContext, { .size = a, .dark = true });
         pContext->setFont(pContext->getFont(), 16);
-        pContext->setFontColor(MainText);
+        pContext->setFontColor(Colors::MainText);
         pContext->drawString(name, { a.left + 5, a.getCenter().y + 4 });
     }
 
@@ -74,7 +74,7 @@ namespace Kaixo
     {
         auto a = getViewSize();
 
-        pContext->setFrameColor(BorderHover);
+        pContext->setFrameColor(Colors::BorderHover);
 
         for (int i = 0; i < 3; i++)
         {
@@ -98,6 +98,7 @@ namespace Kaixo
         bInit->press = [this]() {
             this->editor->controller->Init();
             nameDisplay->setDirty(true);
+            Colors::MainGreen = CColor{ 179, 66, 0, 255 };
         };
         bInit->p = true;
 

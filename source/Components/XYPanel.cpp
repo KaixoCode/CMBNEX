@@ -41,13 +41,13 @@ namespace Kaixo
         auto a = getViewSize();
         BackgroundEffect::draw(pContext, { .size = a });
         a.inset({ 1, 1 });
-        pContext->setFillColor(MainBack);
+        pContext->setFillColor(Colors::MainBack);
         pContext->drawRect(a, kDrawFilled);
         pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
 
         pContext->setDrawMode(kAntiAliasing);
         pContext->setLineWidth(1);
-        pContext->setFrameColor(Border);
+        pContext->setFrameColor(Colors::Border);
         constexpr static double nmr = 10;
         for (int i = 0; i < nmr; i++)
         {
@@ -57,7 +57,7 @@ namespace Kaixo
             pContext->drawLine({ a.left, y }, { a.right - 1, y });
         }
 
-        pContext->setFrameColor(KnobBack);
+        pContext->setFrameColor(Colors::KnobBack);
 
         pContext->drawLine({ a.getCenter().x, a.top }, { a.getCenter().x, a.bottom - 1 });
         pContext->drawLine({ a.left, a.getCenter().y }, { a.right - 1, a.getCenter().y });
@@ -67,16 +67,16 @@ namespace Kaixo
         double _psize = 12;
         double _x = a.left + x->getValue() * (a.getWidth() - 2 * _padding) + _padding;
         double _y = a.top + (1 - y->getValue()) * (a.getHeight() - 2 * _padding) + _padding;
-        if (enabled) pContext->setFrameColor(MainGreen);
-        else pContext->setFrameColor(OffText);
-        pContext->setFillColor(MainBack);
+        if (enabled) pContext->setFrameColor(Colors::MainGreen);
+        else pContext->setFrameColor(Colors::OffText);
+        pContext->setFillColor(Colors::MainBack);
         pContext->setLineWidth(3);
         pContext->drawRect({ _x - _psize / 2, _y - _psize / 2, _x + _psize / 2, _y + _psize / 2 }, kDrawFilledAndStroked);
 
         auto _s = getViewSize();
         double _bsize = 8;
         pContext->setLineWidth(1);
-        pContext->setFrameColor(OffText);
+        pContext->setFrameColor(Colors::OffText);
         pContext->drawLine({ _s.left, _s.top }, { _s.left,  _s.top + _bsize });
         pContext->drawLine({ _s.left, _s.top }, { _s.left + _bsize, _s.top });
 

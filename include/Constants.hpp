@@ -5,23 +5,26 @@ constexpr const char* UPDATE_MODULATION_PARAM = "update modulation param";
 constexpr const char* UPDATE_MODULATION_VALUE = "update modulation value";
 
 #ifndef CMBNEX_TESTS
-constexpr CColor Background = CColor{ 15, 15, 15, 255 };
-constexpr CColor MainGreen =  CColor{ 0, 179, 98, 255 };
-constexpr CColor MainBack =  CColor{ 25, 25, 25, 255 };
-constexpr CColor MainBackL =  CColor{ 40, 40, 40, 255 };
-constexpr CColor MainBackD =  CColor{  5,  5,  5, 255 };
-constexpr CColor DarkBackD =  CColor{ 5, 5, 5, 255 };
-constexpr CColor DarkBack =  CColor{ 15, 15, 15, 255 };
-constexpr CColor DarkBackH =  CColor{ 23, 23, 23, 255 };
-constexpr CColor ItemBack =  CColor{ 15, 15, 15, 255 };
-constexpr CColor KnobBack =  CColor{ 45, 45, 45, 255 };
-constexpr CColor KnobBackL =  CColor{ 55, 55, 55, 255 };
-constexpr CColor KnobBackDark =  CColor{ 30, 30, 30, 255 };
-constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
-constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
-constexpr CColor OffText = CColor{ 100, 100, 100, 255 };
-constexpr CColor OffTextL = CColor{ 110, 110, 110, 255 };
-constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
+struct Colors
+{
+    static inline CColor Background = CColor{ 15, 15, 15, 255 };
+    static inline CColor MainGreen =  CColor{ 0, 179, 98, 255 };
+    static inline CColor MainBack =  CColor{ 25, 25, 25, 255 };
+    static inline CColor MainBackL =  CColor{ 40, 40, 40, 255 };
+    static inline CColor MainBackD =  CColor{  5,  5,  5, 255 };
+    static inline CColor DarkBackD =  CColor{ 5, 5, 5, 255 };
+    static inline CColor DarkBack =  CColor{ 15, 15, 15, 255 };
+    static inline CColor DarkBackH =  CColor{ 23, 23, 23, 255 };
+    static inline CColor ItemBack =  CColor{ 15, 15, 15, 255 };
+    static inline CColor KnobBack =  CColor{ 45, 45, 45, 255 };
+    static inline CColor KnobBackL =  CColor{ 55, 55, 55, 255 };
+    static inline CColor KnobBackDark =  CColor{ 30, 30, 30, 255 };
+    static inline CColor Border =  CColor{ 30, 30, 30, 255 };
+    static inline CColor MainText = CColor{ 200, 200, 200, 255 };
+    static inline CColor OffText = CColor{ 100, 100, 100, 255 };
+    static inline CColor OffTextL = CColor{ 110, 110, 110, 255 };
+    static inline CColor BorderHover = CColor{ 70, 70, 70, 255 };
+};
 #endif 
 
 struct ParamInfo

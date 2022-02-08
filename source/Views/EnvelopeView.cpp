@@ -151,10 +151,10 @@ namespace Kaixo
 
     void EnvelopeCurve::draw(CDrawContext* pContext)
     {
-        constexpr CColor back = ItemBack;
+        CColor back = Colors::ItemBack;
         CColor main = color;
         CColor brgt = color;
-        constexpr CColor crnr = OffText;
+        CColor crnr = Colors::OffText;
         pContext->setLineWidth(1);
         pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
         pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);

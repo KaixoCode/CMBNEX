@@ -341,7 +341,7 @@ namespace Kaixo
                 if (source == ModSources::None) continue;
 
                 // Gray background circle
-                pContext->setFrameColor(Border);
+                pContext->setFrameColor(Colors::Border);
                 pContext->drawArc(a, 135, 135 + 270, kDrawStroked);
 
                 // Two sided modulation if LFO
@@ -358,7 +358,7 @@ namespace Kaixo
                 {   // Draw the other side if two sided
                     double start = std::max(135 + v - ((amount > 0) ? amount * 270 : 0), 135.);
                     double end = std::min(135 + v - ((amount < 0) ? amount * 270 : 0), 135 + 270.);
-                    pContext->setFrameColor(OffText);
+                    pContext->setFrameColor(Colors::OffText);
                     pContext->drawArc(a, start, end, kDrawStroked);
                 }
 
@@ -436,7 +436,7 @@ namespace Kaixo
                     continue;
                 modded++;
                 pContext->setLineWidth(2);
-                pContext->setFrameColor(Border);
+                pContext->setFrameColor(Colors::Border);
                 pContext->drawLine({ a.left, a.bottom }, { a.left, a.top });
 
                 bool two = false;
@@ -456,7 +456,7 @@ namespace Kaixo
                 {
                     double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                     double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
-                    pContext->setFrameColor(OffText);
+                    pContext->setFrameColor(Colors::OffText);
                     pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                 }
 
@@ -479,21 +479,21 @@ namespace Kaixo
         auto a = getViewSize();
         auto w2 = pContext->getStringWidth(settings.name);
         pContext->setLineWidth(1);
-        pContext->setFrameColor(Border);
+        pContext->setFrameColor(Colors::Border);
         pContext->setFillColor(getValue() > 0.5 ? main : back);
         a.top += 1;
         a.left += 1;
         bool pressed = getValue() > 0.5;
         BackgroundEffect::draw(pContext, { .size = a, .pressed = pressed, .dark = settings.dark, 
             .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
-        pContext->setFontColor(getValue() > 0.5 ? text : OffText);
+        pContext->setFontColor(getValue() > 0.5 ? text : Colors::OffText);
         pContext->drawString(settings.name, { a.getCenter().x - w2 / 2, a.getCenter().y + 6 }, true);
     }
 
     void Parameter::drawGroup(CDrawContext* pContext)
     {
         pContext->setLineWidth(1);
-        pContext->setFrameColor(Border);
+        pContext->setFrameColor(Colors::Border);
 
         auto a = getViewSize();
         a.top++;
@@ -513,7 +513,7 @@ namespace Kaixo
                 bool pressed = std::abs(getValue() * (settings.parts.size() - 1) - i) < 0.5;
 
                 pContext->setFillColor(pressed ? main : back);
-                pContext->setFontColor(pressed ? text : OffText);
+                pContext->setFontColor(pressed ? text : Colors::OffText);
                 BackgroundEffect::draw(pContext, { .size = { a.left, _y, a.right, _y + _h - settings.padding - 1 }, .pressed = pressed, 
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x - _w / 2, _y + 6 + (_h - settings.padding - 1) / 2 }, true);
@@ -535,7 +535,7 @@ namespace Kaixo
                 bool pressed = std::abs(getValue() * (settings.parts.size() - 1) - i) < 0.5;
 
                 pContext->setFillColor(pressed ? main : back);
-                pContext->setFontColor(pressed ? text : OffText);
+                pContext->setFontColor(pressed ? text : Colors::OffText);
                 BackgroundEffect::draw(pContext, { .size = { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, .pressed = pressed,
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
 
@@ -566,7 +566,7 @@ namespace Kaixo
                     continue;
                 modded++;
                 pContext->setLineWidth(2);
-                pContext->setFrameColor(Border);
+                pContext->setFrameColor(Colors::Border);
                 pContext->drawLine({ a.left, a.bottom }, { a.left, a.top });
 
                 bool two = false;
@@ -586,7 +586,7 @@ namespace Kaixo
                 {
                     double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                     double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
-                    pContext->setFrameColor(OffText);
+                    pContext->setFrameColor(Colors::OffText);
                     pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                 }
 
@@ -611,7 +611,7 @@ namespace Kaixo
     void Parameter::drawMultigroup(CDrawContext* pContext)
     {
         pContext->setLineWidth(1);
-        pContext->setFrameColor(Border);
+        pContext->setFrameColor(Colors::Border);
 
         auto a = getViewSize();
         a.top++;
@@ -631,7 +631,7 @@ namespace Kaixo
                 auto _w = pContext->getStringWidth(_n);
 
                 pContext->setFillColor(_set ? main : back);
-                pContext->setFontColor(_set ? text : OffText);
+                pContext->setFontColor(_set ? text : Colors::OffText);
 
                 BackgroundEffect::draw(pContext, { .size = { a.left, _y, a.right, _y + _h - settings.padding - 1 }, .pressed = _set,
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
@@ -653,7 +653,7 @@ namespace Kaixo
                 auto _sw = pContext->getStringWidth(_n);
 
                 pContext->setFillColor(_set ? main : back);
-                pContext->setFontColor(_set ? text : OffText);
+                pContext->setFontColor(_set ? text : Colors::OffText);
                 BackgroundEffect::draw(pContext, { .size = { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, .pressed = _set,
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x + (_w - settings.padding - 2) / 2 - _sw / 2, _y + 6 }, true);
@@ -680,7 +680,7 @@ namespace Kaixo
                     continue;
                 modded++;
                 pContext->setLineWidth(2);
-                pContext->setFrameColor(Border);
+                pContext->setFrameColor(Colors::Border);
                 pContext->drawLine({ a.left, a.bottom }, { a.left, a.top });
 
                 bool two = false;
@@ -700,7 +700,7 @@ namespace Kaixo
                 {
                     double start = std::max(v - ((amount > 0) ? amount * _w : 0), 0.);
                     double end = std::min(v - ((amount < 0) ? amount * _w : 0), _w);
-                    pContext->setFrameColor(OffText);
+                    pContext->setFrameColor(Colors::OffText);
                     pContext->drawLine({ a.left, a.bottom - end }, { a.left, a.bottom - start });
                 }
 
@@ -733,20 +733,20 @@ namespace Kaixo
         {
             if (modDragIndex == i)
             {
-                pContext->setFillColor(MainBackD);
+                pContext->setFillColor(Colors::MainBackD);
                 pContext->drawRect({ a.left, a.top, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
-                pContext->setFillColor(settings.dark ? MainBack : MainBackL);
+                pContext->setFillColor(settings.dark ? Colors::MainBack : Colors::MainBackL);
                 pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w, a.bottom }, kDrawFilled);
-                pContext->setFillColor(settings.dark ? DarkBack : DarkBackH);
+                pContext->setFillColor(settings.dark ? Colors::DarkBack : Colors::DarkBackH);
                 pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
             }
             else
             {
-                pContext->setFillColor(MainBackD);
+                pContext->setFillColor(Colors::MainBackD);
                 pContext->drawRect({ a.left, a.top, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
-                pContext->setFillColor(settings.dark ? MainBack : MainBackL);
+                pContext->setFillColor(settings.dark ? Colors::MainBack : Colors::MainBackL);
                 pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w, a.bottom }, kDrawFilled);
-                pContext->setFillColor(settings.dark ? DarkBackD : DarkBack);
+                pContext->setFillColor(settings.dark ? Colors::DarkBackD : Colors::DarkBack);
                 pContext->drawRect({ a.left + 1, a.top + 1, a.left + _w - 1, a.bottom - 1 }, kDrawFilled);
             }
 
@@ -759,7 +759,7 @@ namespace Kaixo
             else if (settings.editor->modSource(getTag(), i) >= ModSources::Mac1) _v = (char)('P' + (int)settings.editor->modSource(getTag(), i) - (int)ModSources::Mac1);
             else if (settings.editor->modSource(getTag(), i) >= ModSources::Env1) _v = std::to_string((int)settings.editor->modSource(getTag(), i) - (int)ModSources::Env1 + 1);
             else if (settings.editor->modSource(getTag(), i) >= ModSources::LFO1) _v = std::to_string((int)settings.editor->modSource(getTag(), i) - (int)ModSources::LFO1 + 1);
-            else pContext->setFontColor(OffText);
+            else pContext->setFontColor(Colors::OffText);
 
             if (settings.editor->modSource(getTag(), i) != ModSources::None)
             {
@@ -781,8 +781,8 @@ namespace Kaixo
         pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
         // Depending on knob theme, set colors
-        if (settings.dark) back = KnobBackDark; else back = KnobBack;
-        if (!settings.enabled) main = OffText, text = OffText; else main = MainGreen, text = MainText;
+        if (settings.dark) back = Colors::KnobBackDark; else back = Colors::KnobBack;
+        if (!settings.enabled) main = Colors::OffText, text = Colors::OffText; else main = Colors::MainGreen, text = Colors::MainText;
 
         modded = 0; // Count how many modulations there are, set to 0 at start.
 

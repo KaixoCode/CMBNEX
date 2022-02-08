@@ -13,13 +13,12 @@ namespace Kaixo
         constexpr TableAxis shapery{ .size = 8, .begin = 0, .end = 1, .interpolate = true };
         constexpr TableAxis shaperz{ .size = 1024, .begin = 0, .end = 2, .constrained = true, .interpolate = true };
 
-        // Wave shaper 0% morph lookup table
+        // Wave shaper lookup table
         const LookupTable<shaperx, shapery, shaperz> ws0m = [&](double x, double amt, double freq) {
             constexpr double steps = 8;
 
             constexpr double(*funcs[(int)steps + 2])(double, double){
                 Shaper04, Shaper03, Shaper02, Shaper01, noShaper, Shaper11, Shaper12, Shaper13, Shaper14, Shaper14,
-                //shaper5, shaper3, shaper2, shaper9, noShaper, shaper0, shaper7, shaper8, shaper6, shaper6,
             };
 
             const int i = amt * steps + 1;
@@ -31,13 +30,12 @@ namespace Kaixo
             return s1 + s2;
         };
 
-        // Phase shaper 0% morph lookup table
+        // Phase shaper lookup table
         const LookupTable<shaperx, shapery, shaperz> ps0m = [&](double x, double amt, double freq) {
             constexpr double steps = 8;
 
             constexpr double(*funcs[(int)steps + 2])(double, double){
                 Shaper04, Shaper03, Shaper02, Shaper01, noShaper, Shaper11, Shaper12, Shaper13, Shaper14, Shaper14,
-                //shaper5, shaper3, shaper2, shaper9, noShaper, shaper0, shaper7, shaper8, shaper6, shaper6,
             };
 
             const int i = amt * steps + 1;
@@ -50,13 +48,13 @@ namespace Kaixo
         };
 
         double mainWaveShaper(double x, double amt, double morph)
-        {   // Interpolate between 0% and 100% morph tables, since a 3d lookup would use too much memory
-            return /*(1 - morph) **/ ws0m.get(x, amt, morph);// +morph * ws100m.get(x, amt);
+        {   
+            return ws0m.get(x, amt, morph);
         }
 
         double mainPhaseShaper(double x, double amt, double morph)
-        {   // Interpolate between 0% and 100% morph tables, since a 3d lookup would use too much memory
-            return /*(1 - morph) * */ps0m.get(x, amt, morph); // +morph * ps100m.get(x, amt);
+        { 
+            return ps0m.get(x, amt, morph);
         }
 
         // Wavefolder lookup table
@@ -86,7 +84,7 @@ namespace Kaixo
         };
 
         double drive(double x, double gain, double amt)
-        {   // Drive table is 1d, interpolate between constrained value.
+        {
             const double _gain = gain * x;
             return drivet.get(_gain, amt);
         }
@@ -116,28 +114,29 @@ namespace Kaixo
 
     namespace Wavetables
     {
+        // Amount of harmonics for a saw wave, 2 numbers per octave
+        constexpr static int harmonics[]{
+             1024,  1024,
+             1024,  1024,
+             1024,  1024,
+             1024,  1024,
+             1024,  1024,
+              768,   512,
+              384,   256,
+              192,   128,
+               96,    64,
+               48,    32,
+               24,    16,
+               12,     8,
+                6,     4,
+                3,     2,
+                1,     1,
+                1,     1,
+        };
         double sine(double phase) { return std::sin(phase * std::numbers::pi_v<double> *2); };
 
         double saw(double phase, double f) 
         {
-            constexpr static int harmonics[]{ 
-                1024, 1024, 
-                1024, 1024, 
-                1024, 1024, 
-                1024, 1024, 
-                1024, 1024,
-                768,  512, 
-                384,  256, 
-                192,  128, 
-                96,   64, 
-                48,   32,
-                24,   16,
-                12,   8, 
-                6,    4,
-                3,    2, 
-                1,    1,
-                1,    1,
-            };
             const double h = harmonics[(int)f];
 
             constexpr static auto generator = [](double phase, int harmonics) {
@@ -152,24 +151,6 @@ namespace Kaixo
 
         double square(double phase, double f) 
         {
-            constexpr static int harmonics[]{
-                4096, 4096,
-                4096, 4096,
-                4096, 4096,
-                2048, 2048,
-                1024, 1024,
-                768,  512,
-                384,  256,
-                192,  128,
-                96,   64,
-                48,   32,
-                24,   16,
-                12,   8,
-                6,    4,
-                3,    2,
-                1,    1,
-                1,    1,
-            };
             const double h = harmonics[(int)f];
 
             constexpr static auto generator = [](double phase, int harmonics) {
@@ -184,24 +165,6 @@ namespace Kaixo
 
         double triangle(double phase, double f) 
         {
-            constexpr static int harmonics[]{
-                4096, 4096,
-                4096, 4096,
-                4096, 4096,
-                2048, 2048,
-                1024, 1024,
-                768,  512,
-                384,  256,
-                192,  128,
-                96,   64,
-                48,   32,
-                24,   16,
-                12,   8,
-                6,    4,
-                3,    2,
-                1,    1,
-                1,    1,
-            };
             const double h = harmonics[(int)f];
 
             constexpr static auto generator = [](double phase, int harmonics) {
@@ -214,9 +177,9 @@ namespace Kaixo
             return constrain(generator(myfmod1(phase + 0.5), h) * 0.95, -1, 1);
         };
 
-        // Lookup for basic wavetable, interpolate x-axis, since that's the phase
-        // and that needs to be smooth to avoid aliasing.
-        const LookupTable <
+        // Lookup for basic wavetable, 3rd axis is frequency, prevent aliasing by
+        // choosing the table with the correct number of harmonics
+        LookupTable <
             TableAxis{ .size = 2048, .begin = 0, .end = 1, .interpolate = true },
             TableAxis{ .size =    3, .begin = 0, .end = 1,. interpolate = true },
             TableAxis{ .size =   32, .begin = 0, .end = 32, .constrained = true }
@@ -242,23 +205,7 @@ namespace Kaixo
         // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
         bool basicLoaded() { return basict.done; };
         double basic(double phase, double wtpos, double f) 
-        {
-            //double p = phase;
-            //if (wtpos < 0.33)
-            //{
-            //    const double r = wtpos * 3;
-            //    return triangle(p, f) * r + sine(p, f) * (1 - r);
-            //}
-            //else if (wtpos < 0.66)
-            //{
-            //    const double r = (wtpos - 0.33) * 3;
-            //    return saw(p, f) * r + triangle(p, f) * (1 - r);
-            //}
-            //else
-            //{
-            //    const double r = (wtpos - 0.66) * 3;
-            //    return square(p, f) * r + saw(p, f) * (1 - r);
-            //}
+        {   // Log2(f) to get octave, *2 because 2 tables per octave
             return basict.get(phase, wtpos, fastlog2(f) * 2);
         }
     }

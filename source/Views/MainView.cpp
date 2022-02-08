@@ -5,7 +5,7 @@ namespace Kaixo
     MainView::MainView(const CRect& size, IControlListener* listener, MyEditor* editor)
         : CViewContainer{ size }
     {
-        setBackgroundColor(Background);
+        setBackgroundColor(Colors::Background);
         prst = new PresetView{ { 0, 0, 1085, 727 }, listener, editor };
         bgef = new BackgroundEffect{ {.size = { 745, 5, 745 + 335, 5 + 90 } } };
         tbrv = new TopBarView{ { 5, 5, 740, 50 }, listener, editor, prst };
@@ -19,7 +19,7 @@ namespace Kaixo
         prst->setVisible(false);
 
         auto* _v = new CViewContainer{ { 0, 0, 1085, 727 } };
-        _v->setBackgroundColor(Background);
+        _v->setBackgroundColor(Colors::Background);
         addView(_v);
 
         addView(bgef); addView(oscp); addView(cmbn); addView(lfop); addView(envp);
@@ -1596,7 +1596,7 @@ namespace Kaixo
             i.x += getViewSize().left, i.y += getViewSize().top;
 
         pContext->setDrawMode(kAntiAliasing);
-        pContext->setFillColor(MainGreen);
+        pContext->setFillColor(Colors::MainGreen);
         pContext->drawPolygon(points, kDrawFilled);
         pContext->drawPolygon(points2, kDrawFilled);
         pContext->drawPolygon(points3, kDrawFilled);

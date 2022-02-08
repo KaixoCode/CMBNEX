@@ -11,7 +11,7 @@ namespace Kaixo
 
         addView(new BackgroundEffect{ {.size = { 5 + x, 0, getWidth() - 5 - x, getHeight() } } });
 
-        CColor brdclr = BorderHover;
+        CColor brdclr = Colors::BorderHover;
         if (index == 0)
         {
             addView(new BackgroundEffect{ {.size = { 0,   0, 8,   0 + 67 }, .sides = 1 } });
@@ -337,7 +337,7 @@ namespace Kaixo
             .tag = Params::PreGainX + index,
             .editor = editor,
             .size = {  35,  7,  35 + 65,  7 + 53 },
-            .type = Parameter::NUMBER, .name = "Pre-Gain",
+            .type = Parameter::NUMBER, .name = "Pre",
             .min = 0, .max = 2, .reset = 1, .decimals = 1,
             .unit = " dB",
         } };
@@ -355,7 +355,7 @@ namespace Kaixo
             .tag = Params::GainX + index,
             .editor = editor,
             .size = { 165,  7, 165 + 65,  7 + 53 },
-            .type = Parameter::NUMBER, .name = "Gain",
+            .type = Parameter::NUMBER, .name = "Post",
             .min = 0, .max = 2, .reset = 1, .decimals = 1,
             .unit = " dB",
         } };

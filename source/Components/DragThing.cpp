@@ -23,8 +23,6 @@ namespace Kaixo
 
     void DragThing::draw(CDrawContext* pContext)
     {
-        constexpr CColor back = KnobBack;
-        constexpr CColor brdr = Border;
         auto a = getViewSize();
         pContext->setLineWidth(1);
         a.top += 1;
@@ -32,7 +30,7 @@ namespace Kaixo
         pContext->setFillColor({ 255, 255, 255, 16 });
         pContext->drawRect(a, kDrawFilled);
         a.right = a.left + 3;
-        pContext->setFillColor(MainGreen);
+        pContext->setFillColor(Colors::MainGreen);
         pContext->drawRect(a, kDrawFilled);
     }
 }

@@ -41,9 +41,9 @@ namespace Kaixo
         } settings;
 
     private:
-        CColor main = MainGreen;
-        CColor text = MainText;
-        CColor back = KnobBack;
+        CColor main = Colors::MainGreen;
+        CColor text = Colors::MainText;
+        CColor back = Colors::KnobBack;
         int modDragIndex = -1;
         int modEditIndex = -1;
         int modded = 0;

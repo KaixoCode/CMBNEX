@@ -28,11 +28,11 @@ namespace Kaixo
 
     void WaveformView::draw(CDrawContext* pContext)
     {
-        constexpr CColor back = ItemBack;
-        CColor main = MainGreen;
-        if (!enabled) main = OffText;
+        CColor back = Colors::ItemBack;
+        CColor main = Colors::MainGreen;
+        if (!enabled) main = Colors::OffText;
 
-        constexpr CColor crnr = OffText;
+        CColor crnr = Colors::OffText;
         pContext->setLineWidth(1);
         pContext->setLineStyle(CLineStyle{ CLineStyle::kLineCapRound, CLineStyle::kLineJoinRound });
         pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
