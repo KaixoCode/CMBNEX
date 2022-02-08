@@ -80,8 +80,7 @@ namespace Kaixo
             TableAxis{ .size = 100000, .begin = -10, .end = 10, .constrained = true },
             TableAxis{ .size = 1, .begin = 0, .end = 1, .interpolate = true }
         > drivet = [](double x, double amt) {
-            const double _abs = std::max(std::abs(x), 0.000001);
-            const double _pow = (x / _abs) * (1 - std::exp((-x * x) / _abs));
+            const double _pow = std::tanh(x);
             const double _cns = constrain(x, -1., 1.);
             return amt * _pow + (1 - amt) * _cns;
         };
