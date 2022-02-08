@@ -204,6 +204,8 @@ namespace Kaixo
                     diff = (where.x - pwhere.x) / getViewSize().getWidth(); break;
                 case INTERPOLATE: // Interpolate is horizontal, but slides slower.
                     diff = (where.x - pwhere.x) / (settings.parts.size() * getViewSize().getWidth()); break;
+                case NUMBER: // Interpolate is horizontal, but slides slower.
+                    diff = (pwhere.y - where.y) * 0.0025; break;
                 }
 
                 pwhere = where; // Set new pwhere

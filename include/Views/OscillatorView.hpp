@@ -12,11 +12,11 @@ namespace Kaixo
     class OscillatorToggle : public CViewContainer
     {
     public:
-        Label* outl, * shpl, * nsel, * fldl, * drvl, * ftrl;
+        Label* outl, * shpl, * nsel, * fldl, * drvl, * ftrl, * frzl;
         Parameter* dest, * rphs, * phse, * sync, * plsw, * wtps, * bend, 
             * dcof, * enbs, * shpr, * shpm, * shp2, * sh2m, * shmr, * enbn, 
             * nois, * nscl, * enbf, * flda, * bias, * enbd, * drvg, * drve, 
-            * enbr, * fltr, * freq, * reso;
+            * enbr, * fltr, * freq, * reso, * frez;
         XYPanel* panel;
 
         int index;

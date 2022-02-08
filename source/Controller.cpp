@@ -50,26 +50,37 @@ namespace Kaixo
 
     void MyEditor::savePreset(UTF8StringPtr file)
     {
-        std::string _path = file;
+        std::string _path = file; 
         if (!_path.ends_with(".cmbnex"))
             _path += ".cmbnex";
-        std::ofstream _file{ _path, std::ios::binary | std::ios::out };
+        std::ofstream _file{ _path, std::ios::out };
+        _file << std::fixed << std::setprecision(9);
 
         std::filesystem::path _p = _path;
         controller->preset = _p.stem().c_str();
-        for (int i = 0; i < Params::ModCount * ModAmt; i++)
-        {
-            int index = i * 2 + Params::Size;
-            float v = controller->getParamNormalized(index);
-            _file.write((char*)&v, sizeof(float));
-            v = controller->getParamNormalized(index + 1);
-            _file.write((char*)&v, sizeof(float));
-        }
 
         for (size_t i = 0; i < Params::Size; i++)
         {
-            float v = controller->getParamNormalized(i);
-            _file.write((char*)&v, sizeof(float));
+            // First write parameter name, to identify.
+            _file << ParamNames[i].name;
+            _file << "=";
+            _file << controller->getParamNormalized(i);
+
+            if (i < Params::ModCount) // If modable
+            {   // Add mod amount + goals
+                for (int j = 0; j < ModAmt; j++)
+                {
+                    int param = Params::Size + (i * ModAmt + j) * 2;
+                    _file << ",";
+                    double v = controller->getParamNormalized(param);
+                    _file << v;
+                    _file << ",";
+                    v = controller->getParamNormalized(param + 1);
+                    _file << v;
+                }
+            }
+            _file << ",";
+            _file << "\n";
         }
 
         _file.close();
@@ -83,39 +94,74 @@ namespace Kaixo
     void MyEditor::loadPreset(UTF8StringPtr file)
     {
         std::string _path = file;
-        std::ifstream _file{ _path, std::ios::binary | std::ios::in };
+        std::ifstream _file{ _path, std::ios::in };
         try
         {
             std::filesystem::path _p = _path;
             controller->preset = _p.stem().c_str();
-            for (int i = 0; i < Params::ModCount * ModAmt; i++)
-            {
-                float v;
-                _file.read((char*)&v, sizeof(float));
-                int index = i * 2 + Params::Size;
-                controller->beginEdit(index);
-                controller->performEdit(index, v); 
-                controller->setParamNormalized(index, v);
-                controller->endEdit(index);
-                _file.read((char*)&v, sizeof(float));
-                controller->beginEdit(index + 1);
-                controller->performEdit(index + 1, v);
-                controller->setParamNormalized(index + 1, v);
-                controller->endEdit(index + 1); 
-            }
 
-            for (size_t i = 0; i < Params::Size; i++)
+            std::string line;
+            while (std::getline(_file, line))
             {
-                float v;
-                _file.read((char*)&v, sizeof(float));
-                controller->beginEdit(i);
-                controller->performEdit(i, v);
-                if (auto p = controller->getParameterObject(i))
+                try
                 {
-                    p->setNormalized(v);
-                    p->changed();
+                    std::string name = line.substr(0, line.find_first_of("="));
+                    int param = -1;
+                    for (auto& i : ParamNames)
+                    {
+                        param++;
+                        if (i.name == name)
+                            break;
+                    }
+
+                    if (param >= Params::Size)
+                        continue;
+
+                    std::string remainder = line.substr(line.find_first_of("=") + 1);
+                    std::string values = remainder.substr(0, remainder.find_first_of(","));
+                    double value = std::stod(values);
+
+                    if (param < Params::ModCount)
+                    {
+                        try
+                        {
+                            for (int i = 0; i < ModAmt; i++)
+                            {
+                                remainder = remainder.substr(remainder.find_first_of(",") + 1);
+                                std::string values1 = remainder.substr(0, remainder.find_first_of(","));
+                                remainder = remainder.substr(remainder.find_first_of(",") + 1);
+                                std::string values2 = remainder.substr(0, remainder.find_first_of(","));
+                                double moda = std::stod(values1);
+                                double modb = std::stod(values2);
+
+                                int p = Params::Size + (param * ModAmt + i) * 2;
+
+                                controller->beginEdit(p);
+                                controller->performEdit(p, moda);
+                                controller->setParamNormalized(p, moda);
+                                controller->endEdit(p);
+
+                                controller->beginEdit(p + 1);
+                                controller->performEdit(p + 1, modb);
+                                controller->setParamNormalized(p + 1, modb);
+                                controller->endEdit(p + 1);
+                            }
+                        }
+                        catch (...)
+                        {
+
+                        }
+                    }
+
+                    controller->beginEdit(param);
+                    controller->performEdit(param, value);
+                    controller->setParamNormalized(param, value);
+                    controller->endEdit(param);
                 }
-                controller->endEdit(i);
+                catch (...)
+                {
+
+                }
             }
 
             _file.close();

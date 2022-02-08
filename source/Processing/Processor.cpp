@@ -17,7 +17,6 @@ namespace Kaixo
         voices[voice].frequency = voices[lastPressedVoice].frequency;
         voices[voice].pressedOld = voices[lastPressedVoice].frequency;
         voices[voice].pressed = pitch;
-        voices[voice].key = pitch;
         lastPressedVoice = voice;
 
         if (params.goals[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
@@ -188,7 +187,7 @@ namespace Kaixo
             for (int i = 0; i < Oscillators; i++)
             {   // Oscillator generate
                 if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                    voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i]);
+                    voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i] > 0.5, params.goals[Params::ShaperFreez1 + i] > 0.5);
                 else
                 {
                     voice.osc[i].sample = 0;
@@ -210,7 +209,7 @@ namespace Kaixo
                 if (params.goals[Params::ENBDrive1 + i] > 0.5)
                     voice.oscs[i] = Shapers::drive(voice.oscs[i], voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
                 else
-                    voice.oscs[i] = std::max(std::min(voice.oscs[i], 1.), -1.);
+                    voice.oscs[i] = constrain(voice.oscs[i], -1., 1.);
 
                 // Gain
                 voice.oscs[i] *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
@@ -271,7 +270,7 @@ namespace Kaixo
             if (params.goals[Params::ENBDriveX + i] > 0.5)
                 _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i]);
             else // Always clip, even if drive disabled, to prevent unstable filter
-                _v = std::max(std::min(_v, 1.), -1.);
+                _v = constrain(_v, -1., 1.);
 
             // Volume
             _v = _v * voice.modulated[Params::GainX + i] * 2;
@@ -359,27 +358,29 @@ namespace Kaixo
                 swapBuffer.right[j] += i.buffer.right[j];
     }
 
-    inline double Processor::Combine(double a, double b, int index, Voice& voice)
-    {   // Calculate all the combines
-        const auto mmin = voice.modulated[Params::MinMixX + index] ? voice.modulated[Params::MinMixX + index] * CombineSingle(a, b, MIN) : 0;
-        const auto mult = voice.modulated[Params::MultMixX + index] ? voice.modulated[Params::MultMixX + index] * CombineSingle(a, b, MULT) : 0;
-        const auto pong = voice.modulated[Params::PongMixX + index] ? voice.modulated[Params::PongMixX + index] * CombineSingle(a, b, PONG) : 0;
-        const auto mmax = voice.modulated[Params::MaxMixX + index] ? voice.modulated[Params::MaxMixX + index] * CombineSingle(a, b, MAX) : 0;
-        const auto mmod = voice.modulated[Params::ModMixX + index] ? voice.modulated[Params::ModMixX + index] * CombineSingle(a, b, MOD) : 0;
-        const auto mand = voice.modulated[Params::AndMixX + index] ? voice.modulated[Params::AndMixX + index] * CombineSingle(a, b, AND) : 0;
-        const auto inlv = voice.modulated[Params::InlvMixX + index] ? voice.modulated[Params::InlvMixX + index] * CombineSingle(a, b, INLV) : 0;
-        const auto mmor = voice.modulated[Params::OrMixX + index] ? voice.modulated[Params::OrMixX + index] * CombineSingle(a, b, OR) : 0;
-        const auto mxor = voice.modulated[Params::XOrMixX + index] ? voice.modulated[Params::XOrMixX + index] * CombineSingle(a, b, XOR) : 0;
-        const auto madd = voice.modulated[Params::AddMixX + index] ? voice.modulated[Params::AddMixX + index] * CombineSingle(a, b, ADD) : 0;
 
-        // This multiplier tries to normallize the result by checking total percentage of volume over all combine modes and dividing by that.
-        const auto multiplier = 1 + voice.modulated[Params::MinMixX + index] + voice.modulated[Params::MultMixX + index]
-            + voice.modulated[Params::PongMixX + index] + voice.modulated[Params::MaxMixX + index] + voice.modulated[Params::ModMixX + index]
-            + voice.modulated[Params::AndMixX + index] + voice.modulated[Params::InlvMixX + index] + voice.modulated[Params::OrMixX + index]
-            + voice.modulated[Params::XOrMixX + index] + voice.modulated[Params::AddMixX + index];
+    inline double Processor::Combine(double a, double b, int index, Voice& voice)
+    {   
+        const uint64_t _a = std::bit_cast<uint64_t>(a);
+        const uint64_t _b = std::bit_cast<uint64_t>(b);
+        const uint64_t _as = a * 4294967296;
+        const uint64_t _bs = b * 4294967296;
+
+        // Calculate all the combines
+        const double sum =
+            voice.modulated[Params::MinMixX + index] * 1.4 * (std::min(a, b))
+          + voice.modulated[Params::MaxMixX + index] * 1.3 * (std::max(a, b))
+          + voice.modulated[Params::AndMixX + index] * 1.5 * (std::bit_cast<double>(_a & _b))
+          + voice.modulated[Params::XOrMixX + index] * 1.7 * ((((uint64_t)(a * 4294967296) ^ (uint64_t)(b * 4294967296)) % 4294967296) / 4294967296. - 0.5)
+          + voice.modulated[Params::OrMixX + index] * 0.3 * std::bit_cast<double>(_a | _b)
+          + voice.modulated[Params::MultMixX + index] * a * b * 1.8
+          + voice.modulated[Params::PongMixX + index] * (1.2 * (a > 0 ? a : b < 0 ? b : 0))
+          + voice.modulated[Params::ModMixX + index] * 1.4 * (std::bit_cast<double>(_a % (_b == 0 ? 1 : _b)))
+          + voice.modulated[Params::InlvMixX + index] * 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)))
+          + voice.modulated[Params::AddMixX + index] * (a + b);
 
         // Return the combined signals, taking into account the mix value for this combiner.
-        return voice.modulated[Params::MixX + index] * 2 * (1 / multiplier) * (mmin + mult + pong + mmax + mmod + mand + inlv + mmor + mxor + madd) + (1 - voice.modulated[Params::MixX + index]) * (a + b);
+        return voice.modulated[Params::MixX + index] * sum + (1 - voice.modulated[Params::MixX + index]) * (a + b);
     }
 
     double Processor::CombineSingle(double a, double b, int mode)
@@ -441,8 +442,7 @@ namespace Kaixo
                 }
                 else if (source == (int)ModSources::Key)
                 {   // Key also takes into account bend and transpose
-                    const double _bendOffset = params[{ Params::PitchBend, ratio }] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
-                    voice.modulated[m] += (((voice.key + _bendOffset) / 127.0) * amount);
+                    voice.modulated[m] += (voice.key * amount);
                 }
                 else if (source >= (int)ModSources::Mac1)
                 {   // Macro, first calculate macro index, then multiply amount
@@ -485,6 +485,8 @@ namespace Kaixo
         if (voice.frequency < voice.pressed)
             if (voice.frequency + voice.deltaf > voice.pressed) voice.frequency = voice.pressed;
             else voice.frequency += voice.deltaf;
+
+        voice.key = (voice.frequency + _bendOffset) / 127.;
 
         for (int i = 0; i < Combines; i++)
         {   // Combines parameters

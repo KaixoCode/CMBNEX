@@ -297,72 +297,80 @@ namespace Kaixo
 
         inline double Shaper01(double x, double freq)
         {
-            const double p1 = SineShaper(x, freq, 2) * CenterExpander(x);
-            const double p2 = SineShaper(x, freq, 9) * CenterExpander(x);
-            const double p3 = SineShaper(x, freq, 19);
+            const double coefs[3]{ 2, 9, 19 };
+            const double p1 = SineShaper(x, freq, coefs[0]) * CenterExpander(x);
+            const double p2 = SineShaper(x, freq, coefs[1]) * CenterExpander(x);
+            const double p3 = SineShaper(x, freq, coefs[2]);
             const double p4 = SaturatorShaper(x, 3);
             return p1 * 0.2 + p2 * 0.2 + p3 * 0.4 + p4 * 0.2;
         }
 
         inline double Shaper02(double x, double freq)
         {
-            const double p1 = SineShaper(x, freq, 39);
-            const double p2 = SineShaper(x, freq, 4) * CenterExpander(x);
-            const double p3 = SineShaper(x, freq, 17);
+            const double coefs[3]{ 39, 4, 17 };
+            const double p1 = SineShaper(x, freq, coefs[0]);
+            const double p2 = SineShaper(x, freq, coefs[1]) * CenterExpander(x);
+            const double p3 = SineShaper(x, freq, coefs[2]);
             const double p4 = SaturatorShaper(x, 5);
             return p1 * 0.6 + p2 * 0.1 + p3 * 0.1 + p4 * 0.2;
         }
 
         inline double Shaper03(double x, double freq)
         {
-            const double p1 = SineShaper(x, freq, 5) * CenterExpander(x);
-            const double p2 = PoweredSineShaper(x, freq, 13, 2) * CenterExpander(x);
-            const double p3 = PoweredSineShaper(x, freq, 47, 5);
+            const double coefs[3]{ 5, 13, 47 };
+            const double p1 = SineShaper(x, freq, coefs[0]) * CenterExpander(x);
+            const double p2 = PoweredSineShaper(x, freq, coefs[1], 2) * CenterExpander(x);
+            const double p3 = PoweredSineShaper(x, freq, coefs[2], 5);
             const double p4 = SaturatorShaper(x, 2);
             return p1 * 0.2 + p2 * 0.2 + p3 * 0.3 + p4 * 0.3;
         }
 
         inline double Shaper04(double x, double freq)
         {
-            const double p1 = PoweredSineShaper(x, freq, 6, 5) * CenterExpander(x);
-            const double p2 = PoweredSineShaper(x, freq, 12, 2) * CenterExpander(x);
-            const double p3 = PoweredSineShaper(x, freq, 63, 1) * CenterExpander(x);
+            const double coefs[3]{ 6, 12, 63 };
+            const double p1 = PoweredSineShaper(x, freq, coefs[0], 5) * CenterExpander(x);
+            const double p2 = PoweredSineShaper(x, freq, coefs[1], 2) * CenterExpander(x);
+            const double p3 = PoweredSineShaper(x, freq, coefs[2], 1) * CenterExpander(x);
             const double p4 = SaturatorShaper(x, 5);
             return p1 * 0.3 + p2 * 0.2 + p3 * 0.3 + p4 * 0.2;
         }
 
         inline double Shaper11(double x, double freq)
         {
-            const double p1 = SineShaper(x, freq, 24);
-            const double p2 = SineShaper(x, freq, 7) * CenterExpander(x);
-            const double p3 = SineShaper(x, freq, 21);
+            const double coefs[3]{ 24, 7, 21 };
+            const double p1 = SineShaper(x, freq, coefs[0]);
+            const double p2 = SineShaper(x, freq, coefs[1]) * CenterExpander(x);
+            const double p3 = SineShaper(x, freq, coefs[2]);
             const double p4 = MinimizerShaper(x, 3, 2);
             return p1 * 0.2 + p2 * 0.2 + p3 * 0.4 + p4 * 0.2;
         }
 
         inline double Shaper12(double x, double freq)
         {
-            const double p1 = SineShaper(x, freq, 17);
-            const double p2 = SineShaper(x, freq, 16) * CenterExpander(x);
-            const double p3 = SineShaper(x, freq, 15) * CenterExpander(x);
+            const double coefs[3]{ 17, 16, 15 };
+            const double p1 = SineShaper(x, freq, coefs[0]);
+            const double p2 = SineShaper(x, freq, coefs[1]) * CenterExpander(x);
+            const double p3 = SineShaper(x, freq, coefs[2]) * CenterExpander(x);
             const double p4 = MinimizerShaper(x, 5, 1);
             return p1 * 0.6 + p2 * 0.1 + p3 * 0.1 + p4 * 0.2;
         }
 
         inline double Shaper13(double x, double freq)
         {
-            const double p1 = SineShaper(x, freq, 8) * CenterExpander(x);
-            const double p2 = PoweredSineShaper(x, freq, 16, 1) * CenterExpander(x);
-            const double p3 = PoweredSineShaper(x, freq, 32, 3);
+            const double coefs[3]{ 8, 16, 32 };
+            const double p1 = SineShaper(x, freq, coefs[0]) * CenterExpander(x);
+            const double p2 = PoweredSineShaper(x, freq, coefs[1], 1) * CenterExpander(x);
+            const double p3 = PoweredSineShaper(x, freq, coefs[2], 3);
             const double p4 = MinimizerShaper(x, 2, 5);
             return p1 * 0.2 + p2 * 0.2 + p3 * 0.3 + p4 * 0.3;
         }
 
         inline double Shaper14(double x, double freq)
         {
-            const double p1 = PoweredSineShaper(x, freq, 10, 7) * CenterExpander(x);
-            const double p2 = PoweredSineShaper(x, freq, 31, 1) * CenterExpander(x);
-            const double p3 = PoweredSineShaper(x, freq, 97, 4) * CenterExpander(x);
+            const double coefs[3]{ 10, 31, 97 };
+            const double p1 = PoweredSineShaper(x, freq, coefs[0], 7) * CenterExpander(x);
+            const double p2 = PoweredSineShaper(x, freq, coefs[1], 1) * CenterExpander(x);
+            const double p3 = PoweredSineShaper(x, freq, coefs[2], 4) * CenterExpander(x);
             const double p4 = MinimizerShaper(x, 5, 3);
             return p1 * 0.3 + p2 * 0.2 + p3 * 0.3 + p4 * 0.2;
         }
@@ -598,7 +606,7 @@ namespace Kaixo
         Oscillator(const Settings& s = {}) : settings(s) {}
 
         void Generate(size_t);
-        double Offset(double phaseoffset, bool shaper); // Generate at phase offset, basic wavetable.
+        double Offset(double phaseoffset, bool shaper, bool freeze); // Generate at phase offset, basic wavetable.
         double OffsetSimple(double phaseoffset); // Only simple shaper, at phase offset, basic wavetable.
         double OffsetClean(double phaseoffset); // No shapers, at phase offset, sub wavetable.
 

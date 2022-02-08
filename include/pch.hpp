@@ -51,4 +51,29 @@ using namespace Steinberg::Vst;
 #include <complex>
 #include <cassert>
 
+#if defined(_M_X64) || defined(__amd64__) || defined(__SSE2__) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
 
+#ifndef USE_SIMD
+#define USE_SIMD 1
+#endif
+
+#if USE_SIMD
+#include <immintrin.h>
+#endif
+
+#elif defined (__ARM_NEON__) || defined (__ARM_NEON) || defined (__arm64__) || defined (__aarch64__)
+
+#ifndef USE_SIMD
+#define USE_SIMD 1
+#endif
+
+#include <arm_neon.h>
+
+#else
+
+// No SIMD Support
+#ifndef USE_SIMD
+#define USE_SIMD 0
+#endif
+
+#endif

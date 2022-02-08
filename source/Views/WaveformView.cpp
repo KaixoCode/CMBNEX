@@ -9,7 +9,7 @@ namespace Kaixo
         for (double v = p; v < p + step; v += step / _oversample)
         {
             osc.phase = std::fmod(v, 1.0);
-            double _vs = (LFO ? osc.OffsetSimple(phase) : osc.Offset(phase, true)) + offset * 2 - 1;
+            double _vs = (LFO ? osc.OffsetSimple(phase) : osc.Offset(phase, true, false)) + offset * 2 - 1;
 
             // Fold
             if (enableFold)

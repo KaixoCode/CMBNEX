@@ -40,8 +40,8 @@ enum Params
     Macro1, Macro2, Macro3, Macro4, Macro5,
 
     Volume1,      Volume2,      Volume3,      Volume4,
-    Pitch1,       Pitch2,       Pitch3,       Pitch4,
     Detune1,      Detune2,      Detune3,      Detune4,
+    Pitch1,       Pitch2,       Pitch3,       Pitch4,
     Pan1,         Pan2,         Pan3,         Pan4,
 
     WTPos1,       WTPos2,       WTPos3,       WTPos4,
@@ -55,6 +55,7 @@ enum Params
     ShaperMix1,   ShaperMix2,   ShaperMix3,   ShaperMix4,
     Shaper21,     Shaper22,     Shaper23,     Shaper24,
     Shaper2Mix1,  Shaper2Mix2,  Shaper2Mix3,  Shaper2Mix4,
+    ShaperFreez1, ShaperFreez2, ShaperFreez3, ShaperFreez4,
     ShaperMorph1, ShaperMorph2, ShaperMorph3, ShaperMorph4,
 
     Noise1,       Noise2,       Noise3,       Noise4,
@@ -163,8 +164,8 @@ constexpr ParamInfo ParamNames[]
     { "Macro P", 0 }, { "Macro Q", 0 }, { "Macro R", 0 }, { "Macro S", 0 }, { "Macro T", 0 },
 
     { "A Gain", 1 },           { "B Gain", 0 },           { "C Gain", 0 },           { "D Gain", 0 },
-    { "A Pitch", 0.5, 1, 0 },  { "B Pitch", 0.5, 1, 0 },  { "C Pitch", 0.5, 1, 0 },  { "D Pitch", 0.5, 1, 0 },
     { "A Detune", 0.5, 1, 0 }, { "B Detune", 0.5, 1, 0 }, { "C Detune", 0.5, 1, 0 }, { "D Detune", 0.5, 1, 0 },
+    { "A Pitch", 0.5, 1, 0 },  { "B Pitch", 0.5, 1, 0 },  { "C Pitch", 0.5, 1, 0 },  { "D Pitch", 0.5, 1, 0 },
     { "A Pan", 0.5, 1 },       { "B Pan", 0.5, 1 },       { "C Pan", 0.5, 1 },       { "D Pan", 0.5, 1 },
 
     { "A Pos", 0 },            { "B Pos", 0 },            { "C Pos", 0 },            { "D Pos", 0 },
@@ -178,7 +179,8 @@ constexpr ParamInfo ParamNames[]
     { "A SHP-X Mix", 0.5 },    { "B SHP-X Mix", 0.5 },    { "C SHP-X Mix", 0.5 },    { "D SHP-X Mix", 0.5 },
     { "A SHP-Y", 0.5 },        { "B SHP-Y", 0.5 },        { "C SHP-Y", 0.5 },        { "D SHP-Y", 0.5 },
     { "A SHP-Y Mix", 0.5 },    { "B SHP-Y Mix", 0.5 },    { "C SHP-Y Mix", 0.5 },    { "D SHP-Y Mix", 0.5 },
-    { "A Shaper Morph", 0 },   { "B Shaper Morph", 0 },   { "C Shaper Morph", 0 },   { "D Shaper Morph", 0 },
+    { "A Shaper Freeze", 1 },  { "B Shaper Freeze", 1 },  { "C Shaper Freeze", 1 },  { "D Shaper Freeze", 1 },
+    { "A Shaper Morph", 0.1 }, { "B Shaper Morph", 0.1 }, { "C Shaper Morph", 0.1 }, { "D Shaper Morph", 0.1 },
 
     { "A Noise", 0 },          { "B Noise", 0 },          { "C Noise", 0 },          { "D Noise", 0 },
     { "A Color", 0.5 },        { "B Color", 0.5 },        { "C Color", 0.5 },        { "D Color", 0.5 },

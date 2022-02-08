@@ -5,6 +5,7 @@ namespace Kaixo
 {
 	// Some small util functions.
 	constexpr auto constrain(auto x, auto y, auto z) { return (x < y ? y : x > z ? z : x); } //std::clamp(x, y, z)
+	static inline auto fastlog2(double x) { return std::log2(x); }
 	constexpr auto myfmod1(auto a) { return a - (int)a; }
 	constexpr auto db2lin(auto db) { return std::powf(10.0f, 0.05 * (db)); }
 	constexpr auto lin2db(auto lin) { return (20.0f * std::log10f(static_cast<float>(lin))); }

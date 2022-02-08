@@ -11,7 +11,7 @@ namespace Kaixo
         // Interpolating shapers lookup table axis.
         constexpr TableAxis shaperx{ .size = 2048, .begin = -1, .end = 1, .interpolate = true };
         constexpr TableAxis shapery{ .size = 8, .begin = 0, .end = 1, .interpolate = true };
-        constexpr TableAxis shaperz{ .size = 1024, .begin = 0, .end = 1, .interpolate = true };
+        constexpr TableAxis shaperz{ .size = 1024, .begin = 0, .end = 2, .constrained = true, .interpolate = true };
 
         // Wave shaper 0% morph lookup table
         const LookupTable<shaperx, shapery, shaperz> ws0m = [&](double x, double amt, double freq) {
@@ -60,34 +60,36 @@ namespace Kaixo
         }
 
         // Wavefolder lookup table
-        //const LookupTable <
-        //    TableAxis{ .size = 100000, .begin = -4, .end = 4 }
-        //> foldt = [](double x) {
-        //    constexpr static double b = 4;
-        //    return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
-        //};
+        const LookupTable <
+            TableAxis{ .size = 100000, .begin = -4, .end = 4 }
+        > foldt = [](double x) {
+            constexpr static double b = 4;
+            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        };
 
         double fold(double x, double bias)
         {
-            //return foldt.get(myfmod1((x + bias) * 0.25) * 4);
-            constexpr static double b = 4;
-            x += bias;
-            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+            return foldt.get(myfmod1((x + bias) * 0.25) * 4);
+            //constexpr static double b = 4;
+            //x += bias;
+            //return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
         }
 
         // Drive lookup table, 1d.
         const LookupTable <
-            TableAxis{ .size = 100000, .begin = -10, .end = 10, .constrained = true }
-        > drivet = [](double x) {
+            TableAxis{ .size = 100000, .begin = -10, .end = 10, .constrained = true },
+            TableAxis{ .size = 1, .begin = 0, .end = 1, .interpolate = true }
+        > drivet = [](double x, double amt) {
             const double _abs = std::max(std::abs(x), 0.000001);
             const double _pow = (x / _abs) * (1 - std::exp((-x * x) / _abs));
-            return _pow;
+            const double _cns = constrain(x, -1., 1.);
+            return amt * _pow + (1 - amt) * _cns;
         };
 
         double drive(double x, double gain, double amt)
         {   // Drive table is 1d, interpolate between constrained value.
             const double _gain = gain * x;
-            return drivet.get(_gain) * amt + (constrain(_gain, -1., 1.)) * (1 - amt);
+            return drivet.get(_gain, amt);
         }
 
         // Power curve lookup table, interpolate x-axis once again to prevent aliasing.
@@ -258,7 +260,7 @@ namespace Kaixo
             //    const double r = (wtpos - 0.66) * 3;
             //    return square(p, f) * r + saw(p, f) * (1 - r);
             //}
-            return basict.get(phase, wtpos, (std::log(f) / std::numbers::ln2_v<double>) * 2);
+            return basict.get(phase, wtpos, fastlog2(f) * 2);
         }
     }
 
@@ -334,7 +336,7 @@ namespace Kaixo
     void Oscillator::Generate(size_t c)
     {   // Only generate at channel == 0
         if (c != 0) return;
-        sample = Offset(0, true);
+        sample = Offset(0, true, false);
     }
 
     double Oscillator::OffsetClean(double phaseoffset)
@@ -349,7 +351,7 @@ namespace Kaixo
         return Shapers::simpleshaper(Wavetables::basic(myfmod1(phase + phaseoffset + 100000), settings.wtpos, settings.frequency), settings.shaper3);
     }
 
-    double Oscillator::Offset(double phaseoffset, bool shaper)
+    double Oscillator::Offset(double phaseoffset, bool shaper, bool freeze)
     {
         // Increment phase according to the frequency
         double phase = this->phase;
@@ -357,12 +359,13 @@ namespace Kaixo
 
         double _s = 0;
         const double _pw = settings.pw * 2 - 1;
+        const double _sfm = freeze ? 2 * settings.shaperMorph * (30 / settings.frequency) : settings.shaperMorph;
 
         // Separate cases for pulse width < 0 and > 0
         if (_pw > 0)
         {   // Apply phase shaper, taking into account mix
             const double _ph = !shaper ? phase : 
-                Shapers::mainPhaseShaper(phase, settings.shaper, settings.shaperMorph) * settings.shaperMix + // Shaper mix
+                Shapers::mainPhaseShaper(phase, settings.shaper, _sfm) * settings.shaperMix + // Shaper mix
                 phase * (1 - settings.shaperMix); // Clean mix
 
             // Pulse width calculations
@@ -380,7 +383,7 @@ namespace Kaixo
 
             // Apply the main waveshaper, taking into account mix
             const double _s1 = !shaper ? _wt :
-                Shapers::mainWaveShaper(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + // Shaper mix
+                Shapers::mainWaveShaper(_wt, settings.shaper2, _sfm) * settings.shaper2Mix + // Shaper mix
                 _wt * (1 - settings.shaper2Mix); // Clean mix 
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.
@@ -389,7 +392,7 @@ namespace Kaixo
         else
         {   // Apply phase shaper, taking into account mix
             const double _ph = !shaper ? phase :
-                Shapers::mainPhaseShaper(phase, settings.shaper, settings.shaperMorph) * settings.shaperMix + // Shaper mix
+                Shapers::mainPhaseShaper(phase, settings.shaper, _sfm) * settings.shaperMix + // Shaper mix
                 phase * (1 - settings.shaperMix); // Clean mix
 
             // Since pulse width < 0 here, we do 1 + _pw here.
@@ -408,7 +411,7 @@ namespace Kaixo
 
             // Apply the main waveshaper, taking into account mix
             const double _s1 = !shaper ? _wt :
-                Shapers::mainWaveShaper(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + // Shaper mix
+                Shapers::mainWaveShaper(_wt, settings.shaper2, _sfm) * settings.shaper2Mix + // Shaper mix
                 _wt * (1 - settings.shaper2Mix); // Clean mix
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.

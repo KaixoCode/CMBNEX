@@ -116,6 +116,18 @@ namespace Kaixo
             .editor = editor,
             .size = { 193,  14 + y, 193 + 14,  14 + 14 + y },
             .type = Parameter::BUTTON, .dark = true
+        } };        
+
+        frzl = new Label{ {
+            .size = { 340,  13 + y, 340 + 50,  13 + 18 + y },
+            .value = "Freeze", .center = false, .fontsize = 14
+        } };
+
+        frez = new Parameter{ {
+            .tag = Params::ShaperFreez1 + index,
+            .editor = editor,
+            .size = { 324,  14 + y, 324 + 14,  14 + 14 + y },
+            .type = Parameter::BUTTON, .dark = true
         } };
 
         shpr = new Parameter{ {
@@ -298,7 +310,7 @@ namespace Kaixo
         addView(sh2m); addView(shmr); addView(nsel); addView(enbn); addView(nois); addView(nscl); 
         addView(fldl); addView(enbf); addView(flda); addView(bias); addView(drvl); addView(enbd); 
         addView(drvg); addView(drve); addView(ftrl); addView(enbr); addView(fltr); addView(freq); 
-        addView(reso); addView(dest); addView(outl); addView(panel);
+        addView(reso); addView(dest); addView(outl); addView(panel);addView(frez); addView(frzl);
     }
 
     OscillatorToggle::~OscillatorToggle()
@@ -307,7 +319,7 @@ namespace Kaixo
         enbs->forget(); shpr->forget(); shpm->forget(); shp2->forget(); sh2m->forget(); shmr->forget(); 
         enbn->forget(); nois->forget(); nscl->forget(); enbf->forget(); flda->forget(); bias->forget(); 
         enbd->forget(); drvg->forget(); drve->forget(); enbr->forget(); fltr->forget(); freq->forget(); 
-        reso->forget(); dest->forget();
+        reso->forget(); dest->forget(); frez->forget();
     }
 
     void OscillatorView::Select()
@@ -418,6 +430,8 @@ namespace Kaixo
 
             toggle->enbs->settings.enabled = _clr;
             bool _c1 = toggle->enbs->getValue() > 0.5 && _clr;
+            toggle->frzl->settings.enabled = _c1;
+            toggle->frez->settings.enabled = _c1;
             toggle->shpl->settings.enabled = _c1;
             toggle->shpr->settings.enabled = _c1;
             toggle->shpm->settings.enabled = _c1;
@@ -462,7 +476,7 @@ namespace Kaixo
             toggle->enbf->setDirty(true); toggle->flda->setDirty(true); toggle->bias->setDirty(true); toggle->drvl->setDirty(true); 
             toggle->enbd->setDirty(true); toggle->drvg->setDirty(true); toggle->drve->setDirty(true); toggle->ftrl->setDirty(true); 
             toggle->enbr->setDirty(true); toggle->fltr->setDirty(true); toggle->freq->setDirty(true); toggle->reso->setDirty(true); 
-            toggle->outl->setDirty(true);
+            toggle->outl->setDirty(true); toggle->frez->setDirty(true); toggle->frzl->setDirty(true);
 
             wfrm->setDirty(true);
         }
