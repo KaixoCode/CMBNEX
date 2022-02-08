@@ -33,6 +33,8 @@ namespace Kaixo
         OscillatorToggle* toggle;
         bool selected = false;
 
+        bool wtloaded = false;
+
         Parameter* enbl, * tune, * pann, * detn, * volm;
         Label* titl = nullptr; // Oscillator title
         WaveformView* wfrm = nullptr; // Waveform view

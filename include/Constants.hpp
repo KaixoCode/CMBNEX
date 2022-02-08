@@ -20,6 +20,7 @@ constexpr CColor KnobBackDark =  CColor{ 30, 30, 30, 255 };
 constexpr CColor Border =  CColor{ 30, 30, 30, 255 };
 constexpr CColor MainText = CColor{ 200, 200, 200, 255 };
 constexpr CColor OffText = CColor{ 100, 100, 100, 255 };
+constexpr CColor OffTextL = CColor{ 110, 110, 110, 255 };
 constexpr CColor BorderHover = CColor{ 70, 70, 70, 255 };
 #endif 
 

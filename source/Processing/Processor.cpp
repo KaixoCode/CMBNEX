@@ -12,7 +12,7 @@ namespace Kaixo
 
     void Processor::TriggerVoice(int voice, int pitch, double velocity)
     {
-        voices[voice].rand = random() * 0.5 + 0.5;
+        voices[voice].rand = voices[voice].myrandom() * 0.5 + 0.5;
         voices[voice].velocity = velocity;
         voices[voice].frequency = voices[lastPressedVoice].frequency;
         voices[voice].pressedOld = voices[lastPressedVoice].frequency;
@@ -188,7 +188,7 @@ namespace Kaixo
             for (int i = 0; i < Oscillators; i++)
             {   // Oscillator generate
                 if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                    voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5));
+                    voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i]);
                 else
                 {
                     voice.osc[i].sample = 0;
@@ -204,8 +204,8 @@ namespace Kaixo
 
                 // Noise
                 if (params.goals[Params::ENBNoise1 + i] > 0.5)
-                    voice.oscs[i] += voice.modulated[Params::Noise1 + i] * voice.noiself[i].Apply(voice.noisehf[i].Apply(random(), channel), channel); // Add noise
-
+                    voice.oscs[i] += voice.modulated[Params::Noise1 + i] * voice.noiself[i].Apply(voice.noisehf[i].Apply(voice.myrandom(), channel), channel); // Add noise
+                    
                 // Drive
                 if (params.goals[Params::ENBDrive1 + i] > 0.5)
                     voice.oscs[i] = Shapers::drive(voice.oscs[i], voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
@@ -216,8 +216,12 @@ namespace Kaixo
                 voice.oscs[i] *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
                 
                 // Filter
-                if (!voice.filterp[i].off && params.goals[Params::ENBFilter1 + i] > 0.5)
+                if (params.goals[Params::ENBFilter1 + i] > 0.5)
                     voice.oscs[i] = voice.filter[i].Apply(voice.oscs[i], channel); // Apply pre-combine filter
+
+                // Apply AAF if oversampling
+                //if (params.goals[Params::Oversample] > 0)
+                //    voice.oscs[i] = voice.aaf[2 + i].Apply(voice.oscs[i], voice.aafp[2 + i]);
             }
 
             { // Sub oscillator
@@ -273,11 +277,15 @@ namespace Kaixo
             _v = _v * voice.modulated[Params::GainX + i] * 2;
 
             // Filter
-            if (!voice.cfilterp[i].off && params.goals[Params::ENBFilterX + i] > 0.5)
+            if (params.goals[Params::ENBFilterX + i] > 0.5)
                 _v = voice.cfilter[i].Apply(_v, channel);
 
             // DCoffset
             _v = params.goals[Params::DCX + i] > 0.5 ? voice.dcoff[i].Apply(_v, channel) : _v;
+
+            // Apply AAF if oversampling
+            //if (params.goals[Params::Oversample] > 0)
+            //    _v = voice.aaf[6 + i + channel * Combines].Apply(_v, voice.aafp[6 + i + channel * Combines]);
 
             if (i == Combines - 1) // if combiner 'Z', add to output and break.
             {
@@ -323,7 +331,7 @@ namespace Kaixo
         {
             // Divide voices among worker threads and main thread
             std::future<void> futures[Voices];
-            bool onMain[Voices]{ false, false, false, false, false, false };
+            bool onMain[Voices]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
             int forDone = 0;
             for (int i = 0; i < Voices; i++)
             {
@@ -562,7 +570,7 @@ namespace Kaixo
             voice.noiselfp[i].RecalculateParameters(ratio == 1);
 
             voice.noisehfp[i].sampleRate = voice.samplerate;
-            voice.noisehfp[i].f0 = (std::max(voice.modulated[Params::Color1 + i] * 2 - 1, 0.)) * 21000 + 30;
+            voice.noisehfp[i].f0 = (std::max(voice.modulated[Params::Color1 + i] * 2 - 1, 0.)) * 21000 + 100;
             voice.noisehfp[i].Q = 0.6;
             voice.noisehfp[i].type = FilterType::HighPass;
             voice.noisehfp[i].RecalculateParameters(ratio == 1);
@@ -583,9 +591,11 @@ namespace Kaixo
     }
 
     inline void Processor::GenerateVoice(Voice& voice)
-    {   // Calculate oversample amount
-        const size_t _index = std::floor(params.goals[Params::Oversample] * 4);
-        const size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
+    {   
+        // Calculate oversample amount
+        size_t _index = std::floor(params.goals[Params::Oversample] * 4);
+        size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
+        if (processData->processMode & ProcessModes::kOffline) _osa = 16;
 
         // Set oversampled sample rate in voice
         voice.samplerate = processData->processContext->sampleRate * _osa;
@@ -615,15 +625,12 @@ namespace Kaixo
             }
             else // Oversampling
             {
-                voice.aafp1.sampleRate = voice.samplerate;
-                voice.aafp1.f0 = std::min(22000., voice.samplerate * 0.4);
-                voice.aafp2.sampleRate = voice.samplerate;
-                voice.aafp2.f0 = std::min(22000., voice.samplerate * 0.4);
-                //voice.aafp.f0 = processData->processContext->sampleRate * 0.4;
-                //voice.aafp.Q = 0.6;
-                //voice.aafp.type = FilterType::LowPass;
-                voice.aafp1.RecalculateParameters();
-                voice.aafp2.RecalculateParameters();
+                for (auto& i : voice.aafp)
+                {
+                    i.sampleRate = voice.samplerate;
+                    i.f0 = std::min(22000., voice.samplerate * 0.4);
+                    i.RecalculateParameters();
+                }
 
                 double _suml = 0;
                 double _sumr = 0;
@@ -632,8 +639,8 @@ namespace Kaixo
                     double _l = GenerateSample(0, *processData, voice, ratio);
                     double _r = GenerateSample(1, *processData, voice, ratio);
 
-                    _l = voice.aaf1.Apply(_l, voice.aafp1);
-                    _r = voice.aaf2.Apply(_r, voice.aafp2);
+                    _l = voice.aaf[0].Apply(_l, voice.aafp[0]);
+                    _r = voice.aaf[1].Apply(_r, voice.aafp[1]);
 
                     _suml += _l;
                     _sumr += _r;

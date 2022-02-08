@@ -11,6 +11,7 @@ namespace Kaixo
         {
             CRect size; // Initial size, don't edit here, no effect!
             bool pressed = false; // Is pressed, switches light/dark edges, if button: display color.
+            bool hovering = false; // Is hovering, switches light/dark edges, if button: display color.
             bool dark = false;   // Is dark theme?
             bool button = false; // Is for button? Displays color when pressed = true
             bool enabled = true; // enabled for button only, displays gray instead of color when false.

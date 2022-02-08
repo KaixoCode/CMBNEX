@@ -10,84 +10,53 @@ namespace Kaixo
     {
         // Interpolating shapers lookup table axis.
         constexpr TableAxis shaperx{ .size = 2048, .begin = -1, .end = 1, .interpolate = true };
-        constexpr TableAxis shapery{ .size = 1000, .begin = 0, .end = 1 };
+        constexpr TableAxis shapery{ .size = 8, .begin = 0, .end = 1, .interpolate = true };
+        constexpr TableAxis shaperz{ .size = 1024, .begin = 0, .end = 1, .interpolate = true };
 
         // Wave shaper 0% morph lookup table
-        const LookupTable<shaperx, shapery> ws0m = [&](double x, double amt) {
-            constexpr double steps = 4;
+        const LookupTable<shaperx, shapery, shaperz> ws0m = [&](double x, double amt, double freq) {
+            constexpr double steps = 8;
 
             constexpr double(*funcs[(int)steps + 2])(double, double){
-                shaper7, shaper8, noShaper, shaper0, shaper6, shaper6,
+                Shaper04, Shaper03, Shaper02, Shaper01, noShaper, Shaper11, Shaper12, Shaper13, Shaper14, Shaper14,
+                //shaper5, shaper3, shaper2, shaper9, noShaper, shaper0, shaper7, shaper8, shaper6, shaper6,
             };
 
-            const int i = amt * 4 + 1;
-            const double r = myfmod1(amt * 4);
+            const int i = amt * steps + 1;
+            const double r = myfmod1(amt * steps);
             const auto& func1 = funcs[i - 1];
             const auto& func2 = funcs[i];
-            const double s1 = func1(x, 1 - r);
-            const double s2 = func2(x, r);
+            const double s1 = func1(x, freq) * (1 - r);
+            const double s2 = func2(x, freq) * r;
             return s1 + s2;
         };
 
-        // Wave shaper 100% morph lookup table
-        const LookupTable<shaperx, shapery> ws100m = [&](double x, double amt) {
-            constexpr double steps = 4;
-
-            constexpr double(*funcs[(int)steps + 2])(double, double){
-                shaper3, shaper2, shaper9, shaper5, shaper1, shaper1,
-            };
-
-            const int i = amt * steps + 1;
-            const double r = myfmod1(amt * steps);
-            const auto& func1 = funcs[i - 1];
-            const auto& func2 = funcs[i];
-            const double s3 = func1(x, 1 - r);
-            const double s4 = func2(x, r);
-            return s3 + s4;
-        };
-
         // Phase shaper 0% morph lookup table
-        const LookupTable<shaperx, shapery> ps0m = [&](double x, double amt) {
-            constexpr double steps = 4;
+        const LookupTable<shaperx, shapery, shaperz> ps0m = [&](double x, double amt, double freq) {
+            constexpr double steps = 8;
 
             constexpr double(*funcs[(int)steps + 2])(double, double){
-                shaper7, shaper8, noShaper, shaper0, shaper6, shaper6,
+                Shaper04, Shaper03, Shaper02, Shaper01, noShaper, Shaper11, Shaper12, Shaper13, Shaper14, Shaper14,
+                //shaper5, shaper3, shaper2, shaper9, noShaper, shaper0, shaper7, shaper8, shaper6, shaper6,
             };
 
             const int i = amt * steps + 1;
             const double r = myfmod1(amt * steps);
             const auto& func1 = funcs[i - 1];
             const auto& func2 = funcs[i];
-            const double s1 = func1(x, 1 - r);
-            const double s2 = func2(x, r);
-            return constrain(s1 + s2, 0., 1.);
-        };
-
-        // Phase shaper 100% morph lookup table
-        const LookupTable<shaperx, shapery> ps100m = [&](double x, double amt) {
-            constexpr double steps = 4;
-
-            constexpr double(*funcs[(int)steps + 2])(double, double){
-                shaper3, shaper2, shaper9, shaper5, shaper1, shaper1,
-            };
-
-            const int i = amt * steps + 1;
-            const double r = myfmod1(amt * steps);
-            const auto& func1 = funcs[i - 1];
-            const auto& func2 = funcs[i];
-            const double s3 = func1(x, 1 - r);
-            const double s4 = func2(x, r);
-            return constrain(s3 + s4, 0., 1.);
+            const double s1 = func1(x * 2 - 1, freq) * (1 - r);
+            const double s2 = func2(x * 2 - 1, freq) * r;
+            return constrain(s1 + s2, -1., 1.) * 0.5 + 0.5;
         };
 
         double mainWaveShaper(double x, double amt, double morph)
         {   // Interpolate between 0% and 100% morph tables, since a 3d lookup would use too much memory
-            return (1 - morph) * ws0m.get(x, amt) + morph * ws100m.get(x, amt);
+            return /*(1 - morph) **/ ws0m.get(x, amt, morph);// +morph * ws100m.get(x, amt);
         }
 
         double mainPhaseShaper(double x, double amt, double morph)
         {   // Interpolate between 0% and 100% morph tables, since a 3d lookup would use too much memory
-            return (1 - morph) * ps0m.get(x, amt) + morph * ps100m.get(x, amt);
+            return /*(1 - morph) * */ps0m.get(x, amt, morph); // +morph * ps100m.get(x, amt);
         }
 
         // Wavefolder lookup table
@@ -146,18 +115,10 @@ namespace Kaixo
 
     namespace Wavetables
     {
-        const LookupTable <
-            TableAxis{ .size = 1000, .begin = 0, . end = 1, .interpolate = true }
-        > sinet = [](double phase) {            
-            return std::sin(phase * std::numbers::pi_v<double> *2);
-        };
+        double sine(double phase) { return std::sin(phase * std::numbers::pi_v<double> *2); };
 
-        double sine(double phase, double f) { return sinet.get(phase); };
-
-        const LookupTable <
-            TableAxis{ .size = 2048, .begin = 0, . end = 1, .interpolate = true },
-            TableAxis{ .size = 32, .begin = 0, .end = 32, .constrained = true }
-        > sawt = [](double phase, double f) {
+        double saw(double phase, double f) 
+        {
             constexpr static int harmonics[]{ 
                 1024, 1024, 
                 1024, 1024, 
@@ -188,12 +149,8 @@ namespace Kaixo
             return constrain(generator(phase, h) * 0.90, -1, 1);
         };
 
-        double saw(double phase, double f) { return sawt.get(phase, (std::log(f) / std::numbers::ln2_v<double>) * 2); };
-
-        const LookupTable <
-            TableAxis{ .size = 2048, .begin = 0, . end = 1, .interpolate = true },
-            TableAxis{ .size = 32, .begin = 0, .end = 32, .constrained = true }
-        > squaret = [](double phase, double f) {
+        double square(double phase, double f) 
+        {
             constexpr static int harmonics[]{
                 4096, 4096,
                 4096, 4096,
@@ -224,12 +181,8 @@ namespace Kaixo
             return constrain(generator(phase, h) * 0.82, -1, 1);
         };
 
-        double square(double phase, double f) { return squaret.get(phase, (std::log(f) / std::numbers::ln2_v<double>) * 2); };
-
-        const LookupTable <
-            TableAxis{ .size = 2048, .begin = 0, . end = 1, .interpolate = true },
-            TableAxis{ .size = 32, .begin = 0, .end = 32, .constrained = true }
-        > trianglet = [](double phase, double f) {
+        double triangle(double phase, double f) 
+        {
             constexpr static int harmonics[]{
                 4096, 4096,
                 4096, 4096,
@@ -260,40 +213,18 @@ namespace Kaixo
             return constrain(generator(myfmod1(phase + 0.5), h) * 0.95, -1, 1);
         };
 
-        double triangle(double phase, double f) { return trianglet.get(phase, (std::log(f) / std::numbers::ln2_v<double>) * 2); }
-
         // Lookup for basic wavetable, interpolate x-axis, since that's the phase
         // and that needs to be smooth to avoid aliasing.
-        //const LookupTable <
-        //    TableAxis{ .size = 1000, .begin = 0, .end = 1, .interpolate = true },
-        //    TableAxis{ .size = 1000, .begin = 0, .end = 1 }
-        //> basict = [](double phase, double wtpos) {
-        //    double p = phase;
-        //    if (wtpos < 0.33)
-        //    {
-        //        const double r = wtpos * 3;
-        //        return triangle(p, wtpos) * r + sine(p, wtpos) * (1 - r);
-        //    }
-        //    else if (wtpos < 0.66)
-        //    {
-        //        const double r = (wtpos - 0.33) * 3;
-        //        return saw(p, wtpos) * r + triangle(p, wtpos) * (1 - r);
-        //    }
-        //    else
-        //    {
-        //        const double r = (wtpos - 0.66) * 2.9;
-        //        return square(p, wtpos) * r + saw(p, wtpos) * (1 - r);
-        //    }
-        //};
-
-        // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
-        double basic(double phase, double wtpos, double f) 
-        {
+        const LookupTable <
+            TableAxis{ .size = 2048, .begin = 0, .end = 1, .interpolate = true },
+            TableAxis{ .size =    3, .begin = 0, .end = 1,. interpolate = true },
+            TableAxis{ .size =   32, .begin = 0, .end = 32, .constrained = true }
+        > basict = [](double phase, double wtpos, double f) {
             double p = phase;
             if (wtpos < 0.33)
             {
                 const double r = wtpos * 3;
-                return triangle(p, f) * r + sine(p, f) * (1 - r);
+                return triangle(p, f) * r + sine(p) * (1 - r);
             }
             else if (wtpos < 0.66)
             {
@@ -305,7 +236,29 @@ namespace Kaixo
                 const double r = (wtpos - 0.66) * 3;
                 return square(p, f) * r + saw(p, f) * (1 - r);
             }
-            //return basict.get(phase, wtpos);
+        };
+
+        // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
+        bool basicLoaded() { return basict.done; };
+        double basic(double phase, double wtpos, double f) 
+        {
+            //double p = phase;
+            //if (wtpos < 0.33)
+            //{
+            //    const double r = wtpos * 3;
+            //    return triangle(p, f) * r + sine(p, f) * (1 - r);
+            //}
+            //else if (wtpos < 0.66)
+            //{
+            //    const double r = (wtpos - 0.33) * 3;
+            //    return saw(p, f) * r + triangle(p, f) * (1 - r);
+            //}
+            //else
+            //{
+            //    const double r = (wtpos - 0.66) * 3;
+            //    return square(p, f) * r + saw(p, f) * (1 - r);
+            //}
+            return basict.get(phase, wtpos, (std::log(f) / std::numbers::ln2_v<double>) * 2);
         }
     }
 
@@ -381,7 +334,7 @@ namespace Kaixo
     void Oscillator::Generate(size_t c)
     {   // Only generate at channel == 0
         if (c != 0) return;
-        sample = Offset(0);
+        sample = Offset(0, true);
     }
 
     double Oscillator::OffsetClean(double phaseoffset)
@@ -396,7 +349,7 @@ namespace Kaixo
         return Shapers::simpleshaper(Wavetables::basic(myfmod1(phase + phaseoffset + 100000), settings.wtpos, settings.frequency), settings.shaper3);
     }
 
-    double Oscillator::Offset(double phaseoffset)
+    double Oscillator::Offset(double phaseoffset, bool shaper)
     {
         // Increment phase according to the frequency
         double phase = this->phase;
@@ -408,7 +361,7 @@ namespace Kaixo
         // Separate cases for pulse width < 0 and > 0
         if (_pw > 0)
         {   // Apply phase shaper, taking into account mix
-            const double _ph = 
+            const double _ph = !shaper ? phase : 
                 Shapers::mainPhaseShaper(phase, settings.shaper, settings.shaperMorph) * settings.shaperMix + // Shaper mix
                 phase * (1 - settings.shaperMix); // Clean mix
 
@@ -426,16 +379,16 @@ namespace Kaixo
             const double _wt = Wavetables::basic(_dphase, settings.wtpos, settings.frequency);
 
             // Apply the main waveshaper, taking into account mix
-            const double _s1 = 
+            const double _s1 = !shaper ? _wt :
                 Shapers::mainWaveShaper(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + // Shaper mix
                 _wt * (1 - settings.shaper2Mix); // Clean mix 
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.
-            _s = Shapers::simpleshaper(_s1, settings.shaper3);
+            _s = _s1;
         }
         else
         {   // Apply phase shaper, taking into account mix
-            const double _ph = 
+            const double _ph = !shaper ? phase :
                 Shapers::mainPhaseShaper(phase, settings.shaper, settings.shaperMorph) * settings.shaperMix + // Shaper mix
                 phase * (1 - settings.shaperMix); // Clean mix
 
@@ -454,12 +407,12 @@ namespace Kaixo
             const double _wt = Wavetables::basic(_dphase, settings.wtpos, settings.frequency);
 
             // Apply the main waveshaper, taking into account mix
-            const double _s1 = 
+            const double _s1 = !shaper ? _wt :
                 Shapers::mainWaveShaper(_wt, settings.shaper2, settings.shaperMorph) * settings.shaper2Mix + // Shaper mix
                 _wt * (1 - settings.shaper2Mix); // Clean mix
 
             // Taking into account the pulse width remainer, return either 0 or result from simple waveshaper.
-            _s = Shapers::simpleshaper(_s1, settings.shaper3);
+            _s = _s1;
         }
 
         return _s; // Our resulting value is returned!

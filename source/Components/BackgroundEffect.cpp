@@ -39,7 +39,10 @@ namespace Kaixo
         if (settings.sides != 1) a.right -= corner ? settings.edge : settings.edge;
         if (settings.sides != 2) a.bottom -= corner ? settings.edge : settings.edge;
         pContext->setFillColor(settings.button ?
-            settings.pressed ? settings.enabled ? MainGreenC : OffText : KnobBack :
+            settings.pressed ? settings.enabled ? 
+                                settings.hovering ? MainGreenB : MainGreenC :
+                                settings.hovering ? OffTextL : OffText :
+                                settings.hovering ? KnobBackL : KnobBack :
             settings.dark ? DarkBack : MainBack);
         pContext->drawRect(a, kDrawFilled);
     }

@@ -22,6 +22,7 @@ namespace Kaixo
 
         bool pressed = false;
         bool modulateChange = false;
+        bool wtloaded = false;
 
         void UpdateIndex();
         void onIdle() override;

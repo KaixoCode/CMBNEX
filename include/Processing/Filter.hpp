@@ -60,7 +60,7 @@ namespace Kaixo
             } break;
             case FilterType::HighPass:
             {
-                off = f0 <= 21;
+                off = f0 <= 30;
                 alpha = sinw0 / (2.0 * Q);
                 b0 = (1.0 + cosw0) / 2.0, b1 = -(1.0 + cosw0), b2 = b0;
                 a0 = 1.0 + alpha, a1 = -2.0 * cosw0, a2 = 1.0 - alpha;
@@ -133,6 +133,8 @@ namespace Kaixo
         using Params = BiquadParameters;
         double Apply(double s, Params& p)
         {
+            if (p.off) return s;
+
             x[0] = s;
             y[0] = p.b0a0 * x[0] + p.b1a0 * x[1] + p.b2a0 * x[2] - p.a1a0 * y[1] - p.a2a0 * y[2];
 

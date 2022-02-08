@@ -193,7 +193,9 @@ namespace Kaixo
             case INTERPOLATE: // 
             case SMALLSLIDER: // 
             {   // Get multiplier depending on if shift is set.
-                double mult = buttons.isShiftSet() ? 0.25 : 1;
+                double mult = 1;
+                if (buttons.isShiftSet()) mult *= 0.25;
+                if (buttons.isControlSet()) mult *= 0.25;
                 double diff = (pwhere.y - where.y) * 0.005; // Calculate the difference using mouse coords.
                 if (modEditIndex == -1) switch (settings.type) 
                 { // These types have special cases for mouse movement
@@ -314,7 +316,7 @@ namespace Kaixo
         auto v = getValueNormalized() * 270;
         auto start = 135;
         auto end = 135 + v;
-        if (settings.min == -settings.max) 
+        if (settings.min == -settings.max)
         {   // If min == -max, it's double sided, so 0 is middle top instead of bottom left.
             v -= 135;
             start = v < 0 ? 270 + v : 270;

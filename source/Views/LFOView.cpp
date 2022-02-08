@@ -4,6 +4,14 @@ namespace Kaixo
 {
     void LFOView::onIdle()
     {
+        if (!wtloaded)
+        {
+            curve->setDirty(true);
+
+            if (Wavetables::basicLoaded())
+                wtloaded = true;
+        }
+
         if (modulateChange)
         {
             modulateChange = false;
@@ -159,6 +167,7 @@ namespace Kaixo
         } };
 
         curve = new WaveformView{ {  5,  30, 5 + 325, 30 + 95 } };
+        curve->LFO = true;
 
         nvd1 = new DragThing{ {   5,   5,   5 + 60,   5 + 18 } };
         nvd2 = new DragThing{ {  71,   5,  71 + 60,   5 + 18 } };

@@ -63,14 +63,15 @@ namespace Kaixo
         pContext->drawLine({ a.left, a.getCenter().y }, { a.right - 1, a.getCenter().y });
 
         pContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
-        double _padding = 12;
-        double _x = a.left + x->getValue() * (getWidth() - 2 * _padding + 1) + _padding;
-        double _y = a.top + (1 - y->getValue()) * (getHeight() - 2 * _padding + 1) + _padding;
+        double _padding = 8;
+        double _psize = 12;
+        double _x = a.left + x->getValue() * (a.getWidth() - 2 * _padding) + _padding;
+        double _y = a.top + (1 - y->getValue()) * (a.getHeight() - 2 * _padding) + _padding;
         if (enabled) pContext->setFrameColor(MainGreen);
         else pContext->setFrameColor(OffText);
         pContext->setFillColor(MainBack);
         pContext->setLineWidth(3);
-        pContext->drawRect({ _x - _padding / 2, _y - _padding / 2, _x + _padding / 2, _y + _padding / 2 }, kDrawFilledAndStroked);
+        pContext->drawRect({ _x - _psize / 2, _y - _psize / 2, _x + _psize / 2, _y + _psize / 2 }, kDrawFilledAndStroked);
 
         auto _s = getViewSize();
         double _bsize = 8;

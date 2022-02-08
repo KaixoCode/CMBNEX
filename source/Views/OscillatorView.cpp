@@ -328,6 +328,14 @@ namespace Kaixo
 
     void OscillatorView::onIdle()
     {
+        if (!wtloaded)
+        {
+            wfrm->setDirty(true);
+            
+            if (Wavetables::basicLoaded())
+                wtloaded = true;
+        }
+
         if (modulateChange)
         {
             modulateChange = false;

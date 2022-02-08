@@ -15,6 +15,21 @@ namespace Kaixo
     class Processor : public Instrument
     {
     public:
+        
+        // Fast random number generator, uses xorshift algorithm
+        struct NoiseGenerator
+        {
+            constexpr static inline auto max = (double)std::numeric_limits<uint32_t>::max();
+            uint32_t x = 0xF123456789ABCDEF;
+            inline double operator()() {
+                uint32_t t = x;
+                t ^= t << 13;
+                t ^= t >> 17;
+                t ^= t << 5;
+                return 2 * ((x = t) / max) - 1.;
+            }
+        };
+
         static FUnknown* createInstance(void*) { return static_cast<IAudioProcessor*>(new Processor); }
 
         // Amounts of each
@@ -30,9 +45,12 @@ namespace Kaixo
         // Single voice contains all components.
         struct Voice
         {
+            NoiseGenerator myrandom;
+
             Voice() {
                 std::fill_n(modulated, Params::ModCount, 0.);
             }
+
             Buffer buffer;
             double samplerate = 44100;
 
@@ -72,10 +90,9 @@ namespace Kaixo
             StereoEqualizer<2, BiquadFilter> dcoff[Combines]{ dcoffp[0], dcoffp[1], dcoffp[2] };
 
             // Anti-aliasing filter
-            EllipticParameters aafp1;
-            EllipticParameters aafp2;
-            EllipticFilter aaf1;
-            EllipticFilter aaf2;
+            // 2x Global, 4x Oscillator, 6x Combiner: 12
+            EllipticParameters aafp[12];
+            EllipticFilter aaf[12];
         };
 
         Voice voices[Voices]; // All the voices

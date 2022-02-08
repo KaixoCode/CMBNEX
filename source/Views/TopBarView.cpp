@@ -115,14 +115,14 @@ namespace Kaixo
 
         nameDisplay = new NameDisplay{ { 200, 5, 200 + 335, 5 + 35 }, editor->controller->preset };
         nameDisplay->press = [this]() {
-            this->prst->setVisible(true);
-            //loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
-            //loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            //loader->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            //loader->setDefaultSaveName("Preset.cmbnex");
-            //loader->setTitle("Choose An Audio File");
-            //loader->run(this);
-            //loader->forget();
+            //this->prst->setVisible(true);
+            loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
+            loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            loader->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            loader->setDefaultSaveName("Preset.cmbnex");
+            loader->setTitle("Choose An Audio File");
+            loader->run(this);
+            loader->forget();
         };
 
         ovrl = new Overlay{ { 0, 0, getWidth(), getHeight() } };

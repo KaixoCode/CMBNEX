@@ -27,6 +27,7 @@ namespace Kaixo
         double drive = 0;
         double drivegain = 0;
         double noise = 0;
+        bool LFO = false;
 
         Oscillator osc;
 
