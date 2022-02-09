@@ -58,19 +58,19 @@ namespace Kaixo
         }
 
         // Wavefolder lookup table
-        const LookupTable <
-            TableAxis{ .size = 100000, .begin = -4, .end = 4 }
-        > foldt = [](double x) {
-            constexpr static double b = 4;
-            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
-        };
+        //const LookupTable <
+        //    TableAxis{ .size = 100000, .begin = -4, .end = 4 }
+        //> foldt = [](double x) {
+        //    constexpr static double b = 4;
+        //    return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        //};
 
         double fold(double x, double bias)
         {
-            return foldt.get(myfmod1((x + bias) * 0.25) * 4);
-            //constexpr static double b = 4;
-            //x += bias;
-            //return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+            //return foldt.get(myfmod1((x + bias) * 0.25) * 4);
+            constexpr static double b = 4;
+            x += bias;
+            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
         }
 
         // Drive lookup table, 1d.

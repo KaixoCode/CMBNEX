@@ -20,7 +20,6 @@ namespace Kaixo
         using CView::CView;
 
         ADSR env; // The envelope
-        CColor color = Colors::MainGreen;
         Section editing = None; // Section we're currently editing.
         CPoint pwhere{ 0, 0 };
         double pvaluea;

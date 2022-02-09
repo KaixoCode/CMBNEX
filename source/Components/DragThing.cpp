@@ -27,7 +27,7 @@ namespace Kaixo
         pContext->setLineWidth(1);
         a.top += 1;
         a.left += 1;
-        pContext->setFillColor({ 255, 255, 255, 16 });
+        pContext->setFillColor(Colors::lightMode ? CColor{ 0, 0, 0, 16 } : CColor{ 255, 255, 255, 16 });
         pContext->drawRect(a, kDrawFilled);
         a.right = a.left + 3;
         pContext->setFillColor(Colors::MainGreen);

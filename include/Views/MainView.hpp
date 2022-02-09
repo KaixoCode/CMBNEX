@@ -35,6 +35,26 @@ namespace Kaixo
         BackgroundEffect* bgef;
         ImageDraw* imgd;
 
+        CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons)
+        {
+            CViewContainer::onMouseDown(where, buttons);
+            if (imgd->getViewSize().pointInside(where))
+            {
+                prst->setVisible(true);
+            }
+            return kMouseEventHandled;
+        }
+
+        struct BackgroundColor : public CView
+        {
+            using CView::CView;
+            void draw(CDrawContext* pContext)
+            {
+                pContext->setFillColor(Colors::Background);
+                pContext->drawRect(getViewSize(), kDrawFilled);
+            }
+        };
+
         MainView(const CRect& size, IControlListener* listener, MyEditor* editor);
     };
 

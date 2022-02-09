@@ -5,22 +5,23 @@ namespace Kaixo
 {
     class UserSettings
     {
-
+    public:
         static std::filesystem::path SettingsPath()
         {
             std::filesystem::path _path;
 #ifdef WIN32
             TCHAR szPath[MAX_PATH];
             // Get path for each computer, non-user specific and non-roaming data.
-            if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, szPath)))
+            if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, szPath)))
             {
                 // Append product-specific path
                 _path = szPath;
                 _path = _path / "Kaixo" / "CMBNEX" / "settings";
+
+                if (!std::filesystem::exists(_path))
+                    std::filesystem::create_directories(_path);
             }
 #endif
-            if (!std::filesystem::exists(_path))
-                std::filesystem::create_directory(_path);
 
             return _path;
         }
@@ -46,6 +47,115 @@ namespace Kaixo
         void savePreset(UTF8StringPtr file);
         void loadPreset(UTF8StringPtr file);
         void Init();
+
+        void loadSettings()
+        {
+            loadColor();
+            loadTheme();
+        }
+
+        void loadTheme()
+        {
+            try
+            {
+                std::ifstream _file{ UserSettings::SettingsPath() / "theme" };
+                if (_file.is_open())
+                {
+                    _file >> Colors::lightMode;
+                    UpdateTheme(Colors::lightMode);
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+
+        void loadColor()
+        {
+            try
+            {
+                std::ifstream _file{ UserSettings::SettingsPath() / "color" };
+                if (_file.is_open())
+                {
+                    _file >> Colors::MainGreen.red;
+                    _file >> Colors::MainGreen.green;
+                    _file >> Colors::MainGreen.blue;
+                }
+            } 
+            catch(...)
+            { 
+            }
+        }
+
+        void saveColor()
+        {
+            try
+            {
+                std::ofstream _file{ UserSettings::SettingsPath() / "color" };
+                _file << Colors::MainGreen.red << "\n";
+                _file << Colors::MainGreen.green << "\n";
+                _file << Colors::MainGreen.blue << "\n";
+            }
+            catch (...)
+            {
+            }
+        }
+
+        void UpdateTheme(bool value)
+        {
+            Colors::lightMode = value;
+            if (value)
+            {
+                Colors::Background = CColor{ 250, 250, 250, 255 };
+                Colors::MainBack = CColor{ 235, 235, 235, 255 };
+                Colors::MainBackL = CColor{ 245, 240, 245, 255 };
+                Colors::MainBackD = CColor{ 215, 215, 215, 255 };
+                Colors::DarkBackD = CColor{ 195, 195, 195, 255 };
+                Colors::DarkBack = CColor{ 220, 220, 220, 255 };
+                Colors::DarkBackH = CColor{ 205, 205, 205, 255 };
+                Colors::ItemBack = CColor{ 220, 220, 220, 255 };
+                Colors::KnobBack = CColor{ 205, 205, 205, 255 };
+                Colors::KnobBackL = CColor{ 220, 220, 220, 255 };
+                Colors::KnobBackDark = CColor{ 195, 195, 195, 255 };
+                Colors::Border = CColor{ 230, 230, 230, 255 };
+                Colors::MainText = CColor{ 55, 55, 55, 255 };
+                Colors::OffText = CColor{ 155, 155, 155, 255 };
+                Colors::OffTextL = CColor{ 155, 155, 155, 255 };
+                Colors::BorderHover = CColor{ 225, 225, 225, 255 };
+            }
+            else
+            {
+                Colors::Background = CColor{ 15, 15, 15, 255 };
+                Colors::MainBack = CColor{ 25, 25, 25, 255 };
+                Colors::MainBackL = CColor{ 40, 40, 40, 255 };
+                Colors::MainBackD = CColor{ 5,  5,  5, 255 };
+                Colors::DarkBackD = CColor{ 5, 5, 5, 255 };
+                Colors::DarkBack = CColor{ 15, 15, 15, 255 };
+                Colors::DarkBackH = CColor{ 23, 23, 23, 255 };
+                Colors::ItemBack = CColor{ 15, 15, 15, 255 };
+                Colors::KnobBack = CColor{ 45, 45, 45, 255 };
+                Colors::KnobBackL = CColor{ 55, 55, 55, 255 };
+                Colors::KnobBackDark = CColor{ 30, 30, 30, 255 };
+                Colors::Border = CColor{ 30, 30, 30, 255 };
+                Colors::MainText = CColor{ 200, 200, 200, 255 };
+                Colors::OffText = CColor{ 100, 100, 100, 255 };
+                Colors::OffTextL = CColor{ 110, 110, 110, 255 };
+                Colors::BorderHover = CColor{ 70, 70, 70, 255 };
+            }
+        }
+
+        void saveTheme()
+        {
+            try
+            {
+                std::ofstream _file{ UserSettings::SettingsPath() / "theme" };
+                _file << Colors::lightMode;
+            }
+            catch (...)
+            {
+            }
+        }
+
     };
 
     // Plugin controller

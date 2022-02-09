@@ -24,6 +24,7 @@ struct Colors
     static inline CColor OffText = CColor{ 100, 100, 100, 255 };
     static inline CColor OffTextL = CColor{ 110, 110, 110, 255 };
     static inline CColor BorderHover = CColor{ 70, 70, 70, 255 };
+    static inline bool lightMode = false;
 };
 #endif 
 
