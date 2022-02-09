@@ -24,7 +24,8 @@ namespace Kaixo
         if (params.goals[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
         {
             for (int i = 0; i < Oscillators; i++)
-                voices[voice].osc[i].phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
+                for (int j = 0; j < Unison; j++)
+                    voices[voice].osc[i * Unison + j].phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
             for (int i = 0; i < LFOs; i++)
                 voices[voice].lfo[i].phase = 0;
             voices[voice].sub.phase = 0;
@@ -110,7 +111,7 @@ namespace Kaixo
             // Clear polyphonic voices
             for (int i = 0; i < Voices; i++)
                 if (m_Notes[i] != -1)
-                    m_Available.push_back(i), m_Notes[i] = -1;
+                    m_Available.push_back(i), m_Notes[i] = -1; 
 
             return;
         }
@@ -192,42 +193,52 @@ namespace Kaixo
         if (channel == 0) // Only do all generating on channel 0, to prevent double calculating
         {
             for (int i = 0; i < Oscillators; i++)
-            {   // Oscillator generate
-                if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                    voice.osc[i].sample = voice.osc[i].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i] > 0.5, params.goals[Params::ShaperFreez1 + i] > 0.5);
-                else
+            {
+                voice.oscs[0][i] = 0;
+                voice.oscs[1][i] = 0;
+                for (int j = 0; j < Unison; j++)
                 {
-                    voice.osc[i].sample = 0;
-                    voice.oscs[i] = 0;
-                    continue;
+                    double _panning = j / (double)Unison;
+                    // Oscillator generate
+                    if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
+                        voice.osc[i * Unison + j].sample = voice.osc[i * Unison + j].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i] > 0.5, params.goals[Params::ShaperFreez1 + i] > 0.5);
+                    else
+                    {
+                        voice.osc[i * Unison + j].sample = 0;
+                        voice.oscs[0][i] = 0;
+                        voice.oscs[1][i] = 0;
+                        break;
+                    }
+
+                    double _v = voice.osc[i * Unison + j].sample + voice.modulated[Params::DCOff1 + i] * 2 - 1;
+
+                    // Fold
+                    if (params.goals[Params::ENBFold1 + i] > 0.5)
+                        _v = Shapers::fold(_v * (voice.modulated[Params::Fold1 + i] * 15 + 1), voice.modulated[Params::Bias1 + i] * 2 - 1);
+
+                    // Noise
+                    if (params.goals[Params::ENBNoise1 + i] > 0.5)
+                        _v += voice.modulated[Params::Noise1 + i] * voice.noiself[i * Unison + j].Apply(voice.noisehf[i * Unison + j].Apply(voice.myrandom(), channel), channel); // Add noise
+
+                    // Drive
+                    if (params.goals[Params::ENBDrive1 + i] > 0.5)
+                        _v = Shapers::drive(_v, voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
+                    else
+                        _v = constrain(_v, -1., 1.);
+
+                    // Gain
+                    _v *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
+
+                    // Filter
+                    if (params.goals[Params::ENBFilter1 + i] > 0.5)
+                        _v = voice.filter[i * Unison + j].Apply(_v, channel); // Apply pre-combine filter
+
+                    // Apply AAF if oversampling
+                    //if (params.goals[Params::Oversample] > 0)
+                    //    voice.oscs[i] = voice.aaf[2 + i].Apply(voice.oscs[i], voice.aafp[2 + i]);
+                    voice.oscs[0][i] += _v * _panning;
+                    voice.oscs[1][i] += _v * (1 - _panning);
                 }
-
-                voice.oscs[i] = voice.osc[i].sample + voice.modulated[Params::DCOff1 + i] * 2 - 1;
-
-                // Fold
-                if (params.goals[Params::ENBFold1 + i] > 0.5)
-                    voice.oscs[i] = Shapers::fold(voice.oscs[i] * (voice.modulated[Params::Fold1 + i] * 15 + 1), voice.modulated[Params::Bias1 + i] * 2 - 1);
-
-                // Noise
-                if (params.goals[Params::ENBNoise1 + i] > 0.5)
-                    voice.oscs[i] += voice.modulated[Params::Noise1 + i] * voice.noiself[i].Apply(voice.noisehf[i].Apply(voice.myrandom(), channel), channel); // Add noise
-                    
-                // Drive
-                if (params.goals[Params::ENBDrive1 + i] > 0.5)
-                    voice.oscs[i] = Shapers::drive(voice.oscs[i], voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
-                else
-                    voice.oscs[i] = constrain(voice.oscs[i], -1., 1.);
-
-                // Gain
-                voice.oscs[i] *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
-                
-                // Filter
-                if (params.goals[Params::ENBFilter1 + i] > 0.5)
-                    voice.oscs[i] = voice.filter[i].Apply(voice.oscs[i], channel); // Apply pre-combine filter
-
-                // Apply AAF if oversampling
-                //if (params.goals[Params::Oversample] > 0)
-                //    voice.oscs[i] = voice.aaf[2 + i].Apply(voice.oscs[i], voice.aafp[2 + i]);
             }
 
             { // Sub oscillator
@@ -239,7 +250,7 @@ namespace Kaixo
         double _cs[Combines * 2 + 1]{ 0, 0, 0, 0, 0, 0, 0 };
         for (int i = 0; i < Oscillators; i++)
         {
-            double _vs = voice.oscs[i];
+            double _vs = voice.oscs[channel][i];
 
             // Pan
             if (voice.modulated[Params::Pan1 + i] != 0.5)
@@ -573,7 +584,8 @@ namespace Kaixo
         }
 
         for (int i = 0; i < Oscillators; i++)
-        {   // Oscillator parameters
+        {
+            // Oscillator parameters
             auto _ft = std::floor(params.goals[Params::Filter1 + i] * 3); // Filter parameters
             voice.filterp[i].sampleRate = voice.samplerate;
             voice.filterp[i].f0 = voice.modulated[Params::Freq1 + i] * voice.modulated[Params::Freq1 + i] * (22000 - 30) + 30;
@@ -593,18 +605,23 @@ namespace Kaixo
             voice.noisehfp[i].type = FilterType::HighPass;
             voice.noisehfp[i].RecalculateParameters(ratio == 1);
 
-            voice.osc[i].SAMPLE_RATE = voice.samplerate;
-            voice.osc[i].settings.frequency = noteToFreq(voice.frequency + _bendOffset
-                + voice.modulated[Params::Detune1 + i] * 4 - 2 + voice.modulated[Params::Pitch1 + i] * 48 - 24);
-            voice.osc[i].settings.wtpos = voice.modulated[Params::WTPos1 + i];
-            voice.osc[i].settings.sync = voice.modulated[Params::Sync1 + i];
-            voice.osc[i].settings.pw = voice.modulated[Params::PulseW1 + i];
-            voice.osc[i].settings.bend = voice.modulated[Params::Bend1 + i];
-            voice.osc[i].settings.shaper = voice.modulated[Params::Shaper1 + i];
-            voice.osc[i].settings.shaperMix = voice.modulated[Params::ShaperMix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
-            voice.osc[i].settings.shaper2 = voice.modulated[Params::Shaper21 + i];
-            voice.osc[i].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
-            voice.osc[i].settings.shaperMorph = voice.modulated[Params::ShaperMorph1 + i];
+            for (int j = 0; j < Unison; j++)
+            {
+                double foff = 0.2 * j / (double)Unison;
+
+                voice.osc[i * Unison + j].SAMPLE_RATE = voice.samplerate;
+                voice.osc[i * Unison + j].settings.frequency = noteToFreq(foff + voice.frequency + _bendOffset
+                    + voice.modulated[Params::Detune1 + i] * 4 - 2 + voice.modulated[Params::Pitch1 + i] * 48 - 24);
+                voice.osc[i * Unison + j].settings.wtpos = voice.modulated[Params::WTPos1 + i];
+                voice.osc[i * Unison + j].settings.sync = voice.modulated[Params::Sync1 + i];
+                voice.osc[i * Unison + j].settings.pw = voice.modulated[Params::PulseW1 + i];
+                voice.osc[i * Unison + j].settings.bend = voice.modulated[Params::Bend1 + i];
+                voice.osc[i * Unison + j].settings.shaper = voice.modulated[Params::Shaper1 + i];
+                voice.osc[i * Unison + j].settings.shaperMix = voice.modulated[Params::ShaperMix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
+                voice.osc[i * Unison + j].settings.shaper2 = voice.modulated[Params::Shaper21 + i];
+                voice.osc[i * Unison + j].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
+                voice.osc[i * Unison + j].settings.shaperMorph = voice.modulated[Params::ShaperMorph1 + i];
+            }
         }
 
         { // Sub oscillator

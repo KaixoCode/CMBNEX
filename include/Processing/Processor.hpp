@@ -36,6 +36,7 @@ namespace Kaixo
         constexpr static auto Envelopes = 5;
         constexpr static auto LFOs = 5;
         constexpr static auto Oscillators = 4;
+        constexpr static auto Unison = 8;
         constexpr static auto Combines = 3;
         constexpr static auto Voices = 16;
 
@@ -67,21 +68,37 @@ namespace Kaixo
 
             double bendOffset = 0;
 
-            double oscs[Oscillators]; // Oscillator values, stored separately for modulation
-            Oscillator osc[Oscillators]; // Main oscillators
+            double oscs[2][Oscillators]; // Oscillator values, stored separately for modulation
+            Oscillator osc[Oscillators * Unison]; // Main oscillators
             Oscillator sub; // Sub oscillator
             Oscillator lfo[LFOs]; // LFOs
             ADSR env[Envelopes]; // Envelopes
 
             // Main oscillator filters
             BiquadParameters filterp[Oscillators];
-            StereoEqualizer<2, BiquadFilter> filter[Oscillators]{ filterp[0], filterp[1], filterp[2], filterp[3] };
+            StereoEqualizer<2, BiquadFilter> filter[Oscillators * Unison]{ 
+                filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], 
+                filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], 
+                filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], 
+                filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], 
+            };
 
             // Main oscillator noise color filters
             BiquadParameters noiselfp[Oscillators];
-            StereoEqualizer<2, BiquadFilter> noiself[Oscillators]{ noiselfp[0], noiselfp[1], noiselfp[2], noiselfp[3] };
+            StereoEqualizer<2, BiquadFilter> noiself[Oscillators * Unison]{
+                noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], 
+                noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], 
+                noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], 
+                noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3],
+            };
+
             BiquadParameters noisehfp[Oscillators];
-            StereoEqualizer<2, BiquadFilter> noisehf[Oscillators]{ noisehfp[0], noisehfp[1], noisehfp[2], noisehfp[3] };
+            StereoEqualizer<2, BiquadFilter> noisehf[Oscillators * Unison]{ 
+                noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], 
+                noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], 
+                noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], 
+                noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3],
+            };
 
             // Combiner filters
             BiquadParameters cfilterp[Combines];
@@ -101,7 +118,8 @@ namespace Kaixo
                 for (auto& i : env) i.m_Phase = -1, i.m_SustainPhase = false, i.sample = 0, i.m_Gate = false, i.m_Down = i.settings.sustain, i.Generate(0);
                 for (auto& i : osc) i.phase = 0, i.sample = 0;
                 for (auto& i : lfo) i.phase = 0, i.sample = 0;
-                for (auto& i : oscs) i = 0;
+                for (auto& i : oscs[0]) i = 0;
+                for (auto& i : oscs[1]) i = 0;
                 for (auto& i : filterp) i.RecalculateParameters(true);
                 for (auto& i : noiselfp) i.RecalculateParameters(true);
                 for (auto& i : noisehfp) i.RecalculateParameters(true);
