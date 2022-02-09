@@ -10,12 +10,12 @@ namespace Kaixo
         modulationThread.join();
     }
 
-    void Processor::TriggerVoice(int voice, int pitch, double velocity)
+    void Processor::TriggerVoice(int voice, int pitch, double velocity, bool legato)
     {
         voices[voice].rand = voices[voice].myrandom() * 0.5 + 0.5;
         voices[voice].velocity = velocity;
-        voices[voice].frequency = voices[lastPressedVoice].frequency;
-        voices[voice].pressedOld = voices[lastPressedVoice].frequency;
+        voices[voice].frequency = legato ? voices[lastPressedVoice].frequency : pitch;
+        voices[voice].pressedOld = legato ? voices[lastPressedVoice].frequency : pitch;
         voices[voice].pressed = pitch;
         lastPressedVoice = voice;
 
@@ -40,8 +40,8 @@ namespace Kaixo
     {
         if (params.goals[Params::Voices] < 0.5)
         {
+            TriggerVoice(0, event.noteOn.pitch, event.noteOn.velocity, !m_MonoNotePresses.empty());
             m_MonoNotePresses.push_back(event.noteOn.pitch);
-            TriggerVoice(0, event.noteOn.pitch, event.noteOn.velocity);
             return;
         }
 
@@ -68,7 +68,7 @@ namespace Kaixo
             // Set voice to note
             m_Notes[voice] = event.noteOn.pitch;
             {
-                TriggerVoice(voice, event.noteOn.pitch, event.noteOn.velocity);
+                TriggerVoice(voice, event.noteOn.pitch, event.noteOn.velocity, m_Pressed.size() > 1);
             }
         }
     }
@@ -98,7 +98,7 @@ namespace Kaixo
 
                 // And if notes remain on the stack, we'll trigger that one again.
                 if (!m_MonoNotePresses.empty())
-                    TriggerVoice(0, m_MonoNotePresses.back(), voices[0].velocity);
+                    TriggerVoice(0, m_MonoNotePresses.back(), voices[0].velocity, true);
 
                 // Otherwise release the voice
                 else

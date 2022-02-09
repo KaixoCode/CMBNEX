@@ -2,6 +2,7 @@
 
 namespace Kaixo
 {
+    // Big mess, deal with it!
     void BackgroundEffect::draw(CDrawContext* pContext, Settings settings)
     {
         auto a = settings.size;

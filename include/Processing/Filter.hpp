@@ -54,7 +54,6 @@ namespace Kaixo
             {
                 off = f0 >= (sampleRate / 2 - 100);
                 alpha = sinw0 / (2.0 * Q);
-                //alpha = sinw0 * std::sinh((log2 / 2.0) * BW * (w0 / sinw0));
                 b0 = (1.0 - cosw0) / 2.0, b1 = 1.0 - cosw0, b2 = b0;
                 a0 = 1.0 + alpha, a1 = -2.0 * cosw0, a2 = 1.0 - alpha;
             } break;
@@ -120,7 +119,7 @@ namespace Kaixo
             b0a0 = b0 / a0, b1a0 = b1 / a0, b2a0 = b2 / a0, a1a0 = a1 / a0, a2a0 = a2 / a0;
         }
 
-        constexpr static double log2 = 0.30102999566;
+        constexpr static double log2 = 0.30102999566; // Log10(2)
         double b0 = 1, b1 = 0, b2 = 0, a0 = 1, a1 = 0, a2 = 0;
         double b0a0 = 0, b1a0 = 0, b2a0 = 0, a1a0 = 0, a2a0 = 0;
         double w0 = 0, cosw0 = 0, sinw0 = 0, A = 0, alpha = 0;
@@ -151,6 +150,8 @@ namespace Kaixo
         double y[3]{ 0, 0, 0 }, x[3]{ 0, 0, 0 };
     };
 
+    // High order minimal phase infinite impulse response elliptic
+    // lowpass filter used for anti-aliasing
     class EllipticParameters
     {
         void ellipticIntegralK(double k, double& K, double& Kp)

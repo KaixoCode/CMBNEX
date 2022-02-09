@@ -8,7 +8,6 @@
 namespace Kaixo
 {
     // Buffer that's filled in separate threads per voice.
-    // use the lock to access the buffer to make it threadsafe.
     struct Buffer
     {
         float* left = nullptr;
@@ -50,31 +49,7 @@ namespace Kaixo
             double values[Params::Size];
             double goals[Params::Size];
 
-            //double* persample[Params::Size];
-            //uint64_t size = 0, amount = 0;
-
-            //ParamList() { std::fill_n(persample, Params::Size, nullptr); }
-            
-            //void resize(uint64_t s)
-            //{
-            //    amount = s;
-            //    if (s > size)
-            //    {
-            //        size = s;
-            //        for (int i = 0; i < Params::Size; i++)
-            //        {
-            //            delete[] persample[i], persample[i] = new double[size];
-            //        }
-            //    }
-            //
-            //    for (int i = 0; i < Params::Size; i++)                    
-            //        for (int j = 0; j < size; j++)
-            //            persample[i][j] = goals[i];
-            //}
-
             inline double operator[](std::pair<size_t, double> i) {
-                //uint64_t index = i.second * amount;
-                //return persample[i.first][index];
                 return (1 - i.second) * values[i.first] + i.second * goals[i.first]; 
             }
         } params;

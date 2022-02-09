@@ -117,7 +117,7 @@ namespace Kaixo
 
         // Midi event handlers
         void Event(Vst::Event& event) override;
-        void TriggerVoice(int voice, int pitch, double velocity);
+        void TriggerVoice(int voice, int pitch, double velocity, bool legato = false);
         void ReleaseVoice(int voice, int pitch, double velocity);
         void NotePress(Vst::Event& event);
         void NoteRelease(Vst::Event& event);

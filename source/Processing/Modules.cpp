@@ -9,9 +9,9 @@ namespace Kaixo
     namespace Shapers
     {
         // Interpolating shapers lookup table axis.
-        constexpr TableAxis shaperx{ .size = 2048, .begin = -1, .end = 1, .interpolate = true };
+        constexpr TableAxis shaperx{ .size = 4096, .begin = -1, .end = 1, .interpolate = true };
         constexpr TableAxis shapery{ .size = 8, .begin = 0, .end = 1, .interpolate = true };
-        constexpr TableAxis shaperz{ .size = 1024, .begin = 0, .end = 2, .constrained = true, .interpolate = true };
+        constexpr TableAxis shaperz{ .size = 1024, .begin = 0, .end = 3, .constrained = true, .interpolate = true };
 
         // Wave shaper lookup table
         const LookupTable<shaperx, shapery, shaperz> ws0m = [&](double x, double amt, double freq) {
@@ -273,7 +273,7 @@ namespace Kaixo
             Trigger();
         }
         else if (!settings.legato) // If gate was set to same value and not legato
-            m_Phase = 0; // Just reset phase to 0.
+            m_Phase = 0, m_SustainPhase = false; // Just reset phase to 0.
 
         m_Gate = g; // Finally
     }
@@ -305,7 +305,7 @@ namespace Kaixo
 
         double _s = 0;
         const double _pw = settings.pw * 2 - 1;
-        const double _sfm = freeze ? 2 * settings.shaperMorph * (30 / settings.frequency) : settings.shaperMorph;
+        const double _sfm = freeze ? 3 * settings.shaperMorph * (30 / settings.frequency) : settings.shaperMorph;
 
         // Separate cases for pulse width < 0 and > 0
         if (_pw > 0)
