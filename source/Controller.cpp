@@ -1,11 +1,13 @@
 #include "Controller.hpp"
 #include "CIDs.hpp"
+#include "version.hpp"
 
 using namespace Steinberg;
 
 namespace Kaixo 
 {
     MyEditor::MyEditor(Controller* controller)
+//        : VST3Editor(new UIDescription{ CResourceDescription{ UIDESC } }, dynamic_cast<EditController*>(controller), "view" ),
         : VST3Editor(dynamic_cast<EditController*>(controller), "view", "CMBNEX.uidesc"),
         controller(controller)
     {

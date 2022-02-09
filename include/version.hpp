@@ -6,6 +6,8 @@
 
 #include "pluginterfaces/base/fplatform.h"
 
+#define UIDESC 127
+
 // Here you can define the version of your plug-in: "Major.Sub.Release.Build""
 #define MAJOR_VERSION_STR "1"
 #define MAJOR_VERSION_INT 1

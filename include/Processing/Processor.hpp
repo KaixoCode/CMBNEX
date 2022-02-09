@@ -65,6 +65,8 @@ namespace Kaixo
             double velocity = 1; // Pressed velocity
             double rand = 0; // Random value, generated each note press.
 
+            double bendOffset = 0;
+
             double oscs[Oscillators]; // Oscillator values, stored separately for modulation
             Oscillator osc[Oscillators]; // Main oscillators
             Oscillator sub; // Sub oscillator
@@ -93,12 +95,26 @@ namespace Kaixo
             // 2x Global, 4x Oscillator, 6x Combiner: 12
             EllipticParameters aafp[12];
             EllipticFilter aaf[12];
+
+            void Reset()
+            {
+                for (auto& i : env) i.m_Phase = -1, i.m_SustainPhase = false, i.sample = 0, i.m_Gate = false, i.m_Down = i.settings.sustain, i.Generate(0);
+                for (auto& i : osc) i.phase = 0, i.sample = 0;
+                for (auto& i : lfo) i.phase = 0, i.sample = 0;
+                for (auto& i : oscs) i = 0;
+                for (auto& i : filterp) i.RecalculateParameters(true);
+                for (auto& i : noiselfp) i.RecalculateParameters(true);
+                for (auto& i : noisehfp) i.RecalculateParameters(true);
+                for (auto& i : cfilterp) i.RecalculateParameters(true);
+                for (auto& i : dcoffp) i.RecalculateParameters(true);
+            }
         };
 
         Voice voices[Voices]; // All the voices
 
         double projectTimeSamples = 0; // Amount of samples since start project.
         int lastPressedVoice = 0; // Last voice index that was activated
+        bool monophonic = false;
 
         bool doModulationSync = true; // Gets set to false at end to stop modulation sync thread.
 

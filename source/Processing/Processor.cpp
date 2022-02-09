@@ -12,6 +12,8 @@ namespace Kaixo
 
     void Processor::TriggerVoice(int voice, int pitch, double velocity, bool legato)
     {
+        voices[voice].bendOffset = (params.goals[Params::PitchBend] * 2 - 1) * 24 * voices[voice].modulated[Params::Bend];
+
         voices[voice].rand = voices[voice].myrandom() * 0.5 + 0.5;
         voices[voice].velocity = velocity;
         voices[voice].frequency = legato ? voices[lastPressedVoice].frequency : pitch;
@@ -104,16 +106,23 @@ namespace Kaixo
                 else
                     ReleaseVoice(0, event.noteOff.pitch, event.noteOff.velocity);
             }
+
+            // Clear polyphonic voices
+            for (int i = 0; i < Voices; i++)
+                if (m_Notes[i] != -1)
+                    m_Available.push_back(i), m_Notes[i] = -1;
+
+            return;
         }
         else
         {
             // If not monophonic, empty note stack
-            m_MonoNotePresses.clear();
+            if (!m_MonoNotePresses.empty())
+            {
+                ReleaseVoice(0, m_MonoNotePresses.back(), voices[0].velocity);
+                m_MonoNotePresses.clear();
+            }
         }
-
-        // Even if monophonic, we'll check the other notes in case
-        // it was switched to monophonic while notes were being held,
-        // this will then release those voices once the note is released.
 
         // Find the note in the pressed notes per voice
         while (true)
@@ -143,7 +152,9 @@ namespace Kaixo
         switch (event.type)
         {
         case Event::kNoteOnEvent:
-            if (params.goals[Params::PitchBend] > 1 || params.goals[Params::PitchBend] < 0) params.goals[Params::PitchBend] = 0.5;
+            //if (params.goals[Params::PitchBend] > 1 || params.goals[Params::PitchBend] < 0) params.goals[Params::PitchBend] = 0.5;
+
+            //params.goals[Params::PitchBend] = constrain(params.goals[Params::PitchBend]);
 
             NotePress(event);
             break;
@@ -177,10 +188,6 @@ namespace Kaixo
     double Processor::GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio)
     {   // If the gain envelope is done, no more sound, so return 0.
         if (voice.env[0].Done()) return 0;
-
-        // Calculate bend offset and time mult.
-        const double _bendOffset = params[{ Params::PitchBend, ratio }] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
-        const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
 
         if (channel == 0) // Only do all generating on channel 0, to prevent double calculating
         {
@@ -224,10 +231,6 @@ namespace Kaixo
             }
 
             { // Sub oscillator
-                int _octave = std::round(params.goals[Params::SubOct] * 4 - 2);
-                voice.sub.SAMPLE_RATE = voice.samplerate;
-                voice.sub.settings.frequency = noteToFreq(voice.frequency + _octave * 12 + _bendOffset);
-                voice.sub.settings.wtpos = voice.modulated[Params::SubOvertone];
                 voice.sub.sample = voice.sub.OffsetClean(0);
             }
         }
@@ -314,20 +317,31 @@ namespace Kaixo
         for (auto& i : voices)
             i.buffer.prepare(s);
 
+
         // If monophonic, only generate 1st voice.
         if (params.goals[Params::Voices] < 0.5)
         {
             GenerateVoice(voices[0]);
+
+            if (!monophonic)
+            {
+                for (int i = 1; i < Voices; i++)
+                    voices[i].Reset(); // Reset all other (inactive) voices
+                monophonic = true;
+            }
         }
 
         // If no threading, do everything on main thread
         else if (params.goals[Params::Threading] < 0.5)
         {
+            monophonic = false;
             for (int i = 0; i < Voices; i++)
                 GenerateVoice(voices[i]);
         }
         else
         {
+            monophonic = false;
+
             // Divide voices among worker threads and main thread
             std::future<void> futures[Voices];
             bool onMain[Voices]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
@@ -472,7 +486,9 @@ namespace Kaixo
         double bpm = (processData->processContext->state & ProcessContext::kTempoValid) ? processData->processContext->tempo : 128;
         
         // Calculate bend offset and time mult.
-        const double _bendOffset = params[{ Params::PitchBend, ratio }] * 12 * voice.modulated[Params::Bend] - 6 * voice.modulated[Params::Bend] + voice.modulated[Params::Transpose] * 96 - 48;
+        const double _bendRatio = 50. / processData->processContext->sampleRate;
+        voice.bendOffset = voice.bendOffset * (1 - _bendRatio) + _bendRatio * ((params[{ Params::PitchBend, ratio }] * 2 - 1) * 24 * voice.modulated[Params::Bend]);
+        const double _bendOffset = voice.bendOffset + voice.modulated[Params::Transpose] * 96 - 48;
         const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
 
         // Frequency glide
@@ -589,6 +605,13 @@ namespace Kaixo
             voice.osc[i].settings.shaper2 = voice.modulated[Params::Shaper21 + i];
             voice.osc[i].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
             voice.osc[i].settings.shaperMorph = voice.modulated[Params::ShaperMorph1 + i];
+        }
+
+        { // Sub oscillator
+            int _octave = std::round(params.goals[Params::SubOct] * 4 - 2);
+            voice.sub.SAMPLE_RATE = voice.samplerate;
+            voice.sub.settings.frequency = noteToFreq(voice.frequency + _octave * 12 + _bendOffset);
+            voice.sub.settings.wtpos = voice.modulated[Params::SubOvertone];
         }
     }
 
