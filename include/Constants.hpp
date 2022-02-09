@@ -220,7 +220,7 @@ constexpr ParamInfo ParamNames[]
 
     { "Sub Gain", 0 }, { "Overtone", 0 },
 
-    { "LFO 1 Rate", 0, 0, 0, 1, 0 },   { "LFO 2 Rate", 0, 0, 0, 1, 0 },    { "LFO 3 Rate", 0, 0, 0, 1, 0 },   { "LFO 4 Rate", 0, 0, 0, 1, 0 },   { "LFO 5 Rate", 0, 0, 0, 1, 0 },
+    { "LFO 1 Rate", 0, 0, 1, 1, 0 },   { "LFO 2 Rate", 0, 0, 1, 1, 0 },    { "LFO 3 Rate", 0, 0, 1, 1, 0 },   { "LFO 4 Rate", 0, 0, 1, 1, 0 },   { "LFO 5 Rate", 0, 0, 1, 1, 0 },
     { "LFO 1 Amount", 1 },  { "LFO 2 Amount", 1 },  { "LFO 3 Amount", 1 },  { "LFO 4 Amount", 1 },  { "LFO 5 Amount", 1 },
     { "LFO 1 Pos",  0 },    { "LFO 2 Pos",  0 },    { "LFO 3 Pos",  0 },    { "LFO 4 Pos",  0 },    { "LFO 5 Pos",  0 },
     { "LFO 1 Offset", 0 },  { "LFO 2 Offset", 0 },  { "LFO 3 Offset", 0 },  { "LFO 4 Offset", 0 },  { "LFO 5 Offset", 0 },
@@ -276,11 +276,11 @@ constexpr ParamInfo ParamNames[]
 };
 
 constexpr static const char* TimesString[]{
-    "4", "3", "2", "1", "1/2", "1/3", "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32", "1/64",
+    "4", "3", "2", "1", "1/2", "1/3", "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32", "1/64", "1/64",
 };
 
 constexpr static double TimesValue[]{
-    4.0, 3.0, 2.0, 1.0, 1./2., 1./3., 1./4., 1./6., 1./8., 1./12., 1./16., 1./24., 1./32., 1./64.,
+    4.0, 3.0, 2.0, 1.0, 1./2., 1./3., 1./4., 1./6., 1./8., 1./12., 1./16., 1./24., 1./32., 1./64., 1./64.
 };
 
 constexpr static size_t TimesAmount = std::size(TimesValue);

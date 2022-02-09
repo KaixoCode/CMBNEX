@@ -44,6 +44,8 @@ namespace Kaixo
         double modAmount(int32_t param, int index);
         void modAmount(int32_t param, int index, double val);
 
+        std::filesystem::path _presetPath = "";
+
         void savePreset(UTF8StringPtr file);
         void loadPreset(UTF8StringPtr file);
         void Init();
@@ -52,6 +54,22 @@ namespace Kaixo
         {
             loadColor();
             loadTheme();
+            loadPath();
+        }
+
+        void loadPath()
+        {
+            try
+            {
+                std::ifstream _file{ UserSettings::SettingsPath() / "presetpath" };
+                if (_file.is_open())
+                {
+                    _file >> _presetPath;
+                }
+            }
+            catch (...)
+            {
+            }
         }
 
         void loadTheme()
@@ -87,14 +105,26 @@ namespace Kaixo
             }
         }
 
+        void savePath()
+        {
+            try
+            {
+                std::ofstream _file{ UserSettings::SettingsPath() / "presetpath" };
+                _file << _presetPath;
+            }
+            catch (...)
+            {
+            }
+        }
+
         void saveColor()
         {
             try
             {
                 std::ofstream _file{ UserSettings::SettingsPath() / "color" };
-                _file << Colors::MainGreen.red << "\n";
-                _file << Colors::MainGreen.green << "\n";
-                _file << Colors::MainGreen.blue << "\n";
+                _file << Colors::MainGreen.red;
+                _file << Colors::MainGreen.green;
+                _file << Colors::MainGreen.blue;
             }
             catch (...)
             {
@@ -167,7 +197,7 @@ namespace Kaixo
 
         ~Controller() override = default;
 
-        String preset = "Default";
+        String preset = "default";
 
         // WakeupCalls are used to set modulation values in the ui.
         std::mutex lock;

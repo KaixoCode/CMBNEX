@@ -29,17 +29,17 @@ namespace Kaixo
 
     CMouseEventResult TopBarView::Button::onMouseDown(CPoint& where, const CButtonState& buttons)
     {
-        if (p)
-        {   // If press enabled for background effect, setdirty
-            bgef.settings.pressed = true;
-            setDirty(true);
-        }
-        press(); // Call callback
+        bgef.settings.pressed = true;
+        setDirty(true);
         return kMouseEventHandled;
     }
 
     CMouseEventResult TopBarView::Button::onMouseUp(CPoint& where, const CButtonState& buttons)
     {
+        if (bgef.settings.pressed && getViewSize().pointInside(where))
+        {
+            press(); // Call callback
+        }
         bgef.settings.pressed = false;
         setDirty(true);
         return kMouseEventHandled;
@@ -98,28 +98,41 @@ namespace Kaixo
         bInit->press = [this]() {
             this->editor->controller->Init();
             nameDisplay->setDirty(true);
-            Colors::MainGreen = CColor{ 179, 66, 0, 255 };
         };
         bInit->p = true;
 
+        static auto CMBNEX = CFileExtension{ "CMBNEX Preset", "cmbnex", "application/preset", 0, "me.kaixo.cmbnex" };
+
         bSave = new Button{ { 437, 10, 437 + 50, 10 + 25 } };
         bSave->text = "Save";
-        bSave->press = [this]() {
+        bSave->press = [this, editor]() {
             selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile);
-            selector->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            selector->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            selector->setDefaultSaveName("Preset.cmbnex");
+            if (editor->_presetPath != "") 
+                selector->setInitialDirectory(editor->_presetPath.string());
+            //selector->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            selector->setDefaultExtension(CMBNEX);
+            if (editor->controller->preset != "default")
+            {
+                std::string _str = editor->controller->preset.operator const Steinberg::char8 *();
+                _str += ".cmbnex";
+                selector->setDefaultSaveName(_str.c_str());
+            }
+            else
+                selector->setDefaultSaveName("Preset.cmbnex");
+    
             selector->setTitle("Choose An Audio File");
             selector->run(this);
             selector->forget();
         };
 
         nameDisplay = new NameDisplay{ { 200, 5, 200 + 335, 5 + 35 }, editor->controller->preset };
-        nameDisplay->press = [this]() {
-            //this->prst->setVisible(true);
+        nameDisplay->press = [this, editor]() {
+            
             loader = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
-            loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
-            loader->setDefaultExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            if (editor->_presetPath != "")
+                loader->setInitialDirectory(editor->_presetPath.string()); 
+            //loader->addFileExtension(CFileExtension{ "CMBNEX Preset", "cmbnex" });
+            loader->setDefaultExtension(CMBNEX);
             loader->setDefaultSaveName("Preset.cmbnex");
             loader->setTitle("Choose An Audio File");
             loader->run(this);

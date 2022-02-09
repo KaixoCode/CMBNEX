@@ -74,7 +74,7 @@ void TestAlgorithmRanges()
 		{
 			{.precision = 0.01, .begin = -1., .end = 1. }, // X
 			{.precision = 0.01, .begin = 0., .end = 1. },  // Amount
-			{.precision = 0.01, .begin = 0., .end = 1. }   // Morph
+			{.precision = 0.01, .begin = 0., .end = 2. }   // Morph
 		} 
 	});	
 
@@ -85,7 +85,7 @@ void TestAlgorithmRanges()
 		{
 			{.precision = 0.01, .begin = 0., .end = 1. }, // X
 			{.precision = 0.01, .begin = 0., .end = 1. }, // Amount
-			{.precision = 0.01, .begin = 0., .end = 1. }  // Morph
+			{.precision = 0.01, .begin = 0., .end = 2. }  // Morph
 		} 
 	});	
 
@@ -131,12 +131,13 @@ void TestAlgorithmRanges()
 	});
 
 	std::cout << "Wavetables::basic\n";
-	AlgorithmRangeTest<&Kaixo::Wavetables::basic, 2>::Run({
+	AlgorithmRangeTest<&Kaixo::Wavetables::basic, 3>::Run({
 		.min = -1., .max = 1., // Output range
 		.args
 		{
 			{.precision = 0.001, .begin = 0., .end = 1. }, // X
 			{.precision = 0.01, .begin = 0., .end = 1. }, // WT Pos
+			{.precision = 5.0, .begin = 1., .end = 20000. }, //Freq
 		} 
 	});
 
@@ -180,7 +181,8 @@ void SampleFlow()
 
 	double oscillator = Kaixo::Wavetables::basic(
 		phase      /* 0..1 */, 
-		0          /* 0..1 */); 
+		0          /* 0..1 */,
+		1          /* 1..20k */);
 	// Output range: -1..1
 
 	oscillator = Kaixo::Shapers::mainWaveShaper(

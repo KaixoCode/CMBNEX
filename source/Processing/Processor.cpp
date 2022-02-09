@@ -170,7 +170,7 @@ namespace Kaixo
             }
 
             // Approximately 60 times a second.
-            std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
+            std::this_thread::sleep_for(std::chrono::milliseconds{ 30 });
         }
     }
 
@@ -526,7 +526,7 @@ namespace Kaixo
 
             if (params.goals[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
             {
-                size_t _type = std::floor(params[{ Params::LFORate1 + i, ratio }] * (TimesAmount - 1));
+                size_t _type = std::floor(voice.modulated[Params::LFORate1 + i] * (TimesAmount - 1));
 
                 double _ps = (60. / bpm) * TimesValue[_type] * 4; // Seconds per oscillation
                 double _f = 1 / _ps; // Frequency of the oscillations

@@ -57,6 +57,8 @@ namespace Kaixo
         _file << std::fixed << std::setprecision(9);
 
         std::filesystem::path _p = _path;
+        _presetPath = _p.parent_path();
+        savePath();
         controller->preset = _p.stem().c_str();
 
         for (size_t i = 0; i < Params::Size; i++)
@@ -93,11 +95,14 @@ namespace Kaixo
 
     void MyEditor::loadPreset(UTF8StringPtr file)
     {
+        Init();
         std::string _path = file;
         std::ifstream _file{ _path, std::ios::in };
         try
         {
             std::filesystem::path _p = _path;
+            _presetPath = _p.parent_path();
+            savePath();
             controller->preset = _p.stem().c_str();
 
             std::string line;
