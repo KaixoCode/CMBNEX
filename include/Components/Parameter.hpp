@@ -24,6 +24,7 @@ namespace Kaixo
             int type = KNOB;     // Type of knob
             bool modable = true; // Display and enable mod behaviour
             bool enabled = true; // Is knob enabled, changes colors
+            double multiplier = 1; // Drag multiplier
 
             bool dark = false; // Theme
             String name = "";  // Name to display

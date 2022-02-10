@@ -19,14 +19,16 @@ namespace Kaixo
         // Fast random number generator, uses xorshift algorithm
         struct NoiseGenerator
         {
+            NoiseGenerator()
+            {
+            }
             constexpr static inline auto max = (double)std::numeric_limits<uint32_t>::max();
             uint32_t x = 0xF123456789ABCDEF;
             inline double operator()() {
-                uint32_t t = x;
-                t ^= t << 13;
-                t ^= t >> 17;
-                t ^= t << 5;
-                return 2 * ((x = t) / max) - 1.;
+                x ^= x << 13;
+                x ^= x >> 17;
+                x ^= x << 5;
+                return 2 * (x / max) - 1.;
             }
         };
 
@@ -76,29 +78,8 @@ namespace Kaixo
 
             // Main oscillator filters
             BiquadParameters filterp[Oscillators];
-            StereoEqualizer<2, BiquadFilter> filter[Oscillators * Unison]{ 
-                filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], filterp[0], 
-                filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], filterp[1], 
-                filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], filterp[2], 
-                filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], filterp[3], 
-            };
+            StereoEqualizer<2, BiquadFilter> filter[Oscillators]{ filterp[0], filterp[1], filterp[2], filterp[3], };
 
-            // Main oscillator noise color filters
-            BiquadParameters noiselfp[Oscillators];
-            StereoEqualizer<2, BiquadFilter> noiself[Oscillators * Unison]{
-                noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], noiselfp[0], 
-                noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], noiselfp[1], 
-                noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], noiselfp[2], 
-                noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3], noiselfp[3],
-            };
-
-            BiquadParameters noisehfp[Oscillators];
-            StereoEqualizer<2, BiquadFilter> noisehf[Oscillators * Unison]{ 
-                noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], noisehfp[0], 
-                noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], noisehfp[1], 
-                noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], noisehfp[2], 
-                noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3], noisehfp[3],
-            };
 
             // Combiner filters
             BiquadParameters cfilterp[Combines];
@@ -121,8 +102,6 @@ namespace Kaixo
                 for (auto& i : oscs[0]) i = 0;
                 for (auto& i : oscs[1]) i = 0;
                 for (auto& i : filterp) i.RecalculateParameters(true);
-                for (auto& i : noiselfp) i.RecalculateParameters(true);
-                for (auto& i : noisehfp) i.RecalculateParameters(true);
                 for (auto& i : cfilterp) i.RecalculateParameters(true);
                 for (auto& i : dcoffp) i.RecalculateParameters(true);
             }

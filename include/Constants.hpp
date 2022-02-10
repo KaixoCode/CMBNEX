@@ -62,8 +62,8 @@ enum Params
     ShaperFreez1, ShaperFreez2, ShaperFreez3, ShaperFreez4,
     ShaperMorph1, ShaperMorph2, ShaperMorph3, ShaperMorph4,
 
-    Noise1,       Noise2,       Noise3,       Noise4,
-    Color1,       Color2,       Color3,       Color4,
+    UnisonWidth1, UnisonWidth2, UnisonWidth3, UnisonWidth4,
+    UnisonDetun1, UnisonDetun2, UnisonDetun3, UnisonDetun4,
 
     Fold1,        Fold2,        Fold3,        Fold4,
     Bias1,        Bias2,        Bias3,        Bias4,
@@ -119,9 +119,11 @@ enum Params
     
     ModCount,
 
+    UnisonCount1, UnisonCount2, UnisonCount3, UnisonCount4,
+    UnisonType1,  UnisonType2,  UnisonType3,  UnisonType4,
+
     Enable1,      Enable2,      Enable3,      Enable4,
     ENBShaper1,   ENBShaper2,   ENBShaper3,   ENBShaper4,
-    ENBNoise1,    ENBNoise2,    ENBNoise3,    ENBNoise4,
     ENBFold1,     ENBFold2,     ENBFold3,     ENBFold4,
     ENBDrive1,    ENBDrive2,    ENBDrive3,    ENBDrive4,
     ENBFilter1,   ENBFilter2,   ENBFilter3,   ENBFilter4,
@@ -186,8 +188,8 @@ constexpr ParamInfo ParamNames[]
     { "A Shaper Freeze", 1 },  { "B Shaper Freeze", 1 },  { "C Shaper Freeze", 1 },  { "D Shaper Freeze", 1 },
     { "A Shaper Morph", 0.1 }, { "B Shaper Morph", 0.1 }, { "C Shaper Morph", 0.1 }, { "D Shaper Morph", 0.1 },
 
-    { "A Noise", 0 },          { "B Noise", 0 },          { "C Noise", 0 },          { "D Noise", 0 },
-    { "A Color", 0.5 },        { "B Color", 0.5 },        { "C Color", 0.5 },        { "D Color", 0.5 },
+    { "A Unison Width", 1 },   { "B Unison Width", 1 },   { "C Unison Width", 1 },   { "D Unison Width", 1 },
+    { "A Unison Detune", 0.2 },  { "B Unison Detune", 0.2 },  { "C Unison Detune", 0.2 },  { "D Unison Detune", 0.2 },
 
     { "A Fold", 0 },           { "B Fold", 0 },           { "C Fold", 0 },           { "D Fold", 0 },
     { "A Bias", 0.5 },         { "B Bias", 0.5 },         { "C Bias", 0.5 },         { "D Bias", 0.5 },
@@ -199,7 +201,7 @@ constexpr ParamInfo ParamNames[]
     { "A Reso", 0 },           { "B Reso", 0 },           { "C Reso", 0 },           { "D Reso", 0 },
 
     { "X Gain", 0.5 },     { "Y Gain", 0.5 },     { "Z Gain", 0.5 },
-    { "X Pre-Gain", 0.5 }, { "Y Pre-Gain", 0.5 }, { "Z Pre-Gain", 0.5 },
+    { "X Pre-Gain", 0.25 }, { "Y Pre-Gain", 0.25 }, { "Z Pre-Gain", 0.25 },
     { "X Freq", 1 },     { "Y Freq", 1 },     { "Z Freq", 1 },
     { "X Reso", 0 },     { "Y Reso", 0 },     { "Z Reso", 0 },
     { "X Mix", 1 },      { "Y Mix", 1 },      { "Z Mix", 1 },
@@ -243,9 +245,11 @@ constexpr ParamInfo ParamNames[]
 
     { "ModCount", 0, false, true, false, 0, ParameterInfo::kIsHidden },
 
+    { "A Unison Amount", 0 },     { "B Unison Amount", 0 },     { "C Unison Amount", 0 },     { "D Unison Amount", 0 },
+    { "A Unison Type", 0 },       { "B Unison Type", 0 },       { "C Unison Type", 0 },       { "D Unison Type", 0 },
+
     { "A Enable", 1 },            { "B Enable", 1 },            { "C Enable", 1 },            { "D Enable", 1 },
     { "A Enable Waveshaper", 0 }, { "B Enable Waveshaper", 0 }, { "C Enable Waveshaper", 0 }, { "D Enable Waveshaper", 0 },
-    { "A Enable Noise", 0 },      { "B Enable Noise", 0 },      { "C Enable Noise", 0 },      { "D Enable Noise", 0 },
     { "A Enable Fold", 0 },       { "B Enable Fold", 0 },       { "C Enable Fold", 0 },       { "D Enable Fold", 0 },
     { "A Enable Drive", 0 },      { "B Enable Drive", 0 },      { "C Enable Drive", 0 },      { "D Enable Drive", 0 },
     { "A Enable Filter", 0 },     { "B Enable Filter", 0 },     { "C Enable Filter", 0 },     { "D Enable Filter", 0 },

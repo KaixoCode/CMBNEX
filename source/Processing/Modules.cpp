@@ -307,6 +307,9 @@ namespace Kaixo
         const double _pw = settings.pw * 2 - 1;
         const double _sfm = freeze ? 3 * settings.shaperMorph * (30 / settings.frequency) : settings.shaperMorph;
 
+        const double _foffp = (settings.sync * 7 + 1) * (std::abs(settings.bend * 2 - 1) * 4 + 1)
+            * (std::abs(settings.pw * 2 - 1) * 4 + 1);
+
         // Separate cases for pulse width < 0 and > 0
         if (_pw > 0)
         {   // Apply phase shaper, taking into account mix
@@ -325,7 +328,7 @@ namespace Kaixo
             const double _dphase = myfmod1(Shapers::powerCurve(_phase, settings.bend * 2 - 1) * (settings.sync * 7 + 1) + 1000000);
 
             // Finally we can take the value of the wavetable at the calculated phase.
-            const double _wt = Wavetables::basic(_dphase, settings.wtpos, settings.frequency);
+            const double _wt = Wavetables::basic(_dphase, settings.wtpos, settings.frequency * _foffp);
 
             // Apply the main waveshaper, taking into account mix
             const double _s1 = !shaper ? _wt :
@@ -353,7 +356,7 @@ namespace Kaixo
             const double _dphase = myfmod1(Shapers::powerCurve(_phase, settings.bend * 2 - 1) * (settings.sync * 7 + 1) + 1000000);
 
             // Finally we can take the value of the wavetable at the calculated phase.
-            const double _wt = Wavetables::basic(_dphase, settings.wtpos, settings.frequency);
+            const double _wt = Wavetables::basic(_dphase, settings.wtpos, settings.frequency * _foffp);
 
             // Apply the main waveshaper, taking into account mix
             const double _s1 = !shaper ? _wt :

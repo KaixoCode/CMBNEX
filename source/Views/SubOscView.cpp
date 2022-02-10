@@ -21,7 +21,7 @@ namespace Kaixo
             .tag = Params::SubOct,
             .editor = editor,
             .size = {   5, 112,   5 + 60, 112 + 50 },
-            .type = Parameter::NUMBER, .modable = false, .name = "Octave",
+            .type = Parameter::NUMBER, .modable = false, .multiplier = 10, .name = "Octave",
             .min = -2, .max = 2, .reset = 0, .decimals = 0,
             .unit = "",
         } };

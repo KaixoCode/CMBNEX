@@ -12,6 +12,11 @@ namespace Kaixo
 
     void Processor::TriggerVoice(int voice, int pitch, double velocity, bool legato)
     {
+        // Get between 0 and 300 random numbers, this desyncs the voices, as they
+        // all start with the same seed for the xorshift algorithm, this should make it more random per voice.
+        for (int i = 0; i < std::rand() % 300; i++)
+            voices[voice].myrandom();
+
         voices[voice].bendOffset = (params.goals[Params::PitchBend] * 2 - 1) * 24 * voices[voice].modulated[Params::Bend];
 
         voices[voice].rand = voices[voice].myrandom() * 0.5 + 0.5;
@@ -24,8 +29,31 @@ namespace Kaixo
         if (params.goals[Params::Retrigger] > 0.5 || !voices[voice].env[0].Gate())
         {
             for (int i = 0; i < Oscillators; i++)
-                for (int j = 0; j < Unison; j++)
-                    voices[voice].osc[i * Unison + j].phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? (std::rand() % 32767) / 32767. : 0;
+            {
+                int _unisonMode = std::round(params.goals[Params::UnisonType1 + i] * 2);
+                int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
+                switch (_unisonMode)
+                {
+                case 0:
+                case 1:
+                {
+                    double _phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? voices[voice].myrandom() * 0.5 + 0.5 : 0;
+                    for (int j = 0; j < Unison; j++)
+                    {
+                        double _mult = params.goals[Params::RandomPhase1 + i] > 0.5 ? 1.3 + 7 * (voices[voice].myrandom() * 0.5 + 0.5) : 5.3;
+                        voices[voice].osc[i * Unison + j].phase = myfmod1(_phase + _mult * std::pow(j / (double)Unison, 2));
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    double _phase = params.goals[Params::RandomPhase1 + i] > 0.5 ? voices[voice].myrandom() * 0.5 + 0.5 : 0;
+                    for (int j = 0; j < Unison; j++)
+                        voices[voice].osc[i * Unison + j].phase = _phase;
+                    break;
+                }
+                }
+            }
             for (int i = 0; i < LFOs; i++)
                 voices[voice].lfo[i].phase = 0;
             voices[voice].sub.phase = 0;
@@ -192,13 +220,18 @@ namespace Kaixo
 
         if (channel == 0) // Only do all generating on channel 0, to prevent double calculating
         {
+
             for (int i = 0; i < Oscillators; i++)
             {
+                int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
+
                 voice.oscs[0][i] = 0;
                 voice.oscs[1][i] = 0;
-                for (int j = 0; j < Unison; j++)
+                //for (int j = 0; j < Unison; j++)
+                for (int j = 0; j < _unison; j++)
                 {
-                    double _panning = j / (double)Unison;
+                    double _panning = _unison == 1 ? 0.5 : (j / (double)(_unison - 1) - 0.5) * voice.modulated[Params::UnisonWidth1 + i] + 0.5;
+
                     // Oscillator generate
                     if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
                         voice.osc[i * Unison + j].sample = voice.osc[i * Unison + j].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i] > 0.5, params.goals[Params::ShaperFreez1 + i] > 0.5);
@@ -216,28 +249,29 @@ namespace Kaixo
                     if (params.goals[Params::ENBFold1 + i] > 0.5)
                         _v = Shapers::fold(_v * (voice.modulated[Params::Fold1 + i] * 15 + 1), voice.modulated[Params::Bias1 + i] * 2 - 1);
 
-                    // Noise
-                    if (params.goals[Params::ENBNoise1 + i] > 0.5)
-                        _v += voice.modulated[Params::Noise1 + i] * voice.noiself[i * Unison + j].Apply(voice.noisehf[i * Unison + j].Apply(voice.myrandom(), channel), channel); // Add noise
-
                     // Drive
                     if (params.goals[Params::ENBDrive1 + i] > 0.5)
                         _v = Shapers::drive(_v, voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
-                    else
-                        _v = constrain(_v, -1., 1.);
 
                     // Gain
                     _v *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
 
-                    // Filter
-                    if (params.goals[Params::ENBFilter1 + i] > 0.5)
-                        _v = voice.filter[i * Unison + j].Apply(_v, channel); // Apply pre-combine filter
-
                     // Apply AAF if oversampling
                     //if (params.goals[Params::Oversample] > 0)
                     //    voice.oscs[i] = voice.aaf[2 + i].Apply(voice.oscs[i], voice.aafp[2 + i]);
-                    voice.oscs[0][i] += _v * _panning;
-                    voice.oscs[1][i] += _v * (1 - _panning);
+
+                    double _makeup = 3. / (_unison + 2.);
+
+                    voice.oscs[0][i] += 2 * _makeup * _v * _panning;
+                    voice.oscs[1][i] += 2 * _makeup * _v * (1 - _panning);
+                }
+
+                // Filter
+                if (params.goals[Params::ENBFilter1 + i] > 0.5)
+                {
+                    voice.oscs[0][i] = voice.filter[i].Apply(voice.oscs[0][i], 0); // Apply pre-combine filter
+                    voice.oscs[1][i] = voice.filter[i].Apply(voice.oscs[1][i], 1); // Apply pre-combine filter
+
                 }
             }
 
@@ -284,7 +318,7 @@ namespace Kaixo
             if (params.goals[Params::ENBDriveX + i] > 0.5)
                 _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i]);
             else // Always clip, even if drive disabled, to prevent unstable filter
-                _v = constrain(_v, -1., 1.);
+                _v = constrain(_v, -16., 16.);
 
             // Volume
             _v = _v * voice.modulated[Params::GainX + i] * 2;
@@ -593,21 +627,13 @@ namespace Kaixo
             voice.filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
             voice.filterp[i].RecalculateParameters(ratio == 1);
 
-            voice.noiselfp[i].sampleRate = voice.samplerate;
-            voice.noiselfp[i].f0 = (std::min(voice.modulated[Params::Color1 + i] * 2, 1.)) * 21000 + 1000;
-            voice.noiselfp[i].Q = 0.6;
-            voice.noiselfp[i].type = FilterType::LowPass;
-            voice.noiselfp[i].RecalculateParameters(ratio == 1);
-
-            voice.noisehfp[i].sampleRate = voice.samplerate;
-            voice.noisehfp[i].f0 = (std::max(voice.modulated[Params::Color1 + i] * 2 - 1, 0.)) * 21000 + 100;
-            voice.noisehfp[i].Q = 0.6;
-            voice.noisehfp[i].type = FilterType::HighPass;
-            voice.noisehfp[i].RecalculateParameters(ratio == 1);
-
+            int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
+            int _unisonMode = std::round(params.goals[Params::UnisonType1 + i] * 2);
             for (int j = 0; j < Unison; j++)
             {
-                double foff = 0.2 * j / (double)Unison;
+                double foff = _unison == 1 ? 0 : 2 * voice.modulated[Params::UnisonDetun1 + i] * (j / (double)(_unison - 1) - 0.5);
+
+                if (_unisonMode == 1) foff = (voice.myrandom() - 0.1) * voice.modulated[Params::UnisonDetun1 + i] * 8;
 
                 voice.osc[i * Unison + j].SAMPLE_RATE = voice.samplerate;
                 voice.osc[i * Unison + j].settings.frequency = noteToFreq(foff + voice.frequency + _bendOffset

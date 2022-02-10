@@ -193,7 +193,7 @@ namespace Kaixo
             case INTERPOLATE: // 
             case SMALLSLIDER: // 
             {   // Get multiplier depending on if shift is set.
-                double mult = 1;
+                double mult = settings.multiplier;
                 if (buttons.isShiftSet()) mult *= 0.25;
                 if (buttons.isControlSet()) mult *= 0.25;
                 double diff = (pwhere.y - where.y) * 0.005; // Calculate the difference using mouse coords.

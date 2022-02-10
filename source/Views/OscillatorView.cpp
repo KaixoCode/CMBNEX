@@ -21,32 +21,58 @@ namespace Kaixo
         case 3: addView(new BackgroundEffect{ {.size = { getWidth() / 2 + 3, getHeight() - 8, getWidth(), getHeight() }, .sides = 2 } }); break;
         }
 
-        addView(new BackgroundEffect{ {.size = {   5, 10 + y,   5 + 179, 10 + 200 + y }, .dark = true } });
-        addView(new BackgroundEffect{ {.size = { 189, 10 + y, 189 + 206, 10 + 200 + y}, .dark = true } });
-        addView(new BackgroundEffect{ {.size = { 400, 10 + y, 400 + 70, 10 + 200 + y }, .dark = true } });
-        addView(new BackgroundEffect{ {.size = { 475, 10 + y, 475 + 70, 10 + 200 + y }, .dark = true } });
-        addView(new BackgroundEffect{ {.size = { 550, 10 + y, 550 + 70, 10 + 200 + y }, .dark = true } });
-        addView(new BackgroundEffect{ {.size = { 625, 10 + y, 625 + 70, 10 + 200 + y }, .dark = true } });
-        addView(new BackgroundEffect{ {.size = { 700, 10 + y, 700 + 30, 10 + 200 + y }, .dark = true } });
+        double x = size.left - 5;
 
-        outl = new Label{ {
-            .size{ 699,  13 + y, 699 + 30,  13 + 18 + y  },
-            .value = "Out", .center = true, .fontsize = 14,
+        addView(new BackgroundEffect{ {.size = { x +   5, 10 + y, x + 5 + 70, 10 + 200 + y }, .dark = true } });
+
+        unil = new Label{ {
+            .size{ x + 4,  165 + y, x + 4 + 72,  165 + 18 + y  },
+            .value = "Mode", .center = true, .fontsize = 14,
         } };
 
-        dest = new Parameter{ {
-            .tag = Params::DestA + index,
+        unic = new Parameter{ {
+            .tag = Params::UnisonCount1 + index,
             .editor = editor,
-            .size = { 704,  39 + y, 704 + 20,  39 + 169 + y },
-            .type = Parameter::MULTIGROUP,
-            .parts = { "I", "II", "III", "IV", "V", "VI", "O" },
-            .vertical = true, .padding = 4,
+            .size = { x + 10,  15 + y, x + 10 + 65, 15 + 53 + y },
+            .type = Parameter::NUMBER, .modable = false, .multiplier = 5, .dark = true, .name = "Unison",
+            .min = 1, .max = 8, .reset = 1, .decimals = 0,
+            .unit = "",
         } };
+
+        uniw = new Parameter{ {
+            .tag = Params::UnisonWidth1 + index,
+            .editor = editor,
+            .size = { x + 10, 112 + y, x + 10 + 65, 112 + 53 + y },
+            .type = Parameter::NUMBER, .dark = true, .name = "Width",
+            .min = 0, .max = 100, .reset = 100, .decimals = 1,
+            .unit = " %",
+        } };
+
+        unid = new Parameter{ {
+            .tag = Params::UnisonDetun1 + index,
+            .editor = editor,
+            .size = { x + 10,  55 + y, x + 10 + 65,  55 + 53 + y },
+            .type = Parameter::NUMBER, .dark = true, .name = "Detune",
+            .min = 0, .max = 200, .reset = 40, .decimals = 1,
+            .unit = " ct",
+        } };
+
+        unit = new Parameter{ {
+            .tag = Params::UnisonType1 + index,
+            .editor = editor,
+            .size = { x + 9, 185 + y, x + 9 + 62,  18 + 185 + y },
+            .type = Parameter::GROUP,
+            .parts = { "C", "N", "P" },
+            .vertical = false, .padding = 4,
+        } };
+
+        x += 75;
+        addView(new BackgroundEffect{ {.size = { x +   5, 10 + y, x + 5 + 179, 10 + 200 + y }, .dark = true } });
 
         rphs = new Parameter{ {
             .tag = Params::RandomPhase1 + index,
             .editor = editor,
-            .size = {   8,  16 + y,   8 + 14,  16 + 14 + y },
+            .size = { x + 8,  16 + y, x + 8 + 14,  16 + 14 + y },
             .type = Parameter::BUTTON, .dark = true, .name = "R",
             .min = 0, .max = 100, .reset = 0, .decimals = 1,
             .unit = "",
@@ -55,7 +81,7 @@ namespace Kaixo
         phse = new Parameter{ {
             .tag = Params::Phase1 + index,
             .editor = editor,
-            .size = {  10,  15 + y,  10 + 55,  15 + 90 + y },
+            .size = { x + 10,  15 + y, x + 10 + 55,  15 + 90 + y },
             .type = Parameter::KNOB, .dark = true, .name = "   Phase",
             .min = 0, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
@@ -64,7 +90,7 @@ namespace Kaixo
         plsw = new Parameter{ {
             .tag = Params::PulseW1 + index,
             .editor = editor,
-            .size = {  67,  15 + y,  67 + 55,  15 + 90 + y },
+            .size = { x + 67,  15 + y, x + 67 + 55,  15 + 90 + y },
             .type = Parameter::KNOB, .dark = true, .name = "PW",
             .min = -100, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
@@ -73,7 +99,7 @@ namespace Kaixo
         bend = new Parameter{ {
             .tag = Params::Bend1 + index,
             .editor = editor,
-            .size = { 124,  15 + y, 124 + 55,  15 + 90 + y },
+            .size = { x + 124,  15 + y,x + 124 + 55,  15 + 90 + y },
             .type = Parameter::KNOB, .dark = true, .name = "Bend",
             .min = -100, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
@@ -82,7 +108,7 @@ namespace Kaixo
         wtps = new Parameter{ {
             .tag = Params::WTPos1 + index,
             .editor = editor,
-            .size = {  10, 115 + y,  10 + 55, 115 + 90 + y },
+            .size = { x + 10, 115 + y, x + 10 + 55, 115 + 90 + y },
             .type = Parameter::KNOB, .dark = true, .name = "WTP",
             .min = 0, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
@@ -91,7 +117,7 @@ namespace Kaixo
         sync = new Parameter{ {
             .tag = Params::Sync1 + index,
             .editor = editor,
-            .size = {  67, 115 + y,  67 + 55, 115 + 90 + y },
+            .size = { x + 67, 115 + y, x + 67 + 55, 115 + 90 + y },
             .type = Parameter::KNOB, .dark = true, .name = "Sync",
             .min = 100, .max = 800, .reset = 100, .decimals = 1,
             .unit = " %",
@@ -100,40 +126,43 @@ namespace Kaixo
         dcof = new Parameter{ {
             .tag = Params::DCOff1 + index,
             .editor = editor,
-            .size = { 124, 115 + y, 124 + 55, 115 + 90 + y },
+            .size = { x + 124, 115 + y, x + 124 + 55, 115 + 90 + y },
             .type = Parameter::KNOB, .dark = true, .name = "Offset",
             .min = -1, .max = 1, .reset = 0, .decimals = 2,
             .unit = "",
         } };
 
+        x += 184;
+        addView(new BackgroundEffect{ {.size = { x + 5, 10 + y, x + 5 + 206, 10 + 200 + y}, .dark = true } });
+
         shpl = new Label{ {
-            .size = { 209,  13 + y, 209 + 90,  13 + 18 + y },
+            .size = { x + 25,  13 + y, x + 25 + 90,  13 + 18 + y },
             .value = "Waveshaper", .center = false, .fontsize = 14
         } };
 
         enbs = new Parameter{ {
             .tag = Params::ENBShaper1 + index,
             .editor = editor,
-            .size = { 193,  14 + y, 193 + 14,  14 + 14 + y },
+            .size = { x + 9,  14 + y, x + 9 + 14,  14 + 14 + y },
             .type = Parameter::BUTTON, .dark = true
         } };        
 
         frzl = new Label{ {
-            .size = { 340,  13 + y, 340 + 50,  13 + 18 + y },
+            .size = { x + 156,  13 + y, x + 156 + 50,  13 + 18 + y },
             .value = "Freeze", .center = false, .fontsize = 14
         } };
 
         frez = new Parameter{ {
             .tag = Params::ShaperFreez1 + index,
             .editor = editor,
-            .size = { 324,  14 + y, 324 + 14,  14 + 14 + y },
+            .size = { x + 140,  14 + y, x + 140 + 14,  14 + 14 + y },
             .type = Parameter::BUTTON, .dark = true
         } };
 
         shpr = new Parameter{ {
             .tag = Params::Shaper1 + index,
             .editor = editor,
-            .size = { 194,  35 + y, 194 + 65,  35 + 53 + y },
+            .size = { x + 10,  35 + y, x + 10 + 65,  35 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "SHP-X",
             .min = -100, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
@@ -142,7 +171,7 @@ namespace Kaixo
         shpm = new Parameter{ {
             .tag = Params::ShaperMix1 + index,
             .editor = editor,
-            .size = { 259,  35 + y, 259 + 65,  35 + 53 + y },
+            .size = { x + 75,  35 + y, x + 75 + 65,  35 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "Mix-X",
             .min = 0, .max = 100, .reset = 50, .decimals = 1,
             .unit = " %",
@@ -151,7 +180,7 @@ namespace Kaixo
         shp2 = new Parameter{ {
             .tag = Params::Shaper21 + index,
             .editor = editor,
-            .size = { 324, 152 + y, 324 + 65, 152 + 53 + y },
+            .size = { x + 140, 152 + y, x + 140 + 65, 152 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "SHP-Y",
             .min = -100, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
@@ -160,7 +189,7 @@ namespace Kaixo
         sh2m = new Parameter{ {
             .tag = Params::Shaper2Mix1 + index,
             .editor = editor,
-            .size = { 324,  95 + y, 324 + 65,  95 + 53 + y },
+            .size = { x + 140,  95 + y, x + 140 + 65,  95 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "Mix-Y",
             .min = 0, .max = 100, .reset = 50, .decimals = 1,
             .unit = " %",
@@ -169,30 +198,33 @@ namespace Kaixo
         shmr = new Parameter{ {
             .tag = Params::ShaperMorph1 + index,
             .editor = editor,
-            .size = { 324,  35 + y, 324 + 65,  35 + 53 + y },
+            .size = { x + 140,  35 + y, x + 140 + 65,  35 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "Morph",
             .min = 0, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
         } };
 
-        panel = new XYPanel{ shpr, shp2, { 194, 93 + y, 194 + 125, 93 + 112 + y } };
+        panel = new XYPanel{ shpr, shp2, { x + 10, 93 + y, x + 10 + 125, 93 + 112 + y } };
+
+        x += 211;
+        addView(new BackgroundEffect{ {.size = {  x + 5, 10 + y, x + 5 + 70, 10 + 200 + y }, .dark = true } });
 
         fldl = new Label{ {
-            .size{ 420,  13 + y, 420 + 40,  13 + 18 + y },
+            .size{ x + 25,  13 + y, x + 25 + 40,  13 + 18 + y },
             .value = "Fold", .center = false, .fontsize = 14
         } };
 
         enbf = new Parameter{ {
             .tag = Params::ENBFold1 + index,
             .editor = editor,
-            .size = { 404,  14 + y, 404 + 14,  14 + 14 + y },
+            .size = { x + 9,  14 + y, x + 9 + 14,  14 + 14 + y },
             .type = Parameter::BUTTON, .dark = true,
         } };
 
         flda = new Parameter{ {
             .tag = Params::Fold1 + index,
             .editor = editor,
-            .size = { 405,  52 + y, 405 + 60,  52 + 95 + y },
+            .size = { x + 10,  52 + y, x + 10 + 60,  52 + 95 + y },
             .type = Parameter::KNOB, .dark = true, .name = "Gain",
             .min = 1, .max = 15.9, .reset = 1, .decimals = 1,
             .unit = " dB",
@@ -201,58 +233,31 @@ namespace Kaixo
         bias = new Parameter{ {
             .tag = Params::Bias1 + index,
             .editor = editor,
-            .size = { 405, 152 + y, 405 + 65, 152 + 53 + y },
+            .size = { x + 10, 152 + y, x + 10 + 65, 152 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "Bias",
             .min = -1, .max = 1, .reset = 0, .decimals = 2,
             .unit = "",
         } };
 
-        nsel = new Label{ {
-            .size = { 495,  13 + y, 495 + 40,  13 + 18 + y  },
-            .value = "Noise", .center = false, .fontsize = 14,
-        } };
-
-        enbn = new Parameter{ {
-            .tag = Params::ENBNoise1 + index,
-            .editor = editor,
-            .size = { 479,  14 + y, 479 + 14,  14 + 14 + y },
-            .type = Parameter::BUTTON, .dark = true
-        } };
-
-        nois = new Parameter{ {
-            .tag = Params::Noise1 + index,
-            .editor = editor,
-            .size = { 480,  52 + y, 480 + 60,  52 + 95 + y },
-            .type = Parameter::KNOB, .dark = true, .name = "Amount",
-            .min = 0, .max = 100, .reset = 0, .decimals = 1,
-            .unit = " %",
-        } };
-
-        nscl = new Parameter{ {
-            .tag = Params::Color1 + index,
-            .editor = editor,
-            .size = { 480, 152 + y, 480 + 65, 152 + 53 + y },
-            .type = Parameter::NUMBER, .dark = true, .name = "Color",
-            .min = -100, .max = 100, .reset = 0, .decimals = 0,
-            .unit = "",
-        } };
+        x += 75;
+        addView(new BackgroundEffect{ {.size = { x + 5, 10 + y, x + 5 + 70, 10 + 200 + y }, .dark = true } });
 
         drvl = new Label{ {
-            .size = { 570,  13 + y, 570 + 40,  13 + 18 + y },
+            .size = { x + 25,  13 + y, x + 25 + 40,  13 + 18 + y },
             .value = "Drive", .center = false, .fontsize = 14,
         } };
 
         enbd = new Parameter{ {
             .tag = Params::ENBDrive1 + index,
             .editor = editor,
-            .size = { 554,  14 + y, 554 + 14,  14 + 14 + y },
+            .size = { x + 9,  14 + y, x + 9 + 14,  14 + 14 + y },
             .type = Parameter::BUTTON, .dark = true,
         } };
 
         drvg = new Parameter{ {
             .tag = Params::DriveGain1 + index,
             .editor = editor,
-            .size = { 555,  52 + y, 555 + 60,  52 + 95 + y },
+            .size = { x + 10,  52 + y, x + 10 + 60,  52 + 95 + y },
             .type = Parameter::KNOB, .dark = true, .name = "Gain",
             .min = 1, .max = 4, .reset = 1, .decimals = 1,
             .unit = " dB",
@@ -261,28 +266,31 @@ namespace Kaixo
         drve = new Parameter{ {
             .tag = Params::DriveAmt1 + index,
             .editor = editor,
-            .size = { 555, 152 + y, 555 + 65, 152 + 53 + y },
+            .size = { x + 10, 152 + y, x + 10 + 65, 152 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "Shape",
             .min = 0, .max = 100, .reset = 0, .decimals = 1,
             .unit = " %",
         } };
 
+        x += 75;
+        addView(new BackgroundEffect{ {.size = { x + 5, 10 + y, x + 5 + 70, 10 + 200 + y }, .dark = true } });
+
         ftrl = new Label{ {
-            .size { 645,  13 + y, 645 + 40,  13 + 18 + y },
+            .size { x + 25,  13 + y, x + 25 + 40,  13 + 18 + y },
             .value = "Filter", .center = false, .fontsize = 14,
         } };
 
         enbr = new Parameter{ {
             .tag = Params::ENBFilter1 + index,
             .editor = editor,
-            .size = { 629,  14 + y, 629 + 14,  14 + 14 + y },
+            .size = { x + 9,  14 + y, x + 9 + 14,  14 + 14 + y },
             .type = Parameter::BUTTON, .dark = true
         } };
 
         fltr = new Parameter{ {
             .tag = Params::Filter1 + index,
             .editor = editor,
-            .size = { 629,  32 + y, 629 + 63,  32 + 17 + y },
+            .size = {  x + 9,  32 + y,  x + 9 + 63,  32 + 17 + y },
             .type = Parameter::GROUP, .dark = true,
             .parts = { "L", "H", "B" }, .vertical = false, .padding = 4,
         } };
@@ -290,7 +298,7 @@ namespace Kaixo
         freq = new Parameter{ {
             .tag = Params::Freq1 + index,
             .editor = editor,
-            .size = { 630,  52 + y, 630 + 60,  52 + 95 + y },
+            .size = { x + 10,  52 + y, x + 10 + 60,  52 + 95 + y },
             .type = Parameter::KNOB, .dark = true, .name = "Freq",
             .min = 30, .max = 22000, .reset = 22000, .decimals = 1,
             .unit = " Hz",
@@ -299,27 +307,46 @@ namespace Kaixo
         reso = new Parameter{ {
             .tag = Params::Reso1 + index,
             .editor = editor,
-            .size = { 630, 152 + y, 630 + 65, 152 + 53 + y },
+            .size = { x + 10, 152 + y, x + 10 + 65, 152 + 53 + y },
             .type = Parameter::NUMBER, .dark = true, .name = "Reso",
             .min = 0, .max = 125, .reset = 0, .decimals = 1,
             .unit = " %",
         } };
 
+        x += 75;
+        addView(new BackgroundEffect{ {.size = { x + 5, 10 + y, x + 5 + 30, 10 + 200 + y }, .dark = true } });
+
+        outl = new Label{ {
+            .size{ x + 4,  13 + y, x + 4 + 30,  13 + 18 + y  },
+            .value = "Out", .center = true, .fontsize = 14,
+        } };
+
+        dest = new Parameter{ {
+            .tag = Params::DestA + index,
+            .editor = editor,
+            .size = { x + 9,  39 + y, x + 9 + 20,  39 + 169 + y },
+            .type = Parameter::MULTIGROUP,
+            .parts = { "I", "II", "III", "IV", "V", "VI", "O" },
+            .vertical = true, .padding = 4,
+        } };
+
         addView(phse); addView(rphs); addView(sync); addView(plsw); addView(wtps); addView(bend); 
         addView(dcof); addView(shpl); addView(enbs); addView(shpr); addView(shpm); addView(shp2); 
-        addView(sh2m); addView(shmr); addView(nsel); addView(enbn); addView(nois); addView(nscl); 
+        addView(sh2m); addView(shmr); 
         addView(fldl); addView(enbf); addView(flda); addView(bias); addView(drvl); addView(enbd); 
         addView(drvg); addView(drve); addView(ftrl); addView(enbr); addView(fltr); addView(freq); 
         addView(reso); addView(dest); addView(outl); addView(panel);addView(frez); addView(frzl);
+        addView(unic); addView(unil); addView(uniw); addView(unid); addView(unit);
     }
 
     OscillatorToggle::~OscillatorToggle()
     {
         phse->forget(); sync->forget(); plsw->forget(); wtps->forget(); bend->forget(); dcof->forget(); 
         enbs->forget(); shpr->forget(); shpm->forget(); shp2->forget(); sh2m->forget(); shmr->forget(); 
-        enbn->forget(); nois->forget(); nscl->forget(); enbf->forget(); flda->forget(); bias->forget(); 
+        enbf->forget(); flda->forget(); bias->forget(); 
         enbd->forget(); drvg->forget(); drve->forget(); enbr->forget(); fltr->forget(); freq->forget(); 
-        reso->forget(); dest->forget(); frez->forget();
+        reso->forget(); dest->forget(); frez->forget(); uniw->forget(); unid->forget(); unic->forget(); 
+        unit->forget();
     }
 
     void OscillatorView::Select()
@@ -408,7 +435,7 @@ namespace Kaixo
     void OscillatorView::valueChanged(CControl* pControl)
     {
         modulateChange = true;
-        if (pControl == enbl || pControl == toggle->enbd || pControl == toggle->enbf || pControl == toggle->enbn
+        if (pControl == enbl || pControl == toggle->enbd || pControl == toggle->enbf
             || pControl == toggle->enbr || pControl == toggle->enbs)
         {
             titl->settings.enabled = enbl->getValue() > 0.5;
@@ -428,6 +455,12 @@ namespace Kaixo
             toggle->bend->settings.enabled = _clr;
             toggle->dcof->settings.enabled = _clr;
 
+            toggle->unil->settings.enabled = _clr;
+            toggle->unit->settings.enabled = _clr;
+            toggle->uniw->settings.enabled = _clr;
+            toggle->unid->settings.enabled = _clr;
+            toggle->unic->settings.enabled = _clr;
+
             toggle->enbs->settings.enabled = _clr;
             bool _c1 = toggle->enbs->getValue() > 0.5 && _clr;
             toggle->frzl->settings.enabled = _c1;
@@ -439,12 +472,6 @@ namespace Kaixo
             toggle->sh2m->settings.enabled = _c1;
             toggle->shmr->settings.enabled = _c1;
             toggle->panel->enabled = _c1;
-
-            toggle->enbn->settings.enabled = _clr;
-            bool _c2 = toggle->enbn->getValue() > 0.5 && _clr;
-            toggle->nsel->settings.enabled = _c2;
-            toggle->nois->settings.enabled = _c2;
-            toggle->nscl->settings.enabled = _c2;
 
             toggle->enbf->settings.enabled = _clr;
             bool _c3 = toggle->enbf->getValue() > 0.5 && _clr;
@@ -471,12 +498,13 @@ namespace Kaixo
             toggle->dest->setDirty(true); toggle->phse->setDirty(true); toggle->sync->setDirty(true); toggle->plsw->setDirty(true); 
             toggle->wtps->setDirty(true); toggle->bend->setDirty(true); toggle->dcof->setDirty(true); toggle->enbs->setDirty(true); 
             toggle->shpl->setDirty(true); toggle->shpr->setDirty(true); toggle->shpm->setDirty(true); toggle->shp2->setDirty(true); 
-            toggle->sh2m->setDirty(true); toggle->shmr->setDirty(true); toggle->panel->setDirty(true); toggle->enbn->setDirty(true); 
-            toggle->nsel->setDirty(true); toggle->nois->setDirty(true); toggle->nscl->setDirty(true); toggle->fldl->setDirty(true); 
+            toggle->sh2m->setDirty(true); toggle->shmr->setDirty(true); toggle->panel->setDirty(true); toggle->fldl->setDirty(true); 
             toggle->enbf->setDirty(true); toggle->flda->setDirty(true); toggle->bias->setDirty(true); toggle->drvl->setDirty(true); 
             toggle->enbd->setDirty(true); toggle->drvg->setDirty(true); toggle->drve->setDirty(true); toggle->ftrl->setDirty(true); 
             toggle->enbr->setDirty(true); toggle->fltr->setDirty(true); toggle->freq->setDirty(true); toggle->reso->setDirty(true); 
             toggle->outl->setDirty(true); toggle->frez->setDirty(true); toggle->frzl->setDirty(true);
+            toggle->unil->setDirty(true); toggle->unit->setDirty(true); toggle->unic->setDirty(true);
+            toggle->unid->setDirty(true); toggle->uniw->setDirty(true); 
 
             wfrm->setDirty(true);
         }
@@ -606,7 +634,7 @@ namespace Kaixo
             i->toggle->bend->registerControlListener(i); i->toggle->shpr->registerControlListener(i); i->toggle->shpm->registerControlListener(i); 
             i->toggle->shp2->registerControlListener(i); i->toggle->sh2m->registerControlListener(i); i->toggle->plsw->registerControlListener(i); 
             i->toggle->enbs->registerControlListener(i); i->toggle->enbd->registerControlListener(i); i->toggle->enbf->registerControlListener(i); 
-            i->toggle->enbn->registerControlListener(i); i->toggle->enbr->registerControlListener(i); i->toggle->shmr->registerControlListener(i); 
+            i->toggle->enbr->registerControlListener(i); i->toggle->shmr->registerControlListener(i); 
             i->toggle->flda->registerControlListener(i); i->toggle->bias->registerControlListener(i); i->toggle->drve->registerControlListener(i); 
             i->toggle->drvg->registerControlListener(i); i->toggle->dcof->registerControlListener(i);
 
