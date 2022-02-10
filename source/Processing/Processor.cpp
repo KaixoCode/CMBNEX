@@ -1,5 +1,266 @@
 #include "Processing/Processor.hpp"
 
+#define SIMD_TYPE 256
+#if SIMD_TYPE == 256
+
+#define SIMD_T __m256
+#define SIMD_Ti __m256i
+#define set1_ps _mm256_set1_ps
+#define load_ps _mm256_load_ps
+#define loadu_ps _mm256_loadu_ps
+#define store_ps _mm256_store_ps
+#define storeu_ps _mm256_storeu_ps
+#define max_ps _mm256_max_ps
+#define min_ps _mm256_min_ps
+#define mul_ps _mm256_mul_ps
+#define add_ps _mm256_add_ps
+#define and_ps _mm256_and_ps
+#define div_ps _mm256_div_ps
+#define xor_ps _mm256_xor_ps
+#define or_ps _mm256_or_ps
+#define sub_ps _mm256_sub_ps
+#define cmp_ps _mm256_cmp_ps
+#define log2_ps _mm256_log2_ps
+#define floor_ps _mm256_floor_ps
+#define scalef_ps _mm256_scalef_ps
+#define cvtps_epi32 _mm256_cvtps_epi32
+#define add_epi32 _mm256_add_epi32
+#define sub_epi32 _mm256_sub_epi32
+#define mullo_epi32 _mm256_mullo_epi32
+#define i32gather_ps(a, b, c) _mm256_i32gather_ps(b, a, c)
+#define set1_epi32 _mm256_set1_epi32
+#define castps_si _mm256_castps_si256
+#define castsi_ps _mm256_castsi256_ps
+
+#elif SIMD_TYPE == 512
+
+#define SIMD_T __m512
+#define SIMD_Ti __m512i
+#define set1_ps _mm512_set1_ps
+#define load_ps _mm512_load_ps
+#define loadu_ps _mm512_loadu_ps
+#define store_ps _mm512_store_ps
+#define storeu_ps _mm512_storeu_ps
+#define max_ps _mm512_max_ps
+#define min_ps _mm512_min_ps
+#define mul_ps _mm512_mul_ps
+#define add_ps _mm512_add_ps
+#define div_ps _mm512_div_ps
+#define and_ps _mm512_and_ps
+#define xor_ps _mm512_xor_ps
+#define or_ps _mm512_or_ps
+#define sub_ps _mm512_sub_ps
+#define cmp_ps _mm512_cmp_ps_mask
+#define log2_ps _mm512_log2_ps
+#define floor_ps _mm512_floor_ps
+#define scalef_ps _mm512_scalef_ps
+#define cvtps_epi32 _mm512_cvtps_epi32
+#define add_epi32 _mm512_add_epi32
+#define sub_epi32 _mm512_sub_epi32
+#define mullo_epi32 _mm512_mullo_epi32
+#define i32gather_ps _mm512_i32gather_ps
+#define set1_epi32 _mm512_set1_epi32
+#define castps_si _mm512_castps_si512
+#define castsi_ps _mm512_castsi512_ps
+
+#endif
+
+struct SIMD;
+
+struct SIMDi
+{
+    inline SIMDi()
+        : value{}
+    {}
+
+    inline SIMDi(int v)
+        : value(set1_epi32(v))
+    {}
+
+    inline  SIMDi(const SIMD_Ti& v)
+        : value(v)
+    {}
+
+    SIMD_Ti value;
+};
+
+struct SIMD
+{
+    inline SIMD()
+        : value{}
+    {}
+
+    explicit inline SIMD(bool v)
+        : value(v ? castsi_ps(set1_epi32(UINT_MAX)) : set1_ps(0))
+    {}
+
+    inline SIMD(float* v)
+        : value(loadu_ps(v))
+    {}
+
+    inline SIMD(float v)
+        : value(set1_ps(v))
+    {}
+
+    inline SIMD(const SIMD_T& v)
+        : value(v)
+    {}
+
+    SIMD_T value;
+
+    inline SIMD floor() const { return floor_ps(value); }
+    inline SIMD log2() const { return log2_ps(value); }
+    
+    inline SIMDi toInt() const { return cvtps_epi32(value); }
+    
+    inline SIMD operator~() { return xor_ps(value, castsi_ps(set1_epi32(UINT_MAX))); }
+};
+
+static inline SIMD operator+(const SIMD& a, const SIMD& b) { return add_ps(a.value, b.value); }
+static inline SIMD operator-(const SIMD& a, const SIMD& b) { return sub_ps(a.value, b.value); }
+static inline SIMD operator*(const SIMD& a, const SIMD& b) { return mul_ps(a.value, b.value); }
+static inline SIMD operator/(const SIMD& a, const SIMD& b) { return div_ps(a.value, b.value); }
+
+static inline SIMD operator&(const SIMD& a, const SIMD& b) { return and_ps(a.value, b.value); }
+static inline SIMD operator|(const SIMD& a, const SIMD& b) { return or_ps(a.value, b.value); }
+       
+static inline SIMD operator<(const SIMD& a, const SIMD& b) { return cmp_ps(a.value, b.value, _CMP_LT_OS); }
+static inline SIMD operator>(const SIMD& a, const SIMD& b) { return cmp_ps(a.value, b.value, _CMP_GT_OS); }
+       
+static inline SIMDi operator+(const SIMDi& a, const SIMDi& b) { return add_epi32(a.value, b.value); }
+static inline SIMDi operator-(const SIMDi& a, const SIMDi& b) { return sub_epi32(a.value, b.value); }
+static inline SIMDi operator*(const SIMDi& a, const SIMDi& b) { return mullo_epi32(a.value, b.value); }
+       
+static inline SIMD simdmin(const SIMD& a, const SIMD& b) { return min_ps(a.value, b.value); }
+static inline SIMD simdmax(const SIMD& a, const SIMD& b) { return max_ps(a.value, b.value); }
+static inline SIMD simdconstrain(const SIMD& a, const SIMD& b, const SIMD& c) { return simdmin(simdmax(a, b), c); }
+
+static inline auto interpolate(SIMD& num, SIMDi& a, SIMD& r)
+{
+    SIMD _start = num.floor(); // Calculate index 1
+    r = num - _start; // Calculate how far along it is to the next index
+    a = _start.toInt();
+};
+
+static inline auto simdmyfmod1(const SIMD& num)
+{
+    SIMD _start = num.floor();
+    return num - _start;
+};
+
+static inline auto lookup3di(const SIMD& x, const SIMD& y, const SIMD& z, const std::array<float, 4097 * 9 * 1025 + 1>& table)
+{
+    SIMD _x = (x + 1) * 2048;
+    SIMDi _xr;
+    SIMD _xrem;
+    interpolate(_x, _xr, _xrem);
+
+    SIMD _y = y * 8;
+    SIMDi _yr;
+    SIMD _yrem;
+    interpolate(_y, _yr, _yrem);
+
+    SIMDi _z = simdconstrain(z * (1024 / 3.f), 0.f, 1024.f).toInt();
+    //SIMD _z = simdconstrain(z * (1024 / 3.f), 0.f, 1024.f);
+    //SIMDi _zr;
+    //SIMD _zrem;
+    //interpolate(_z, _zr, _zrem);
+
+    // Calculate indices to interpolate
+    // Get data at all indices, and interpolate xaxis using xrem
+    SIMD _xa11 = i32gather_ps((_xr + _yr * (4096 + 1) + _z * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+        + i32gather_ps((_xr + 1 + _yr * (4096 + 1) + _z * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    SIMD _xa12 = i32gather_ps((_xr + (_yr + 1) * (4096 + 1) + _z * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+        + i32gather_ps((_xr + 1 + (_yr + 1) * (4096 + 1) + _z * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    //SIMD _xa11 = i32gather_ps((_xr + _yr * (4096 + 1) + _zr * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+    //    + i32gather_ps((_xr + 1 + _yr * (4096 + 1) + _zr * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    //SIMD _xa12 = i32gather_ps((_xr + (_yr + 1) * (4096 + 1) + _zr * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+    //    + i32gather_ps((_xr + 1 + (_yr + 1) * (4096 + 1) + _zr * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    //SIMD _xa21 = i32gather_ps((_xr + _yr * (4096 + 1) + (_zr + 1) * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+    //    + i32gather_ps((_xr + 1 + _yr * (4096 + 1) + (_zr + 1) * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    //SIMD _xa22 = i32gather_ps((_xr + (_yr + 1) * (4096 + 1) + (_zr + 1) * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+    //    + i32gather_ps((_xr + 1 + (_yr + 1) * (4096 + 1) + (_zr + 1) * ((4096 + 1) * (8 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    //SIMD _ya1 = _xa11 * (1 - _yrem) + _xa12 * _yrem;
+    //SIMD _ya2 = _xa21 * (1 - _yrem) + _xa22 * _yrem;
+
+    //return _ya1 * (1 - _zrem) + _ya2 * _zrem;
+    return _xa11 * (1 - _yrem) + _xa12 * _yrem;
+};
+
+static inline auto lookup3di2(const SIMD& x, const SIMD& y, const SIMD& z, const std::array<float, 2049 * 4 * 33 + 1>& table)
+{
+    SIMD _x = x * 2048;
+    SIMDi _xr;
+    SIMD _xrem;
+    interpolate(_x, _xr, _xrem);
+
+    SIMD _y = y * 3;
+    SIMDi _yr;
+    SIMD _yrem;
+    interpolate(_y, _yr, _yrem);
+
+    SIMDi _z = z.toInt();
+
+    // Calculate indices to interpolate
+    // Get data at all indices, and interpolate xaxis using xrem
+    SIMD _xa11 = i32gather_ps((_xr + _yr * (2048 + 1) + _z * ((2048 + 1) * (3 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+        + i32gather_ps((_xr + 1 + _yr * (2048 + 1) + _z * ((2048 + 1) * (3 + 1))).value, table.data(), sizeof(float)) * _xrem;
+    SIMD _xa12 = i32gather_ps((_xr + (_yr + 1) * (2048 + 1) + _z * ((2048 + 1) * (3 + 1))).value, table.data(), sizeof(float)) * (1 - _xrem)
+        + i32gather_ps((_xr + 1 + (_yr + 1) * (2048 + 1) + _z * ((2048 + 1) * (3 + 1))).value, table.data(), sizeof(float)) * _xrem;
+
+    return _xa11 * (1 - _yrem) + _xa12 * _yrem;
+};
+
+static inline auto lookup2di2(const SIMD& x, const SIMD& y, const std::array<float, 100001 * 2 + 1>& table)
+{
+    SIMD _x = (x + 10) * 5000;
+    SIMDi _xr;
+    SIMD _xrem;
+    interpolate(_x, _xr, _xrem);
+
+    SIMD _y = y;
+    SIMDi _yr;
+    SIMD _yrem;
+    interpolate(_y, _yr, _yrem);
+
+    // Calculate indices to interpolate
+    // Get data at all indices, and interpolate xaxis using xrem
+    SIMD _xa11 = i32gather_ps((_xr +      _yr      * (100000 + 1)).value, table.data(), sizeof(float)) * (1 - _xrem)
+               + i32gather_ps((_xr + 1 +  _yr      * (100000 + 1)).value, table.data(), sizeof(float)) * _xrem;
+    SIMD _xa12 = i32gather_ps((_xr +     (_yr + 1) * (100000 + 1)).value, table.data(), sizeof(float)) * (1 - _xrem)
+               + i32gather_ps((_xr + 1 + (_yr + 1) * (100000 + 1)).value, table.data(), sizeof(float)) * _xrem;
+
+    return _xa11 * (1 - _yrem) + _xa12 * _yrem;
+};
+
+static inline auto lookup2di1(const SIMD& x, const SIMD& y, const std::array<float, 1001 * 1001 + 1>& table)
+{
+    SIMD _x = x * 1000;
+    SIMDi _xr;
+    SIMD _xrem;
+    interpolate(_x, _xr, _xrem);
+
+    SIMDi _y = (y * 500.f + 500.f).toInt();
+
+    // Calculate indices to interpolate
+    // Get data at all indices, and interpolate xaxis using xrem
+    return i32gather_ps((_xr + _y * (1000 + 1)).value, table.data(), sizeof(float)) * (1 - _xrem)
+        + i32gather_ps((_xr + 1 + _y * (1000 + 1)).value, table.data(), sizeof(float)) * _xrem;
+};
+
+static inline auto lookup1di1(const SIMD& x, const std::array<float, 100001 + 1>& table)
+{
+    SIMD _x = (x + 5) * 10000;
+    SIMDi _xr;
+    SIMD _xrem;
+    interpolate(_x, _xr, _xrem);
+
+    // Calculate indices to interpolate
+    // Get data at all indices, and interpolate xaxis using xrem
+    return i32gather_ps(_xr.value, table.data(), sizeof(float)) * (1 - _xrem)
+        + i32gather_ps((_xr + 1).value, table.data(), sizeof(float))* _xrem;
+};
+
 using namespace Steinberg;
 
 namespace Kaixo
@@ -62,7 +323,7 @@ namespace Kaixo
 
         for (int i = 0; i < Envelopes; i++)
         {
-            voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;            
+            voices[voice].env[i].settings.legato = params.goals[Params::Retrigger] < 0.5;
             voices[voice].env[i].Gate(true);
         }
     }
@@ -139,7 +400,7 @@ namespace Kaixo
             // Clear polyphonic voices
             for (int i = 0; i < Voices; i++)
                 if (m_Notes[i] != -1)
-                    m_Available.push_back(i), m_Notes[i] = -1; 
+                    m_Available.push_back(i), m_Notes[i] = -1;
 
             return;
         }
@@ -214,77 +475,21 @@ namespace Kaixo
         }
     }
 
-    double Processor::GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio)
+    double Processor::GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio, int osi)
     {   // If the gain envelope is done, no more sound, so return 0.
         if (voice.env[0].Done()) return 0;
 
-        if (channel == 0) // Only do all generating on channel 0, to prevent double calculating
+        if (channel == 0)
         {
-
-            for (int i = 0; i < Oscillators; i++)
-            {
-                int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
-
-                voice.oscs[0][i] = 0;
-                voice.oscs[1][i] = 0;
-                //for (int j = 0; j < Unison; j++)
-                for (int j = 0; j < _unison; j++)
-                {
-                    double _panning = _unison == 1 ? 0.5 : (j / (double)(_unison - 1) - 0.5) * voice.modulated[Params::UnisonWidth1 + i] + 0.5;
-
-                    // Oscillator generate
-                    if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
-                        voice.osc[i * Unison + j].sample = voice.osc[i * Unison + j].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i] > 0.5, params.goals[Params::ShaperFreez1 + i] > 0.5);
-                    else
-                    {
-                        voice.osc[i * Unison + j].sample = 0;
-                        voice.oscs[0][i] = 0;
-                        voice.oscs[1][i] = 0;
-                        break;
-                    }
-
-                    double _v = voice.osc[i * Unison + j].sample + voice.modulated[Params::DCOff1 + i] * 2 - 1;
-
-                    // Fold
-                    if (params.goals[Params::ENBFold1 + i] > 0.5)
-                        _v = Shapers::fold(_v * (voice.modulated[Params::Fold1 + i] * 15 + 1), voice.modulated[Params::Bias1 + i] * 2 - 1);
-
-                    // Drive
-                    if (params.goals[Params::ENBDrive1 + i] > 0.5)
-                        _v = Shapers::drive(_v, voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
-
-                    // Gain
-                    _v *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
-
-                    // Apply AAF if oversampling
-                    //if (params.goals[Params::Oversample] > 0)
-                    //    voice.oscs[i] = voice.aaf[2 + i].Apply(voice.oscs[i], voice.aafp[2 + i]);
-
-                    double _makeup = 3. / (_unison + 2.);
-
-                    voice.oscs[0][i] += 2 * _makeup * _v * _panning;
-                    voice.oscs[1][i] += 2 * _makeup * _v * (1 - _panning);
-                }
-
-                // Filter
-                if (params.goals[Params::ENBFilter1 + i] > 0.5)
-                {
-                    voice.oscs[0][i] = voice.filter[i].Apply(voice.oscs[0][i], 0); // Apply pre-combine filter
-                    voice.oscs[1][i] = voice.filter[i].Apply(voice.oscs[1][i], 1); // Apply pre-combine filter
-
-                }
-            }
-
-            { // Sub oscillator
-                voice.sub.sample = voice.sub.OffsetClean(0);
-            }
+            // Sub oscillator
+            voice.sub.sample = voice.sub.OffsetClean(0);
         }
 
         // Oscillator panning and sending to destination
         double _cs[Combines * 2 + 1]{ 0, 0, 0, 0, 0, 0, 0 };
         for (int i = 0; i < Oscillators; i++)
         {
-            double _vs = voice.oscs[channel][i];
+            double _vs = voice.oscs[channel][i][osi];
 
             // Pan
             if (voice.modulated[Params::Pan1 + i] != 0.5)
@@ -419,7 +624,7 @@ namespace Kaixo
 
 
     inline double Processor::Combine(double a, double b, int index, Voice& voice)
-    {   
+    {
         const uint64_t _a = std::bit_cast<uint64_t>(a);
         const uint64_t _b = std::bit_cast<uint64_t>(b);
         const uint64_t _as = a * 4294967296;
@@ -428,15 +633,15 @@ namespace Kaixo
         // Calculate all the combines
         const double sum =
             voice.modulated[Params::MinMixX + index] * 1.4 * (std::min(a, b))
-          + voice.modulated[Params::MaxMixX + index] * 1.3 * (std::max(a, b))
-          + voice.modulated[Params::AndMixX + index] * 1.5 * (std::bit_cast<double>(_a & _b))
-          + voice.modulated[Params::XOrMixX + index] * 1.7 * ((((uint64_t)(a * 4294967296) ^ (uint64_t)(b * 4294967296)) % 4294967296) / 4294967296. - 0.5)
-          + voice.modulated[Params::OrMixX + index] * 0.3 * std::bit_cast<double>(_a | _b)
-          + voice.modulated[Params::MultMixX + index] * a * b * 1.8
-          + voice.modulated[Params::PongMixX + index] * (1.2 * (a > 0 ? a : b < 0 ? b : 0))
-          + voice.modulated[Params::ModMixX + index] * 1.4 * (std::bit_cast<double>(_a % (_b == 0 ? 1 : _b)))
-          + voice.modulated[Params::InlvMixX + index] * 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)))
-          + voice.modulated[Params::AddMixX + index] * (a + b);
+            + voice.modulated[Params::MaxMixX + index] * 1.3 * (std::max(a, b))
+            + voice.modulated[Params::AndMixX + index] * 1.5 * (std::bit_cast<double>(_a & _b))
+            + voice.modulated[Params::XOrMixX + index] * 1.7 * ((((uint64_t)(a * 4294967296) ^ (uint64_t)(b * 4294967296)) % 4294967296) / 4294967296. - 0.5)
+            + voice.modulated[Params::OrMixX + index] * 0.3 * std::bit_cast<double>(_a | _b)
+            + voice.modulated[Params::MultMixX + index] * a * b * 1.8
+            + voice.modulated[Params::PongMixX + index] * (1.2 * (a > 0 ? a : b < 0 ? b : 0))
+            + voice.modulated[Params::ModMixX + index] * 1.4 * (std::bit_cast<double>(_a % (_b == 0 ? 1 : _b)))
+            + voice.modulated[Params::InlvMixX + index] * 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)))
+            + voice.modulated[Params::AddMixX + index] * (a + b);
 
         // Return the combined signals, taking into account the mix value for this combiner.
         return voice.modulated[Params::MixX + index] * sum + (1 - voice.modulated[Params::MixX + index]) * (a + b);
@@ -529,7 +734,7 @@ namespace Kaixo
     void Processor::UpdateComponentParameters(Voice& voice, double ratio)
     {   // Get BPM from process context if valid, otherwise just use 128
         double bpm = (processData->processContext->state & ProcessContext::kTempoValid) ? processData->processContext->tempo : 128;
-        
+
         // Calculate bend offset and time mult.
         const double _bendRatio = 50. / processData->processContext->sampleRate;
         voice.bendOffset = voice.bendOffset * (1 - _bendRatio) + _bendRatio * ((params[{ Params::PitchBend, ratio }] * 2 - 1) * 24 * voice.modulated[Params::Bend]);
@@ -537,7 +742,7 @@ namespace Kaixo
         const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
 
         // Frequency glide
-        voice.deltaf = _timeMult * std::abs((voice.pressed - voice.pressedOld) / (0.001 + voice.modulated[Params::Glide] * 
+        voice.deltaf = _timeMult * std::abs((voice.pressed - voice.pressedOld) / (0.001 + voice.modulated[Params::Glide] *
             voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * 10 * processData->processContext->sampleRate));
         if (voice.frequency > voice.pressed)
             if (voice.frequency - voice.deltaf < voice.pressed) voice.frequency = voice.pressed;
@@ -628,6 +833,7 @@ namespace Kaixo
             voice.filterp[i].RecalculateParameters(ratio == 1);
 
             int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
+            voice.unison[i] = _unison;
             int _unisonMode = std::round(params.goals[Params::UnisonType1 + i] * 2);
             for (int j = 0; j < Unison; j++)
             {
@@ -647,6 +853,7 @@ namespace Kaixo
                 voice.osc[i * Unison + j].settings.shaper2 = voice.modulated[Params::Shaper21 + i];
                 voice.osc[i * Unison + j].settings.shaper2Mix = voice.modulated[Params::Shaper2Mix1 + i] * (params.goals[Params::ENBShaper1 + i] > 0.5);
                 voice.osc[i * Unison + j].settings.shaperMorph = voice.modulated[Params::ShaperMorph1 + i];
+                voice.osc[i * Unison + j].settings.panning = voice.unison[i] == 1 ? 0.5 : (j / (double)(voice.unison[i] - 1) - 0.5) * voice.modulated[Params::UnisonWidth1 + i] + 0.5;
             }
         }
 
@@ -656,6 +863,276 @@ namespace Kaixo
             voice.sub.settings.frequency = noteToFreq(voice.frequency + _octave * 12 + _bendOffset);
             voice.sub.settings.wtpos = voice.modulated[Params::SubOvertone];
         }
+    }
+
+    inline void Processor::GenerateOscillator(Voice& voice, int os)
+    {
+        
+#ifdef USE_SIMD
+        float _phasoA[Oscillators * Unison]; // PW
+        float _dcoffA[Oscillators * Unison]; // PW
+        float _enbflA[Oscillators * Unison]; // PW
+        float _fldgaA[Oscillators * Unison]; // PW
+        float _fldbiA[Oscillators * Unison]; // PW
+        float _enbdrA[Oscillators * Unison]; // PW
+        float _drvgaA[Oscillators * Unison]; // PW
+        float _drvshA[Oscillators * Unison]; // PW
+        float _pulswA[Oscillators * Unison]; // PW
+        float _bendaA[Oscillators * Unison]; // Bend
+        float _syncaA[Oscillators * Unison]; // Sync
+        float _shap1A[Oscillators * Unison]; // SHP-X
+        float _shap2A[Oscillators * Unison]; // SHP-Y
+        float _morphA[Oscillators * Unison]; // Morph
+        float _shmx1A[Oscillators * Unison]; // Shaper X Mix
+        float _shmx2A[Oscillators * Unison]; // Shaper Y Mix
+        float _phaseA[Oscillators * Unison]; // Phase
+        float _wtposA[Oscillators * Unison]; // WT Pos
+        float _freqcA[Oscillators * Unison]; // Frequency
+        float _gainsA[Oscillators * Unison]; // Volume
+        float _panniA[Oscillators * Unison]; // Unison Panning
+        float _makeuA[Oscillators * Unison]; // Unison Makeup
+        float* _phaseRef[Oscillators * Unison];
+        double* _destL[Oscillators * Unison];
+        double* _destR[Oscillators * Unison];
+        std::fill_n(_phasoA, Oscillators * Unison, 0);
+        std::fill_n(_dcoffA, Oscillators * Unison, 0);
+        std::fill_n(_enbflA, Oscillators * Unison, 0);
+        std::fill_n(_fldgaA, Oscillators * Unison, 0);
+        std::fill_n(_fldbiA, Oscillators * Unison, 0);
+        std::fill_n(_enbdrA, Oscillators * Unison, 0);
+        std::fill_n(_drvgaA, Oscillators * Unison, 0);
+        std::fill_n(_drvshA, Oscillators * Unison, 0);
+        std::fill_n(_pulswA, Oscillators * Unison, 0);
+        std::fill_n(_bendaA, Oscillators * Unison, 0);
+        std::fill_n(_syncaA, Oscillators * Unison, 0);
+        std::fill_n(_shap1A, Oscillators * Unison, 0);
+        std::fill_n(_shap2A, Oscillators * Unison, 0);
+        std::fill_n(_morphA, Oscillators * Unison, 0);
+        std::fill_n(_shmx1A, Oscillators * Unison, 0);
+        std::fill_n(_shmx2A, Oscillators * Unison, 0);
+        std::fill_n(_phaseA, Oscillators * Unison, 0);
+        std::fill_n(_wtposA, Oscillators * Unison, 0);
+        std::fill_n(_freqcA, Oscillators * Unison, 0);
+        std::fill_n(_gainsA, Oscillators * Unison, 0);
+        std::fill_n(_panniA, Oscillators * Unison, 0);
+        std::fill_n(_makeuA, Oscillators * Unison, 0);
+        std::fill_n(_destL, Oscillators * Unison, nullptr);
+        std::fill_n(_destR, Oscillators * Unison, nullptr);
+        std::fill_n(_phaseRef, Oscillators * Unison, nullptr);
+
+        // Count amount of voices
+        int _unisonVoices = 0;
+        int _index = 0;
+        for (int i = 0; i < Oscillators; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                voice.oscs[0][i][j] = 0;
+                voice.oscs[1][i][j] = 0;
+            }
+
+            if (params.goals[Params::Enable1 + i] < 0.5)
+                continue;
+
+            auto makeup = 2 * 3. / (voice.unison[i] + 2.);
+            for (int j = 0; j < voice.unison[i]; j++)
+            {
+                const int _oi = i * Unison + j;
+                auto& osc = voice.osc[_oi];
+                _makeuA[_index] = makeup;
+                _panniA[_index] = osc.settings.panning;
+
+                _phasoA[_index] = voice.modulated[Params::Phase1 + i];
+                _dcoffA[_index] = voice.modulated[Params::DCOff1 + i] * 2 - 1;
+                _enbflA[_index] = params.goals[Params::ENBFold1 + i];
+                _fldgaA[_index] = voice.modulated[Params::Fold1 + i] * 15 + 1;
+                _fldbiA[_index] = voice.modulated[Params::Bias1 + i] * 2 - 1;
+                _enbdrA[_index] = params.goals[Params::ENBDrive1 + i];
+                _drvgaA[_index] = voice.modulated[Params::DriveGain1 + i] * 3 + 1;
+                _drvshA[_index] = voice.modulated[Params::DriveAmt1 + i];
+                _phaseA[_index] = osc.phase;
+                _phaseRef[_index] = &osc.phase;
+                _pulswA[_index] = osc.settings.pw * 2 - 1;
+                _bendaA[_index] = osc.settings.bend * 2 - 1;
+                _syncaA[_index] = osc.settings.sync * 7 + 1;
+                _shap1A[_index] = osc.settings.shaper;
+                _shap2A[_index] = osc.settings.shaper2;
+                _morphA[_index] = params.goals[Params::ShaperFreez1 + i] > 0.5 ? 3 * osc.settings.shaperMorph * (30 / osc.settings.frequency) : osc.settings.shaperMorph;
+                _shmx1A[_index] = osc.settings.shaperMix;
+                _shmx2A[_index] = osc.settings.shaper2Mix;
+                _wtposA[_index] = osc.settings.wtpos;
+                _freqcA[_index] = osc.settings.frequency;
+                _gainsA[_index] = voice.modulated[Params::Volume1 + i];
+                _destL[_index] = &voice.oscs[0][i][0];
+                _destR[_index] = &voice.oscs[1][i][0];
+                _index++;
+            }
+            _unisonVoices += voice.unison[i];
+        }
+
+        for (int i = 0; i < Oscillators * Unison; i += 8)
+        {
+            SIMD _oscFreq = &_freqcA[i];
+
+            SIMD _morph = &_morphA[i];
+            SIMD _shap1 = &_shap1A[i];
+            SIMD _shap2 = &_shap2A[i];
+            SIMD _shmx1 = &_shmx1A[i];
+            SIMD _shmx2 = &_shmx2A[i];
+            SIMD _pulsw = &_pulswA[i];
+            SIMD _synca = &_syncaA[i];
+            SIMD _benda = &_bendaA[i];
+
+            SIMD _phaso = &_phasoA[i];
+            SIMD _dcoff = &_dcoffA[i];
+            SIMD _enbfl = &_enbflA[i];
+            SIMD _fldga = &_fldgaA[i];
+            SIMD _fldbi = &_fldbiA[i];
+            SIMD _enbdr = &_enbdrA[i];
+            SIMD _drvga = &_drvgaA[i];
+            SIMD _drvsh = &_drvshA[i];
+
+            SIMD _pw = _pulsw > 0.f;
+            SIMD _d = simdmax(0.000001f,
+                (_pw & (1 - _pulsw)) | // If pw < 0 : 1 - pw
+                ((~_pw) & (1 + _pulsw))); //        else 1 + pw
+
+            SIMD _freq = _oscFreq * _synca;
+            SIMD _freqc = simdconstrain(_freq.log2() * 2, 0.f, 32.f);
+
+            SIMD _gain = &_gainsA[i];
+            SIMD _incr = _oscFreq / voice.samplerate;
+
+            for (int k = 0; k < os; k++)
+            {
+                SIMD _phasedata = &_phaseA[i];
+                SIMD _newphase = simdmyfmod1(_phasedata + _incr);
+
+                _phasedata = _phasedata * (1 - _shmx1) + _shmx1 * lookup3di(_phasedata, _shap1, _morph, Shapers::getMainPhaseShaper());
+
+                SIMD _pwdone =
+                    (_pw & ((_phasedata / _d) > 1.f)) | // If pw < 0 : phase / _d > 1
+                    ((~_pw) & (((1 - _phasedata) / _d) > 1.f));  //  else (1 - phase) / _d > 1
+
+                _phasedata = simdmyfmod1(
+                    (_pw & ((_phasedata / _d) + _phaso)) |
+                    ((~_pw) & (((_phasedata + _pulsw) / _d) + _phaso))
+                );
+
+                _phasedata = simdmyfmod1(lookup2di1(_phasedata, _benda, Shapers::getPowerCurve()) * _synca);
+
+                // calculate the index of the frequency in the wavetable using log and scalar
+                SIMD _wavetable = lookup3di2(_phasedata, &_wtposA[i], _freqc, Wavetables::getBasicTable());
+
+                _wavetable =
+                    (_pwdone & 0.f) | // If pulsewidth done, value 0, otherwise other stuff
+                    ((~_pwdone) & (_wavetable * (1 - _shmx2) + _shmx2 * lookup3di(_wavetable, _shap2, _morph, Shapers::getMainWaveShaper())));
+
+
+                SIMD _result = (_wavetable + _dcoff);
+
+                SIMD _cond = _enbfl > 0.5;
+
+                _result = // Fold
+                    (_cond & lookup1di1(simdmyfmod1(0.25 * (_result * _fldga + _fldbi)) * 4.f, Shapers::getFold())) |
+                    ((~_cond) & _result);
+
+                _cond = _enbdr > 0.5;
+                _result = // Drive
+                    (_cond & lookup2di2(simdconstrain(_result * _drvga, -10.f, 10.f), _drvsh, Shapers::getDrive())) |
+                    ((~_cond) & simdconstrain(_result, -1.f, 1.f));
+
+                _result = _result * _gain;
+
+                // Get final values
+                float _finalData[8];
+                storeu_ps(_finalData, _result.value);
+
+                // Get new phases
+                float _newPhases[8];
+                storeu_ps(_newPhases, _newphase.value);
+                for (int j = 0; j < 8; j++)
+                {
+                    if (_destL[i + j])
+                    {   // Assign new phase, and set generated audio to destination
+                        (*_phaseRef[i + j]) = _phaseA[i + j] = _newPhases[j];
+                        (_destL[i + j][k]) += _finalData[j] * _makeuA[i + j] * _panniA[i + j];
+                        (_destR[i + j][k]) += _finalData[j] * _makeuA[i + j] * (1 - _panniA[i + j]);
+                    }
+                }
+            }
+            if (i + 8 >= _unisonVoices) break;
+        }
+
+        for (int k = 0; k < os; k++)
+        {
+            for (int i = 0; i < Oscillators; i++)
+            {
+                if (params.goals[Params::ENBFilter1 + i] > 0.5)
+                {
+                    voice.oscs[0][i][k] = voice.filter[i].Apply(voice.oscs[0][i][k], 0); // Apply pre-combine filter
+                    voice.oscs[1][i][k] = voice.filter[i].Apply(voice.oscs[1][i][k], 1); // Apply pre-combine filter
+                }
+            }
+        }
+
+#else
+        for (int k = 0; k < os; k++)
+        {
+            for (int i = 0; i < Oscillators; i++)
+            {
+                int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
+
+                voice.oscs[0][i][k] = 0;
+                voice.oscs[1][i][k] = 0;
+                //for (int j = 0; j < Unison; j++)
+                for (int j = 0; j < _unison; j++)
+                {
+                    double _panning = _unison == 1 ? 0.5 : (j / (double)(_unison - 1) - 0.5) * voice.modulated[Params::UnisonWidth1 + i] + 0.5;
+
+                    // Oscillator generate
+                    if (params.goals[Params::Enable1 + i] > 0.5) // Generate oscillator sound
+                        voice.osc[i * Unison + j].sample = voice.osc[i * Unison + j].Offset(myfmod1(voice.modulated[Params::Phase1 + i] + 5), params.goals[Params::ENBShaper1 + i] > 0.5, params.goals[Params::ShaperFreez1 + i] > 0.5);
+                    else
+                    {
+                        voice.osc[i * Unison + j].sample = 0;
+                        voice.oscs[0][i][k] = 0;
+                        voice.oscs[1][i][k] = 0;
+                        break;
+                    }
+
+                    double _v = voice.osc[i * Unison + j].sample + voice.modulated[Params::DCOff1 + i] * 2 - 1;
+
+                    // Fold
+                    if (params.goals[Params::ENBFold1 + i] > 0.5)
+                        _v = Shapers::fold(_v * (voice.modulated[Params::Fold1 + i] * 15 + 1), voice.modulated[Params::Bias1 + i] * 2 - 1);
+
+                    // Drive
+                    if (params.goals[Params::ENBDrive1 + i] > 0.5)
+                        _v = Shapers::drive(_v, voice.modulated[Params::DriveGain1 + i] * 3 + 1, voice.modulated[Params::DriveAmt1 + i]);
+
+                    // Gain
+                    _v *= voice.modulated[Params::Volume1 + i]; // Adjust for volume
+
+                    // Apply AAF if oversampling
+                    //if (params.goals[Params::Oversample] > 0)
+                    //    voice.oscs[i] = voice.aaf[2 + i].Apply(voice.oscs[i], voice.aafp[2 + i]);
+
+                    double _makeup = 3. / (_unison + 2.);
+
+                    voice.oscs[0][i][k] += 2 * _makeup * _v * _panning;
+                    voice.oscs[1][i][k] += 2 * _makeup * _v * (1 - _panning);
+                }
+
+                // Filter
+                if (params.goals[Params::ENBFilter1 + i] > 0.5)
+                {
+                    voice.oscs[0][i][k] = voice.filter[i].Apply(voice.oscs[0][i][k], 0); // Apply pre-combine filter
+                    voice.oscs[1][i][k] = voice.filter[i].Apply(voice.oscs[1][i][k], 1); // Apply pre-combine filter
+                }
+            }
+        }
+#endif
     }
 
     inline void Processor::GenerateVoice(Voice& voice)
@@ -684,10 +1161,13 @@ namespace Kaixo
             CalculateModulation(voice, ratio);
             UpdateComponentParameters(voice, ratio);
 
+            // Generate Oscillator
+            GenerateOscillator(voice, _osa);
+
             if (_osa == 1) // No oversampling
             {
-                const double l = GenerateSample(0, *processData, voice, ratio);
-                const double r = GenerateSample(1, *processData, voice, ratio);
+                const double l = GenerateSample(0, *processData, voice, ratio, 0);
+                const double r = GenerateSample(1, *processData, voice, ratio, 0);
                 voice.buffer.left[index] += l;
                 voice.buffer.right[index] += r;
             }
@@ -704,8 +1184,8 @@ namespace Kaixo
                 double _sumr = 0;
                 for (int k = 0; k < _osa; k++)
                 {
-                    double _l = GenerateSample(0, *processData, voice, ratio);
-                    double _r = GenerateSample(1, *processData, voice, ratio);
+                    double _l = GenerateSample(0, *processData, voice, ratio, k);
+                    double _r = GenerateSample(1, *processData, voice, ratio, k);
 
                     _l = voice.aaf[0].Apply(_l, voice.aafp[0]);
                     _r = voice.aaf[1].Apply(_r, voice.aafp[1]);

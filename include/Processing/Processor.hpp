@@ -70,7 +70,8 @@ namespace Kaixo
 
             double bendOffset = 0;
 
-            double oscs[2][Oscillators]; // Oscillator values, stored separately for modulation
+            double oscs[2][Oscillators][8]; // Oscillator values, stored separately for modulation
+            int unison[Oscillators];
             Oscillator osc[Oscillators * Unison]; // Main oscillators
             Oscillator sub; // Sub oscillator
             Oscillator lfo[LFOs]; // LFOs
@@ -99,8 +100,8 @@ namespace Kaixo
                 for (auto& i : env) i.m_Phase = -1, i.m_SustainPhase = false, i.sample = 0, i.m_Gate = false, i.m_Down = i.settings.sustain, i.Generate(0);
                 for (auto& i : osc) i.phase = 0, i.sample = 0;
                 for (auto& i : lfo) i.phase = 0, i.sample = 0;
-                for (auto& i : oscs[0]) i = 0;
-                for (auto& i : oscs[1]) i = 0;
+                for (auto& i : oscs[0]) for (auto& j : i) j = 0;
+                for (auto& i : oscs[1]) for (auto& j : i) j = 0;
                 for (auto& i : filterp) i.RecalculateParameters(true);
                 for (auto& i : cfilterp) i.RecalculateParameters(true);
                 for (auto& i : dcoffp) i.RecalculateParameters(true);
@@ -143,7 +144,8 @@ namespace Kaixo
 
         // Generate buffer for a single voice
         void GenerateVoice(Voice& voice);
-        double GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio);
+        void GenerateOscillator(Voice& voice, int os);
+        double GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio, int osi);
         void CalculateModulation(Voice& voice, double ratio);
         void UpdateComponentParameters(Voice& voice, double ratio);
 

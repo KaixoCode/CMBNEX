@@ -47,30 +47,33 @@ namespace Kaixo
             return constrain(s1 + s2, -1., 1.) * 0.5 + 0.5;
         };
 
+        const std::array<float, 4097 * 9 * 1025 + 1>& getMainWaveShaper() { return ws0m.table; };
         double mainWaveShaper(double x, double amt, double morph)
         {   
             return ws0m.get(x, amt, morph);
         }
 
+        const std::array<float, 4097 * 9 * 1025 + 1>& getMainPhaseShaper() { return ps0m.table; };
         double mainPhaseShaper(double x, double amt, double morph)
         { 
             return ps0m.get(x, amt, morph);
         }
 
         // Wavefolder lookup table
-        //const LookupTable <
-        //    TableAxis{ .size = 100000, .begin = -4, .end = 4 }
-        //> foldt = [](double x) {
-        //    constexpr static double b = 4;
-        //    return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
-        //};
+        const LookupTable <
+            TableAxis{ .size = 100000, .begin = -5, .end = 5 }
+        > foldt = [](double x) {
+            constexpr static double b = 4;
+            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+        };
 
+        const std::array<float, 100001 + 1>& getFold() { return foldt.table; }
         double fold(double x, double bias)
         {
-            //return foldt.get(myfmod1((x + bias) * 0.25) * 4);
-            constexpr static double b = 4;
-            x += bias;
-            return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
+            return foldt.get(myfmod1((x + bias) * 0.25) * 4);
+            //constexpr static double b = 4;
+            //x += bias;
+            //return 4 / b * (4.0 * (std::abs(1 / b * x + 1 / b - std::round(1 / b * x + 1 / b)) - 1 / b) - b / 4 + 1);
         }
 
         // Drive lookup table, 1d.
@@ -83,6 +86,7 @@ namespace Kaixo
             return amt * _pow + (1 - amt) * _cns;
         };
 
+        const std::array<float, 100001 * 2 + 1>& getDrive() { return drivet.table; };
         double drive(double x, double gain, double amt)
         {
             const double _gain = gain * x;
@@ -110,6 +114,7 @@ namespace Kaixo
         };
 
         double powerCurve(double x, double curve) { return powerCurvet.get(x, curve); }
+        const std::array<float, 1001 * 1001 + 1>& getPowerCurve() { return powerCurvet.table; };
     }
 
     namespace Wavetables
@@ -201,6 +206,8 @@ namespace Kaixo
                 return square(p, f) * r + saw(p, f) * (1 - r);
             }
         };
+
+        const std::array<float, 2049 * 4 * 33 + 1>& getBasicTable() { return basict.table; }
 
         // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
         bool basicLoaded() { return basict.done; };

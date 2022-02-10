@@ -130,10 +130,12 @@ namespace Kaixo
         // Main wave shaper, is an interpolating shaper, going over 5 shapers
         // and the ability to morph between an aditional 5 shapers.
         double mainWaveShaper(double x, double amt, double morph);
+        const std::array<float, 4097 * 9 * 1025 + 1>& getMainWaveShaper();
 
         // Main phase shaper, the same as the wave shaper, except the output
         // is always constrained between 0 and 1.
         double mainPhaseShaper(double x, double amt, double morph);
+        const std::array<float, 4097 * 9 * 1025 + 1>& getMainPhaseShaper();
 
         // Simple waveshaper that interpolates between x^(1/5), x, and x^5.
         inline double simpleshaper(double x, double amt)
@@ -161,13 +163,16 @@ namespace Kaixo
         // Wavefolder, basically bounces back signal above 1 and below -1 so it folds
         // in on itself, creating aditional harmonics
         double fold(double x, double bias);
+        const std::array<float, 100001 + 1>& getFold();
 
         // Simple drive algorithm with lookup table.
         double drive(double x, double gain, double amt);
+        const std::array<float, 100001 * 2 + 1>& getDrive();
 
         // power curve interpolates between x^(1/16), x, and x^16, and makes
         // sure the output curve perfectly outputs between 0 and 1.
         double powerCurve(double x, double curve);
+        const std::array<float, 1001 * 1001 + 1>& getPowerCurve();
     }
 
     using Wavetable = double(*)(double, double);
@@ -181,6 +186,7 @@ namespace Kaixo
 
         // Basic wavetable combines sine, saw, square, and triangle into single wavetable.
         double basic(double phase, double wtpos, double f);
+        const std::array<float, 2049 * 4 * 33 + 1>& getBasicTable();
         bool basicLoaded();
 
         inline double sub(double phase, double wtpos)
@@ -252,6 +258,7 @@ namespace Kaixo
             double shaper2Mix = 0;
             double shaper3 = 0.5;
             double shaperMorph = 0;
+            double panning = 0;
         } settings;
 
         Oscillator(const Settings& s = {}) : settings(s) {}

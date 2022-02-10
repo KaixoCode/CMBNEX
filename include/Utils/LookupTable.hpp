@@ -150,15 +150,15 @@ namespace Kaixo
                 const double _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
                 const int _zr = (int)(_z);
                 const double _zrem = _z - _zr;
-                const float _xa11 = (1 - _xrem) * table[_xr + (Width.size + 1) * _yr + (Width.size + 1) * (Height.size + 1) * _zr] +
-                    _xrem * table[_xr + 1 + (Width.size + 1) * _yr + (Width.size + 1) * (Height.size + 1) * _zr];
-                const float _xa12 = (1 - _xrem) * table[_xr + (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * _zr] +
-                    _xrem * table[_xr + 1 + (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * _zr];
+                const float _xa11 = (1 - _xrem) * table[_xr +     (Width.size + 1) * _yr +       (Width.size + 1) * (Height.size + 1) * _zr] +
+                                          _xrem * table[_xr + 1 + (Width.size + 1) * _yr +       (Width.size + 1) * (Height.size + 1) * _zr];
+                const float _xa12 = (1 - _xrem) * table[_xr +     (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * _zr] +
+                                          _xrem * table[_xr + 1 + (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * _zr];
                 const float _ya1 = _xa11 * (1 - _yrem) + _xa12 * _yrem;
-                const float _xa21 = (1 - _xrem) * table[_xr + (Width.size + 1) * _yr + (Width.size + 1) * (Height.size + 1) * (_zr + 1)] +
-                    _xrem * table[_xr + 1 + (Width.size + 1) * _yr + (Width.size + 1) * (Height.size + 1) * (_zr + 1)];
-                const float _xa22 = (1 - _xrem) * table[_xr + (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * (_zr + 1)] +
-                    _xrem * table[_xr + 1 + (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * (_zr + 1)];
+                const float _xa21 = (1 - _xrem) * table[_xr +     (Width.size + 1) * _yr +       (Width.size + 1) * (Height.size + 1) * (_zr + 1)] +
+                                          _xrem * table[_xr + 1 + (Width.size + 1) * _yr +       (Width.size + 1) * (Height.size + 1) * (_zr + 1)];
+                const float _xa22 = (1 - _xrem) * table[_xr +     (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * (_zr + 1)] +
+                                          _xrem * table[_xr + 1 + (Width.size + 1) * (_yr + 1) + (Width.size + 1) * (Height.size + 1) * (_zr + 1)];
                 const float _ya2 = _xa21 * (1 - _yrem) + _xa22 * _yrem;
                 return _ya1 * (1 - _zrem) + _ya2 * _zrem;
             }
