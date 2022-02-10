@@ -106,6 +106,36 @@ namespace Kaixo
                 for (auto& i : cfilterp) i.RecalculateParameters(true);
                 for (auto& i : dcoffp) i.RecalculateParameters(true);
             }
+
+
+            struct SIMDMemory
+            {
+                int _ovsinA[Oscillators * Unison * 8];
+                float _phasoA[Oscillators * Unison * 8];
+                float _dcoffA[Oscillators * Unison * 8];
+                float _enbflA[Oscillators * Unison * 8];
+                float _fldgaA[Oscillators * Unison * 8];
+                float _fldbiA[Oscillators * Unison * 8];
+                float _enbdrA[Oscillators * Unison * 8];
+                float _drvgaA[Oscillators * Unison * 8];
+                float _drvshA[Oscillators * Unison * 8];
+                float _pulswA[Oscillators * Unison * 8];
+                float _bendaA[Oscillators * Unison * 8];
+                float _syncaA[Oscillators * Unison * 8];
+                float _shap1A[Oscillators * Unison * 8];
+                float _shap2A[Oscillators * Unison * 8];
+                float _morphA[Oscillators * Unison * 8];
+                float _shmx1A[Oscillators * Unison * 8];
+                float _shmx2A[Oscillators * Unison * 8];
+                float _phaseA[Oscillators * Unison * 8];
+                float _wtposA[Oscillators * Unison * 8];
+                float _freqcA[Oscillators * Unison * 8];
+                float _gainsA[Oscillators * Unison * 8];
+                float _panniA[Oscillators * Unison * 8];
+                float _makeuA[Oscillators * Unison * 8];
+                double* _destL[Oscillators * Unison * 8];
+                double* _destR[Oscillators * Unison * 8];
+            } memory;
         };
 
         Voice voices[Voices]; // All the voices
