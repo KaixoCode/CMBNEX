@@ -146,6 +146,8 @@ namespace Kaixo
             return y[0];
         }
 
+        void Reset() { y[0] = y[1] = y[2] = x[0] = x[1] = x[2] = 0; }
+
     private:
         double y[3]{ 0, 0, 0 }, x[3]{ 0, 0, 0 };
     };

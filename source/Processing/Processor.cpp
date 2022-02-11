@@ -256,11 +256,11 @@ namespace Kaixo
 
             // Fold
             if (params.goals[Params::ENBFoldX + i] > 0.5)
-                _v = Shapers::fold(_v * (voice.modulated[Params::FoldX + i] * 15 + 1), voice.modulated[Params::BiasX + i] * 2 - 1);
+                _v = Shapers::fold(_v * (voice.modulated[Params::FoldX + i] * 15 + 1), voice.modulated[Params::BiasX + i] * 1.9999 - 1);
 
             // Drive
             if (params.goals[Params::ENBDriveX + i] > 0.5)
-                _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i]);
+                _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i] * 0.9999);
             else // Always clip, even if drive disabled, to prevent unstable filter
                 _v = constrain(_v, -16., 16.);
 
@@ -372,15 +372,17 @@ namespace Kaixo
         // Calculate all the combines
         const double sum =
             voice.modulated[Params::MinMixX + index] * 1.4 * (std::min(a, b))
-            + voice.modulated[Params::MaxMixX + index] * 1.3 * (std::max(a, b))
+            + voice.modulated[Params::MaxMixX + index] * 1.4 * (std::max(a, b))
             + voice.modulated[Params::AndMixX + index] * 1.5 * (std::bit_cast<double>(_a & _b))
-            + voice.modulated[Params::XOrMixX + index] * 1.7 * ((((uint64_t)(a * 4294967296) ^ (uint64_t)(b * 4294967296)) % 4294967296) / 4294967296. - 0.5)
+            + voice.modulated[Params::XOrMixX + index] * 1.5 * ((((uint64_t)(a * 4294967296) ^ (uint64_t)(b * 4294967296)) % 4294967296) / 4294967296. - 0.5)
             + voice.modulated[Params::OrMixX + index] * 0.3 * std::bit_cast<double>(_a | _b)
-            + voice.modulated[Params::MultMixX + index] * a * b * 1.8
-            + voice.modulated[Params::PongMixX + index] * (1.2 * (a > 0 ? a : b < 0 ? b : 0))
+            + voice.modulated[Params::MultMixX + index] * a * b * 1.9
+            + voice.modulated[Params::PongMixX + index] * (1.3 * (a > 0 ? a : b < 0 ? b : 0))
             + voice.modulated[Params::ModMixX + index] * 1.4 * (std::bit_cast<double>(_a % (_b == 0 ? 1 : _b)))
-            + voice.modulated[Params::InlvMixX + index] * 0.7 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)))
+            + voice.modulated[Params::InlvMixX + index] * 0.5 * (std::bit_cast<double>((_a & 0x5555555555555555) | (_b & 0xAAAAAAAAAAAAAAAA)))
             + voice.modulated[Params::AddMixX + index] * (a + b);
+
+        if (std::isnan(sum)) return a + b;
 
         // Return the combined signals, taking into account the mix value for this combiner.
         return voice.modulated[Params::MixX + index] * sum + (1 - voice.modulated[Params::MixX + index]) * (a + b);
@@ -507,6 +509,12 @@ namespace Kaixo
             voice.cfilterp[i].Q = voice.modulated[Params::ResoX + i] * 16 + 1;
             voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
             voice.cfilterp[i].RecalculateParameters(ratio == 1);
+
+            if (ratio == 1)
+            {
+                voice.cfilter[i].Reset();
+                voice.dcoff[i].Reset();
+            }
         }
 
         for (int i = 0; i < Envelopes; i++)
@@ -570,6 +578,11 @@ namespace Kaixo
             voice.filterp[i].Q = voice.modulated[Params::Reso1 + i] * 16 + 1;
             voice.filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
             voice.filterp[i].RecalculateParameters(ratio == 1);
+            
+            if (ratio == 1)
+            {
+                voice.filter[i].Reset();
+            }
 
             int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
             voice.unison[i] = _unison;
@@ -609,7 +622,7 @@ namespace Kaixo
         // Calculate oversample amount
         size_t _index = std::floor(params.goals[Params::Oversample] * 4);
         size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
-        if (processData->processMode & ProcessModes::kOffline) _osa = 16;
+        if (processData->processMode & ProcessModes::kOffline) _osa = 8;
 
         // Set oversampled sample rate in voice
         voice.samplerate = processData->processContext->sampleRate * _osa;
