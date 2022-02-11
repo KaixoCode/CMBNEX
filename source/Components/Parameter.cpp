@@ -486,7 +486,7 @@ namespace Kaixo
         bool pressed = getValue() > 0.5;
         BackgroundEffect::draw(pContext, { .size = a, .pressed = pressed, .dark = settings.dark, 
             .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
-        pContext->setFontColor(getValue() > 0.5 ? text : Colors::OffText);
+        pContext->setFontColor(getValue() > 0.5 ? Colors::SelectText : Colors::OffText);
         pContext->drawString(settings.name, { a.getCenter().x - w2 / 2, a.getCenter().y + 6 }, true);
     }
 
@@ -513,7 +513,7 @@ namespace Kaixo
                 bool pressed = std::abs(getValue() * (settings.parts.size() - 1) - i) < 0.5;
 
                 pContext->setFillColor(pressed ? main : back);
-                pContext->setFontColor(pressed ? text : Colors::OffText);
+                pContext->setFontColor(pressed ? Colors::SelectText : Colors::OffText);
                 BackgroundEffect::draw(pContext, { .size = { a.left, _y, a.right, _y + _h - settings.padding - 1 }, .pressed = pressed, 
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x - _w / 2, _y + 6 + (_h - settings.padding - 1) / 2 }, true);
@@ -535,7 +535,7 @@ namespace Kaixo
                 bool pressed = std::abs(getValue() * (settings.parts.size() - 1) - i) < 0.5;
 
                 pContext->setFillColor(pressed ? main : back);
-                pContext->setFontColor(pressed ? text : Colors::OffText);
+                pContext->setFontColor(pressed ? Colors::SelectText : Colors::OffText);
                 BackgroundEffect::draw(pContext, { .size = { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, .pressed = pressed,
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
 
@@ -631,7 +631,7 @@ namespace Kaixo
                 auto _w = pContext->getStringWidth(_n);
 
                 pContext->setFillColor(_set ? main : back);
-                pContext->setFontColor(_set ? text : Colors::OffText);
+                pContext->setFontColor(_set ? Colors::SelectText : Colors::OffText);
 
                 BackgroundEffect::draw(pContext, { .size = { a.left, _y, a.right, _y + _h - settings.padding - 1 }, .pressed = _set,
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
@@ -653,7 +653,7 @@ namespace Kaixo
                 auto _sw = pContext->getStringWidth(_n);
 
                 pContext->setFillColor(_set ? main : back);
-                pContext->setFontColor(_set ? text : Colors::OffText);
+                pContext->setFontColor(_set ? Colors::SelectText : Colors::OffText);
                 BackgroundEffect::draw(pContext, { .size = { _x, a.top, _x + _w - settings.padding - 1, a.bottom }, .pressed = _set,
                     .dark = settings.dark, .button = true, .enabled = settings.enabled, .sides = 0, .edge = 0 });
                 pContext->drawString(_n, { _x + (_w - settings.padding - 2) / 2 - _sw / 2, _y + 6 }, true);

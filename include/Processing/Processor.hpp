@@ -5,6 +5,7 @@
 #include "Utils/ThreadPool.hpp"
 #include "Utils/Utils.hpp"
 #include "Processing/BaseProcessor.hpp"
+#include "Utils/SIMD.hpp"
 #ifndef CMBNEX_TESTS
 #include "Views/MainView.hpp"
 #endif
@@ -15,7 +16,8 @@ namespace Kaixo
     class Processor : public Instrument
     {
     public:
-        
+        static inline auto SIMDPATH = ChoosePath();
+
         // Fast random number generator, uses xorshift algorithm
         struct NoiseGenerator
         {
@@ -174,7 +176,9 @@ namespace Kaixo
 
         // Generate buffer for a single voice
         void GenerateVoice(Voice& voice);
-        void GenerateOscillator(Voice& voice, int os);
+
+#include "Processing/SIMD_Impl.hpp"
+
         double GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio, int osi);
         void CalculateModulation(Voice& voice, double ratio);
         void UpdateComponentParameters(Voice& voice, double ratio);

@@ -15,6 +15,7 @@ namespace Kaixo
             int fontsize = 20; // Font size
             bool line = false; // Display line below
             bool enabled = true; // Enabled, if false, OffText color, otherwise MainText
+            bool button = false;
         } settings;
 
         Label(Settings settings)

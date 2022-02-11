@@ -567,9 +567,10 @@ namespace Kaixo
         char a[2]{ (char)('A' + index), '\0' };
         titl = new Label{ {
             .size = { 151,   3, 151 + 65,   3 + 30 },
-            .value = a, .center = true, .fontsize = 24,
+            .value = a, .center = true, .fontsize = 24, 
+            .button = true
         } };
-        titl->setMouseEnabled(false);
+        titl->setMouseEnabled(false); 
 
         addView(enbl); addView(tune); addView(pann); addView(detn); 
         addView(volm); addView(titl); addView(wfrm);

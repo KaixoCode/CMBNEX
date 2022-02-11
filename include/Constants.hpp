@@ -21,6 +21,7 @@ struct Colors
     static inline CColor KnobBackDark =  CColor{ 30, 30, 30, 255 };
     static inline CColor Border =  CColor{ 30, 30, 30, 255 };
     static inline CColor MainText = CColor{ 200, 200, 200, 255 };
+    static inline CColor SelectText = CColor{ 0, 200, 200, 255 };
     static inline CColor OffText = CColor{ 100, 100, 100, 255 };
     static inline CColor OffTextL = CColor{ 110, 110, 110, 255 };
     static inline CColor BorderHover = CColor{ 70, 70, 70, 255 };

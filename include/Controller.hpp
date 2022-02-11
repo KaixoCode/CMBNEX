@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.hpp"
+#include "Utils/Utils.hpp"
 
 namespace Kaixo
 {
@@ -172,6 +173,7 @@ namespace Kaixo
                 Colors::OffTextL = CColor{ 110, 110, 110, 255 };
                 Colors::BorderHover = CColor{ 70, 70, 70, 255 };
             }
+            Colors::SelectText = rgb2hsv(Colors::MainGreen).v < 127 ? CColor{ 200, 200, 200, 255 } : CColor{ 15, 15, 15, 255 };
         }
 
         void saveTheme()

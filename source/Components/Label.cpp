@@ -6,7 +6,7 @@ namespace Kaixo
     {
         pContext->setLineWidth(2);
         pContext->setFont(pContext->getFont(), settings.fontsize);
-        pContext->setFontColor(settings.enabled ? Colors::MainText : Colors::OffText);
+        pContext->setFontColor(settings.enabled ? settings.button ? Colors::SelectText : Colors::MainText : Colors::OffText);
         pContext->setFrameColor(settings.enabled ? Colors::MainText : Colors::OffText);
         auto _w = pContext->getStringWidth(settings.value);
         auto _s = getViewSize().getTopCenter();
