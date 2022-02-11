@@ -619,7 +619,7 @@ namespace Kaixo
     inline void Processor::GenerateVoice(Voice& voice)
     {   
         // Calculate oversample amount
-        size_t _pupdate = params.goals[Params::HQMod] > 0.5 ? 1 : 32;
+        size_t _pupdate = params.goals[Params::HQMod] > 0.5 ? 1 : 4;
         size_t _index = std::floor(params.goals[Params::Oversample] * 4);
         size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
         if (processData->processMode & ProcessModes::kOffline) _osa = params.goals[Params::OSExport] > 0.5 ? 8 : _osa, _pupdate = 1;
@@ -645,8 +645,8 @@ namespace Kaixo
                 sinceLastParamUpdate = 0;
             
                 CalculateModulation(voice, ratio, _pupdate);
-                UpdateComponentParameters(voice, ratio, _pupdate);
             }
+            UpdateComponentParameters(voice, ratio, 1);
             sinceLastParamUpdate++;
 
             // Generate Oscillator

@@ -30,7 +30,7 @@ namespace Kaixo
 
 			CViewContainer::onMouseDown(where, buttons);
 			auto a = getViewSize();
-			a.inset({ 390, 200 });
+			a.inset({ 390, 170 });
 			if (!a.pointInside(where))
 			{
 				editor->saveColor();
