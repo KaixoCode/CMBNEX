@@ -14,6 +14,7 @@ namespace Kaixo
     public:
         int index = 0;
 
+        CPoint pwhere;
         WaveformView* curve;
         Parameter* rate, * amnt, * posi, * offs, * shpr, * sync, * retr;
         Label* lfo1, * lfo2, * lfo3, * lfo4, * lfo5;

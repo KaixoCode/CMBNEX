@@ -43,6 +43,7 @@ namespace Kaixo
     public:
         int index = 0;
         bool pressed = false;
+        CPoint pwhere;
 
         EnvelopeCurve* curve;
         Parameter* attk, * atkc, * attl, * decy, * dcyc, * decl, * sust, * rels, * rlsc;

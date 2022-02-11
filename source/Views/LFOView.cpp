@@ -35,6 +35,7 @@ namespace Kaixo
 
     CMouseEventResult LFOView::onMouseDown(CPoint& where, const CButtonState& buttons)
     {
+        pwhere = where;
         auto _r = CViewContainer::onMouseDown(where, buttons);
         pressed = true;
         return kMouseEventHandled;
@@ -48,7 +49,7 @@ namespace Kaixo
         where2.offset(-getViewSize().left, -getViewSize().top);
         getTransform().inverse().transform(where2);
 
-        if (pressed)
+        if (pwhere != where && pressed)
         {
             pressed = false;
             nvd1->onMouseMoved(where2, buttons);

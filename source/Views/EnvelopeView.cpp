@@ -316,7 +316,7 @@ namespace Kaixo
         where2.offset(-getViewSize().left, -getViewSize().top);
         getTransform().inverse().transform(where2);
 
-        if (pressed)
+        if (pressed && pwhere != where)
         {
             pressed = false;
             nvd1->onMouseMoved(where2, buttons); nvd2->onMouseMoved(where2, buttons);
@@ -381,7 +381,7 @@ namespace Kaixo
         auto _r = CViewContainer::onMouseDown(where, buttons);
 
         pressed = true;
-
+        pwhere = where;
         if (where.y - getViewSize().top > 125 && where.y - getViewSize().top < 150)
         {
             int _page = std::floor((where.x - getViewSize().left) / 112);
