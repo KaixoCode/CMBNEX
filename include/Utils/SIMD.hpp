@@ -17,7 +17,6 @@ namespace Kaixo
     enum SIMDPATH { s0, s128, s256, s512 };
     static inline int ChoosePath()
     {
-        return SIMDPATH::s0;
         alignas(4) union {
             int data[4]; 
             struct { int EAX, EBX, ECX, EDX; };

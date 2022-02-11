@@ -407,7 +407,7 @@ namespace Kaixo
         }
     }
 
-    void Processor::CalculateModulation(Voice& voice, double ratio)
+    void Processor::CalculateModulation(Voice& voice, double ratio, int ps)
     {   // If ratio == 1, move goals, because it's more efficient.
         if (ratio == 1) std::memcpy(voice.modulated, params.goals, Params::ModCount * sizeof(double));
 
@@ -470,19 +470,20 @@ namespace Kaixo
         }
     }
 
-    void Processor::UpdateComponentParameters(Voice& voice, double ratio)
+    void Processor::UpdateComponentParameters(Voice& voice, double ratio, int ps)
     {   // Get BPM from process context if valid, otherwise just use 128
         double bpm = (processData->processContext->state & ProcessContext::kTempoValid) ? processData->processContext->tempo : 128;
 
         // Calculate bend offset and time mult.
-        const double _bendRatio = 50. / processData->processContext->sampleRate;
+        const double _curSampleRate = processData->processContext->sampleRate / ps;
+        const double _bendRatio = 50. / _curSampleRate;
         voice.bendOffset = voice.bendOffset * (1 - _bendRatio) + _bendRatio * ((params[{ Params::PitchBend, ratio }] * 2 - 1) * 24 * voice.modulated[Params::Bend]);
         const double _bendOffset = voice.bendOffset + voice.modulated[Params::Transpose] * 96 - 48;
         const double _timeMult = voice.modulated[Params::Time] < 0.5 ? (voice.modulated[Params::Time] + 0.5) : ((voice.modulated[Params::Time] - 0.5) * 2 + 1);
 
         // Frequency glide
         voice.deltaf = _timeMult * std::abs((voice.pressed - voice.pressedOld) / (0.001 + voice.modulated[Params::Glide] *
-            voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * 10 * processData->processContext->sampleRate));
+            voice.modulated[Params::Glide] * voice.modulated[Params::Glide] * 10 * _curSampleRate));
         if (voice.frequency > voice.pressed)
             if (voice.frequency - voice.deltaf < voice.pressed) voice.frequency = voice.pressed;
             else voice.frequency -= voice.deltaf;
@@ -517,7 +518,7 @@ namespace Kaixo
 
         for (int i = 0; i < Envelopes; i++)
         {   // Adjust Envelope parameters and generate
-            voice.env[i].SAMPLE_RATE = processData->processContext->sampleRate;
+            voice.env[i].SAMPLE_RATE = _curSampleRate;
             voice.env[i].settings.attack = voice.modulated[Params::Env1A + i] * voice.modulated[Params::Env1A + i] * voice.modulated[Params::Env1A + i] * 5;
             voice.env[i].settings.attackCurve = voice.modulated[Params::Env1AC + i] * 2 - 1;
             voice.env[i].settings.attackLevel = voice.modulated[Params::Env1AL + i];
@@ -533,7 +534,7 @@ namespace Kaixo
 
         for (int i = 0; i < LFOs; i++)
         {   // Adjust lfo parameters 
-            voice.lfo[i].SAMPLE_RATE = processData->processContext->sampleRate;
+            voice.lfo[i].SAMPLE_RATE = _curSampleRate;
 
             if (params.goals[Params::LFOSync1 + i] > 0.5) // If bpm synced lfo
             {
@@ -618,9 +619,10 @@ namespace Kaixo
     inline void Processor::GenerateVoice(Voice& voice)
     {   
         // Calculate oversample amount
+        size_t _pupdate = 32;
         size_t _index = std::floor(params.goals[Params::Oversample] * 4);
         size_t _osa = _index == 0 ? 1 : _index == 1 ? 2 : _index == 2 ? 4 : 8;
-        if (processData->processMode & ProcessModes::kOffline) _osa = 8;
+        if (processData->processMode & ProcessModes::kOffline) _osa = 8, _pupdate = 1;
 
         // Set oversampled sample rate in voice
         voice.samplerate = processData->processContext->sampleRate * _osa;
@@ -628,8 +630,8 @@ namespace Kaixo
         // If envelope is done, no sound so return, but do calculate modulations
         if (voice.env[0].Done())
         {
-            CalculateModulation(voice, 1);
-            UpdateComponentParameters(voice, 1);
+            CalculateModulation(voice, 1, 1);
+            UpdateComponentParameters(voice, 1, 1);
             return;
         }
 
@@ -638,8 +640,14 @@ namespace Kaixo
         {
             double ratio = index / (double)swapBuffer.amount;
 
-            CalculateModulation(voice, ratio);
-            UpdateComponentParameters(voice, ratio);
+            if (sinceLastParamUpdate >= _pupdate)
+            {
+                sinceLastParamUpdate = 0;
+            
+                CalculateModulation(voice, ratio, _pupdate);
+                UpdateComponentParameters(voice, ratio, _pupdate);
+            }
+            sinceLastParamUpdate++;
 
             // Generate Oscillator
             switch (SIMDPATH)

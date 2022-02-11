@@ -145,6 +145,7 @@ namespace Kaixo
         double projectTimeSamples = 0; // Amount of samples since start project.
         int lastPressedVoice = 0; // Last voice index that was activated
         bool monophonic = false;
+        int sinceLastParamUpdate = 0;
 
         bool doModulationSync = true; // Gets set to false at end to stop modulation sync thread.
 
@@ -180,8 +181,8 @@ namespace Kaixo
 #include "Processing/SIMD_Impl.hpp"
 
         double GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio, int osi);
-        void CalculateModulation(Voice& voice, double ratio);
-        void UpdateComponentParameters(Voice& voice, double ratio);
+        void CalculateModulation(Voice& voice, double ratio, int ps);
+        void UpdateComponentParameters(Voice& voice, double ratio, int ps);
 
         double Combine(double a, double b, int index, Voice& voice);
         static double CombineSingle(double a, double b, int mode);
