@@ -29,6 +29,7 @@ void GenerateOscillator(Voice& voice, int os)
     std::fill_n(voice.memory._makeuA, Oscillators * Unison * 8, 0);
     std::fill_n(voice.memory._destL, Oscillators * Unison * 8, nullptr);
     std::fill_n(voice.memory._destR, Oscillators * Unison * 8, nullptr);
+    std::fill_n(voice.memory._phasR, Oscillators * Unison * 8, nullptr);
 
     // Count amount of voices
     int _unisonVoices = 0;
@@ -64,7 +65,6 @@ void GenerateOscillator(Voice& voice, int os)
         std::fill_n(&voice.memory._shmx1A[_index], voice.unison[i] * os, voice.osc[i * Unison].settings.shaperMix);
         std::fill_n(&voice.memory._shmx2A[_index], voice.unison[i] * os, voice.osc[i * Unison].settings.shaper2Mix);
         std::fill_n(&voice.memory._wtposA[_index], voice.unison[i] * os, voice.osc[i * Unison].settings.wtpos);
-        std::fill_n(&voice.memory._freqcA[_index], voice.unison[i] * os, voice.osc[i * Unison].settings.frequency);
         std::fill_n(&voice.memory._gainsA[_index], voice.unison[i] * os, voice.modulated[Params::Volume1 + i]);
         std::fill_n(&voice.memory._destL[_index], voice.unison[i] * os, &voice.oscs[0][i][0]);
         std::fill_n(&voice.memory._destR[_index], voice.unison[i] * os, &voice.oscs[1][i][0]);
@@ -73,14 +73,17 @@ void GenerateOscillator(Voice& voice, int os)
         {
             const int _oi = i * Unison + j;
             auto& osc = voice.osc[_oi];
+
+            std::fill_n(&voice.memory._phasR[_index], os, &osc.phase);
             for (int k = 0; k < os; k++)
             {
+                voice.memory._freqcA[_index] = osc.settings.frequency;
                 voice.memory._panniA[_index] = osc.settings.panning;
                 voice.memory._ovsinA[_index] = k;
                 voice.memory._phaseA[_index] = osc.phase;
                 _index++;
 
-                osc.phase = myfmod1(osc.phase + osc.settings.frequency / voice.samplerate);
+                //osc.phase = myfmod1(osc.phase + osc.settings.frequency / voice.samplerate);
             }
         }
         _unisonVoices += voice.unison[i] * os;
@@ -108,6 +111,7 @@ void GenerateOscillator(Voice& voice, int os)
         SIMDType _enbdr = &voice.memory._enbdrA[i];
         SIMDType _drvga = &voice.memory._drvgaA[i];
         SIMDType _drvsh = &voice.memory._drvshA[i];
+        SIMDType _ovsin = &voice.memory._ovsinA[i];
         SIMDType _phasedata = &voice.memory._phaseA[i];
 
         SIMDType _gain = &voice.memory._gainsA[i];
@@ -120,7 +124,9 @@ void GenerateOscillator(Voice& voice, int os)
         SIMDType _freq = _oscFreq * _synca;
         SIMDType _freqc = minmax(_freq.log2() * 2, 0.f, 32.f);
 
-        _phasedata = _phasedata * (1 - _shmx1) + _shmx1 * lookup3di(_phasedata, _shap1, _morph, Shapers::getMainPhaseShaper());
+        SIMDType _newPhase = simdmyfmod1(_phasedata + ((_ovsin + 1) * (_oscFreq / voice.samplerate)));
+
+        _phasedata = _newPhase * (1 - _shmx1) + _shmx1 * lookup3di(_newPhase, _shap1, _morph, Shapers::getMainPhaseShaper());
 
         SIMDType _pwdone =
             (_pw & ((_phasedata / _d) > 1.f)) | // If pw < 0 : phase / _d > 1
@@ -158,15 +164,19 @@ void GenerateOscillator(Voice& voice, int os)
 
         // Get final values
         float _finalData[SIMDType::COUNT];
-        _result.get(_finalData);
+        _result.get(_finalData);       
+        
+        float _newPhaseData[SIMDType::COUNT];
+        _newPhase.get(_newPhaseData);
 
         // Get new phases
         for (int j = 0; j < SIMDType::COUNT; j++)
         {
             if (voice.memory._destL[i + j])
             {   // Assign new phase, and set generated audio to destination
-                (voice.memory._destL[i + j][voice.memory._ovsinA[i + j]]) += _finalData[j] * voice.memory._makeuA[i + j] * voice.memory._panniA[i + j];
-                (voice.memory._destR[i + j][voice.memory._ovsinA[i + j]]) += _finalData[j] * voice.memory._makeuA[i + j] * (1 - voice.memory._panniA[i + j]);
+                (*voice.memory._phasR[i + j]) = _newPhaseData[j];
+                (voice.memory._destL[i + j][(int)voice.memory._ovsinA[i + j]]) += _finalData[j] * voice.memory._makeuA[i + j] * voice.memory._panniA[i + j];
+                (voice.memory._destR[i + j][(int)voice.memory._ovsinA[i + j]]) += _finalData[j] * voice.memory._makeuA[i + j] * (1 - voice.memory._panniA[i + j]);
             }
         }
 

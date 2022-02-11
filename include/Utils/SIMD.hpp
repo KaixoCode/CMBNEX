@@ -78,6 +78,7 @@ namespace Kaixo
         {}
 
         Type value;
+        auto toFloat() { return _mm_cvtepi32_ps(value); }
 
         inline SIMD operator~() { return _mm_xor_si128(value, _mm_set1_epi32(UINT_MAX)); }
 
@@ -124,6 +125,7 @@ namespace Kaixo
         {}
 
         Type value;
+        auto toFloat() { return _mm256_cvtepi32_ps(value); }
 
         inline SIMD operator~() { return _mm256_xor_si256(value, _mm256_set1_epi32(UINT_MAX)); }
 
@@ -170,6 +172,7 @@ namespace Kaixo
         {}
 
         Type value;
+        auto toFloat() { return _mm512_cvtepi32_ps(value); }
 
         inline SIMD operator~() { return _mm512_xor_si512(value, _mm512_set1_epi32(UINT_MAX)); }
 

@@ -186,6 +186,35 @@ namespace Kaixo
 			}
 		};
 
+		struct MyButton2 : public CView
+		{
+			CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+			{
+				bool enabled = editor->controller->getParamNormalized(tag) > 0.5;
+				
+				editor->controller->beginEdit(tag);
+				editor->controller->performEdit(tag, !enabled);
+				editor->controller->setParamNormalized(tag, !enabled);
+				editor->controller->endEdit(tag);
+
+				setDirty(true);
+				return kMouseEventHandled;
+			}
+
+			MyEditor* editor;
+			int tag;
+			MyButton2(CRect size, MyEditor* editor, int tag)
+				: CView(size), editor(editor), tag(tag)
+			{}
+
+			void draw(CDrawContext* pContext)
+			{
+				auto a = getViewSize();
+				pContext->setFillColor(editor->controller->getParamNormalized(tag) > 0.5 ? Colors::MainGreen : Colors::KnobBack);
+				pContext->drawRect(a, kDrawFilled);
+			}
+		};
+
 		MyEditor* editor;
 		Overlay* overlay;
 
@@ -195,7 +224,7 @@ namespace Kaixo
 			editor->loadSettings();
 			setBackgroundColor({ 0, 0, 0, 128 });
 			auto a = getViewSize();
-			addView(new BackgroundEffect{ {.size{ a.inset(390, 200) } } });
+			addView(new BackgroundEffect{ {.size{ a.inset(390, 170) } } });
 			double y = 5;
 			addView(new Label{ {.size = { a.left, a.top + y, a.right, a.top + y + 20 }, .value = "CMBNEX", .center = true}});
 			y += 28;
@@ -214,14 +243,24 @@ namespace Kaixo
 			addView(new Label{ {.size = { a.left, a.top + y, a.right, a.top + y + 20 }, .value = "For more information, and the manual, visit", .center = true, .fontsize = 14 }});
 			y += 20;
 			addView(new Label{ {.size = { a.left, a.top + y, a.right, a.top + y + 20 }, .value = "https://github.com/KaixoCode/CMBNEX", .center = true, .fontsize = 14 }});
-			y += 40;
-			addView(new Label{ {.size = { a.left, a.top + y, a.right, a.top + y + 20 }, .value = "Change Color (HSV)", .center = true, .fontsize = 14 }});
-			y += 20;
+			y += 33;
+			addView(new Label{ {.size = { a.left, a.top + y, a.right, a.top + y + 20 }, .value = "Change Color (HSV)", .center = true, .fontsize = 16 }});
+			y += 22;
 			addView(new MySlider{ { a.left + 50, a.top + y, a.right - 50, a.top + y + 70 }, editor });
 			y += 70;
 			addView(new MyButton{ { a.left + 50, a.top + y, a.left + 70, a.top + y + 20 }, editor });
 			y += 1;
 			addView(new Label{ {.size = { a.left + 80, a.top + y, a.right, a.top + y + 20 }, .value = "Light mode", .center = false, .fontsize = 14 } });
+			y += 33;
+			addView(new Label{ {.size = { a.left, a.top + y, a.right, a.top + y + 20 }, .value = "Quality", .center = true, .fontsize = 16 } });
+			y += 22;
+			addView(new MyButton2{ { a.left + 50, a.top + y, a.left + 70, a.top + y + 20 }, editor, Params::HQMod });
+			y += 1;
+			addView(new Label{ {.size = { a.left + 80, a.top + y, a.right, a.top + y + 20 }, .value = "High Speed Modulation", .center = false, .fontsize = 14 } });
+			y += 25;
+			addView(new MyButton2{ { a.left + 50, a.top + y, a.left + 70, a.top + y + 20 }, editor, Params::OSExport });
+			y += 1;
+			addView(new Label{ {.size = { a.left + 80, a.top + y, a.right, a.top + y + 20 }, .value = "Oversample On Export", .center = false, .fontsize = 14 } });
 			addView(overlay = new Overlay{ getViewSize() }); overlay->setMouseEnabled(false);
 		}
 

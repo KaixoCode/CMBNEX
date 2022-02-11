@@ -112,7 +112,7 @@ namespace Kaixo
 
             struct SIMDMemory
             {
-                int _ovsinA[Oscillators * Unison * 8];
+                float _ovsinA[Oscillators * Unison * 8];
                 float _phasoA[Oscillators * Unison * 8];
                 float _dcoffA[Oscillators * Unison * 8];
                 float _enbflA[Oscillators * Unison * 8];
@@ -137,6 +137,7 @@ namespace Kaixo
                 float _makeuA[Oscillators * Unison * 8];
                 double* _destL[Oscillators * Unison * 8];
                 double* _destR[Oscillators * Unison * 8];
+                float* _phasR[Oscillators * Unison * 8];
             } memory;
         };
 

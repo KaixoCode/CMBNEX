@@ -149,6 +149,8 @@ enum Params
 
     PitchBend, Voices, Threading, ModWheel,
 
+    HQMod, OSExport,
+
     Size
 };
 
@@ -278,6 +280,9 @@ constexpr ParamInfo ParamNames[]
     { "Voices", 1, false, true, false, 0, ParameterInfo::kIsHidden },
     { "Threading", 1, false, true, false, 0, ParameterInfo::kIsHidden },
     { "Mod Wheel", 0.5, false, true, true, 0, ParameterInfo::kIsHidden },
+
+    { "HQ Mod", 0, false, true, false, 0, ParameterInfo::kIsHidden },
+    { "Oversample Export", 1, false, true, false, 0, ParameterInfo::kIsHidden },
 };
 
 constexpr static const char* TimesString[]{
