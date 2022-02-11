@@ -193,17 +193,17 @@ namespace Kaixo
             if (wtpos < 0.33)
             {
                 const double r = wtpos * 3;
-                return triangle(p, f) * r + sine(p) * (1 - r);
+                return constrain(triangle(p, f) * r + sine(p) * (1 - r), -1., 1.);
             }
             else if (wtpos < 0.66)
             {
                 const double r = (wtpos - 0.33) * 3;
-                return saw(p, f) * r + triangle(p, f) * (1 - r);
+                return constrain(saw(p, f) * r + triangle(p, f) * (1 - r), -1., 1.);
             }
             else
             {
                 const double r = (wtpos - 0.66) * 3;
-                return square(p, f) * r + saw(p, f) * (1 - r);
+                return constrain(square(p, f) * r + saw(p, f) * (1 - r), -1., 1.);
             }
         };
 
@@ -213,7 +213,7 @@ namespace Kaixo
         bool basicLoaded() { return basict.done; };
         double basic(double phase, double wtpos, double f) 
         {   // Log2(f) to get octave, *2 because 2 tables per octave
-            return basict.get(phase, wtpos, fastlog2(f) * 2);
+            return basict.get(phase, wtpos , fastlog2(f) * 2);
         }
     }
 

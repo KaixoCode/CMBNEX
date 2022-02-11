@@ -73,10 +73,10 @@ namespace Kaixo
             if constexpr (Height.constrained) y = constrain(y, Height.begin, Height.end);
             if constexpr (Width.interpolate && Height.interpolate) // If both interpolate
             {   // Calculate index and ratios for both indices
-                const double _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
+                const double _x = (Width.size - 0.0001) * (x - Width.begin) / (Width.end - Width.begin);
                 const int _xr = (int)(_x);
                 const double _xrem = _x - _xr;
-                const double _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
+                const double _y = (Height.size - 0.0001) * (y - Height.begin) / (Height.end - Height.begin);
                 const int _yr = (int)(_y);
                 const double _yrem = _y - _yr; // We average the ratios of both indices.
                 const float _xa1 = (1 - _xrem) * table[_xr + (Width.size + 1) * _yr] +
@@ -87,7 +87,7 @@ namespace Kaixo
             }
             else if constexpr (Width.interpolate)
             {   // Single axis interpolation, works the same as in 1d lookup table
-                const double _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
+                const double _x = (Width.size - 0.0001) * (x - Width.begin) / (Width.end - Width.begin);
                 const int _xr = (int)(_x);
                 const double _xrem = _x - _xr;
                 const int _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
@@ -97,7 +97,7 @@ namespace Kaixo
             else if constexpr (Height.interpolate)
             {   // Single axis interpolation again.
                 const int _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
-                const double _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
+                const double _y = (Height.size - 0.0001) * (y - Height.begin) / (Height.end - Height.begin);
                 const int _yr = (int)(_y);
                 const double _yrem = _y - _yr;
                 return (1 - _yrem) * table[_x + (Width.size + 1) * _yr] +
@@ -141,13 +141,13 @@ namespace Kaixo
             if constexpr (Depth.constrained) z = constrain(z, Depth.begin, Depth.end);
             if constexpr (Width.interpolate && Height.interpolate && Depth.interpolate)
             {
-                const double _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
+                const double _x = (Width.size - 0.0001) * (x - Width.begin) / (Width.end - Width.begin);
                 const int _xr = (int)(_x);
                 const double _xrem = _x - _xr;
-                const double _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
+                const double _y = (Height.size - 0.0001) * (y - Height.begin) / (Height.end - Height.begin);
                 const int _yr = (int)(_y);
                 const double _yrem = _y - _yr;
-                const double _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
+                const double _z = (Depth.size - 0.0001) * (z - Depth.begin) / (Depth.end - Depth.begin);
                 const int _zr = (int)(_z);
                 const double _zrem = _z - _zr;
                 const float _xa11 = (1 - _xrem) * table[_xr +     (Width.size + 1) * _yr +       (Width.size + 1) * (Height.size + 1) * _zr] +
@@ -164,10 +164,10 @@ namespace Kaixo
             }
             else if constexpr (Width.interpolate && Height.interpolate)
             {   // Calculate index and ratios for both indices
-                const double _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
+                const double _x = (Width.size - 0.0001) * (x - Width.begin) / (Width.end - Width.begin);
                 const int _xr = (int)(_x);
                 const double _xrem = _x - _xr;
-                const double _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
+                const double _y = (Height.size - 0.0001) * (y - Height.begin) / (Height.end - Height.begin);
                 const int _yr = (int)(_y);
                 const double _yrem = _y - _yr; // We average the ratios of both indices.
                 const int _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
@@ -180,11 +180,11 @@ namespace Kaixo
             }
             else if constexpr (Width.interpolate && Depth.interpolate)
             {   // Calculate index and ratios for both indices
-                const double _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
+                const double _x = (Width.size - 0.0001)* (x - Width.begin) / (Width.end - Width.begin);
                 const int _xr = (int)(_x);
                 const double _xrem = _x - _xr;
                 const int _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
-                const double _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
+                const double _z = (Depth.size - 0.0001)* (z - Depth.begin) / (Depth.end - Depth.begin);
                 const int _zr = (int)(_z);
                 const double _zrem = _z - _zr;
                 const float _xa1 = (1 - _xrem) * table[_xr + (Width.size + 1) * _y + (Width.size + 1) * (Height.size + 1) * _zr] +
@@ -197,10 +197,10 @@ namespace Kaixo
             else if constexpr (Height.interpolate && Depth.interpolate)
             {   // Calculate index and ratios for both indices
                 const int _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
-                const double _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
+                const double _y = (Height.size - 0.0001) * (y - Height.begin) / (Height.end - Height.begin);
                 const int _yr = (int)(_y);
                 const double _yrem = _y - _yr; // We average the ratios of both indices.
-                const double _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
+                const double _z = (Depth.size - 0.0001) * (z - Depth.begin) / (Depth.end - Depth.begin);
                 const int _zr = (int)(_z);
                 const double _zrem = _z - _zr;
                 const float _ya1 = (1 - _yrem) * table[_x + (Width.size + 1) * _yr + (Width.size + 1) * (Height.size + 1) * _zr] +
@@ -212,7 +212,7 @@ namespace Kaixo
             }
             else if constexpr (Width.interpolate)
             {   // Single axis interpolation, works the same as in 1d lookup table
-                const double _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
+                const double _x = (Width.size - 0.0001)* (x - Width.begin) / (Width.end - Width.begin);
                 const int _xr = (int)(_x);
                 const double _xrem = _x - _xr;
                 const int _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
@@ -223,7 +223,7 @@ namespace Kaixo
             else if constexpr (Height.interpolate)
             {   // Single axis interpolation again.
                 const int _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
-                const double _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
+                const double _y = (Height.size - 0.0001) * (y - Height.begin) / (Height.end - Height.begin);
                 const int _yr = (int)(_y);
                 const double _yrem = _y - _yr;
                 const int _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
@@ -234,7 +234,7 @@ namespace Kaixo
             {   // Single axis interpolation again.
                 const int _x = Width.size * (x - Width.begin) / (Width.end - Width.begin);
                 const int _y = Height.size * (y - Height.begin) / (Height.end - Height.begin);
-                const double _z = Depth.size * (z - Depth.begin) / (Depth.end - Depth.begin);
+                const double _z = (Depth.size - 0.0001)* (z - Depth.begin) / (Depth.end - Depth.begin);
                 const int _zr = (int)(_z);
                 const double _zrem = _z - _zr;
                 return (1 - _zrem) * table[_x + (Width.size + 1) * _y + (Width.size + 1) * (Height.size + 1) * _zr] +

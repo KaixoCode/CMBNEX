@@ -249,20 +249,18 @@ namespace Kaixo
             constexpr static size_t _mult[]{ 32, 8, 0 };
 
             // Do combine, apply pre-gain
-            double _v = Combine(
+            double _v = constrain(Combine(
                 _cs[i * 2] * voice.modulated[Params::PreGainX + i] * 2,
                 _cs[i * 2 + 1] * voice.modulated[Params::PreGainX + i] * 2,
-                i, voice);
+                i, voice), -16., 16.);
 
             // Fold
             if (params.goals[Params::ENBFoldX + i] > 0.5)
-                _v = Shapers::fold(_v * (voice.modulated[Params::FoldX + i] * 15 + 1), voice.modulated[Params::BiasX + i] * 1.9999 - 1);
+                _v = Shapers::fold(_v * (voice.modulated[Params::FoldX + i] * 15 + 1), voice.modulated[Params::BiasX + i] * 2 - 1);
 
             // Drive
             if (params.goals[Params::ENBDriveX + i] > 0.5)
-                _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i] * 0.9999);
-            else // Always clip, even if drive disabled, to prevent unstable filter
-                _v = constrain(_v, -16., 16.);
+                _v = Shapers::drive(_v, voice.modulated[Params::DriveGainX + i] * 3 + 1, voice.modulated[Params::DriveAmtX + i]);
 
             // Volume
             _v = _v * voice.modulated[Params::GainX + i] * 2;
