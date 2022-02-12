@@ -215,9 +215,7 @@ namespace Kaixo
     }
 
     double Processor::GenerateSample(size_t channel, ProcessData& data, Voice& voice, double ratio, int osi)
-    {   // If the gain envelope is done, no more sound, so return 0.
-        if (voice.env[0].Done()) return 0;
-
+    {
         if (channel == 0)
         {
             // Sub oscillator
@@ -583,18 +581,11 @@ namespace Kaixo
                 voice.filter[i].Reset();
             }
 
-            int _unison = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
-            voice.unison[i] = _unison;
-            int _unisonMode = std::round(params.goals[Params::UnisonType1 + i] * 2);
+            voice.unison[i] = std::round(params.goals[Params::UnisonCount1 + i] * 7) + 1;
+            voice.unisonMode[i] = std::round(params.goals[Params::UnisonType1 + i] * 2);
             for (int j = 0; j < Unison; j++)
             {
-                double foff = _unison == 1 ? 0 : 2 * voice.modulated[Params::UnisonDetun1 + i] * (j / (double)(_unison - 1) - 0.5);
-
-                if (_unisonMode == 1) foff = foff * 0.3 + 0.7 * (voice.myrandom()) * voice.modulated[Params::UnisonDetun1 + i] * 8;
-
                 voice.osc[i * Unison + j].SAMPLE_RATE = voice.samplerate;
-                voice.osc[i * Unison + j].settings.frequency = noteToFreq(foff + voice.frequency + _bendOffset
-                    + voice.modulated[Params::Detune1 + i] * 4 - 2 + voice.modulated[Params::Pitch1 + i] * 48 - 24);
                 voice.osc[i * Unison + j].settings.wtpos = voice.modulated[Params::WTPos1 + i];
                 voice.osc[i * Unison + j].settings.sync = voice.modulated[Params::Sync1 + i];
                 voice.osc[i * Unison + j].settings.pw = voice.modulated[Params::PulseW1 + i];
@@ -645,8 +636,27 @@ namespace Kaixo
                 sinceLastParamUpdate = 0;
             
                 CalculateModulation(voice, ratio, _pupdate);
+                UpdateComponentParameters(voice, ratio, _pupdate);
             }
-            UpdateComponentParameters(voice, ratio, 1);
+
+            {   // The frequency of the oscillator has to be updated constantly, not
+                // 4x slower, because the noise generator for unison noise mode will generate different frequency content
+                // if it was processesd 4x slower, so that's why this code is out here.
+                const double _bendOffset = voice.bendOffset + voice.modulated[Params::Transpose] * 96 - 48;
+                for (int i = 0; i < Oscillators; i++)
+                {
+                    for (int j = 0; j < Unison; j++)
+                    {
+                        double foff = voice.unison[i] == 1 ? 0 : 2 * voice.modulated[Params::UnisonDetun1 + i] * (j / (double)(voice.unison[i] - 1) - 0.5);
+
+                        if (voice.unisonMode[i] == 1) foff = foff * 0.3 + 0.7 * (voice.myrandom()) * voice.modulated[Params::UnisonDetun1 + i] * 8;
+
+                        voice.osc[i * Unison + j].settings.frequency = noteToFreq(foff + voice.frequency + _bendOffset
+                            + voice.modulated[Params::Detune1 + i] * 4 - 2 + voice.modulated[Params::Pitch1 + i] * 48 - 24);
+                    }
+                }
+            }
+
             sinceLastParamUpdate++;
 
             // Generate Oscillator

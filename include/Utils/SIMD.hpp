@@ -224,7 +224,10 @@ namespace Kaixo
         inline void get(float(&data)[COUNT]) { return _mm_storeu_ps(data, value); }
 
         inline SIMD floor() const { return _mm_floor_ps(value); }
+        inline SIMD round() const { return _mm_round_ps(value, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
         inline SIMD log2() const { return _mm_log2_ps(value); }
+        inline SIMD tanh() const { return _mm_tanh_ps(value); }
+        inline SIMD abs() const { return _mm_andnot_ps(_mm_set1_ps(-0.0), value); }
 
         inline SIMD<int, BITS> toInt() const { return _mm_cvtps_epi32(value); }
 
@@ -278,7 +281,10 @@ namespace Kaixo
         inline void get(float(&data)[COUNT]) { return _mm256_storeu_ps(data, value); }
 
         inline SIMD floor() const { return _mm256_floor_ps(value); }
+        inline SIMD round() const { return _mm256_round_ps(value, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
         inline SIMD log2() const { return _mm256_log2_ps(value); }
+        inline SIMD tanh() const { return _mm256_tanh_ps(value); }
+        inline SIMD abs() const { return _mm256_andnot_ps(_mm256_set1_ps(-0.0), value); }
 
         inline SIMD<int, BITS> toInt() const { return _mm256_cvtps_epi32(value); }
 
@@ -332,7 +338,10 @@ namespace Kaixo
         inline void get(float(&data)[COUNT]) { return _mm512_storeu_ps(data, value); }
 
         inline SIMD floor() const { return _mm512_floor_ps(value); }
+        inline SIMD round() const { return _mm512_roundscale_ps(value, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
         inline SIMD log2() const { return _mm512_log2_ps(value); }
+        inline SIMD tanh() const { return _mm512_tanh_ps(value); }
+        inline SIMD abs() const { return _mm512_andnot_ps(_mm512_set1_ps(-0.0), value); }
 
         inline SIMD<int, BITS> toInt() const { return _mm512_cvtps_epi32(value); }
 
@@ -433,22 +442,24 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto driveLookup(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
-        const std::array<float, 100001 * 2 + 1>& table)
+    static inline auto driveLookup(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y)
     {
-        SIMD<int, Bits> _x = ((x + 10) * 5000).toInt();
+        return minmax(x, -1., 1.) * (1 - y) + y * x.tanh();
 
-        SIMD<float, Bits>  _y = y;
-        SIMD<int, Bits> _yr;
-        SIMD<float, Bits>  _yrem;
-        interpolate(_y, _yr, _yrem);
 
-        // Calculate indices to interpolate
-        // Get data at all indices, and interpolate xaxis using xrem
-        SIMD<int, Bits> _yi1 = _yr * (100000 + 1);
-        SIMD<int, Bits> _yi2 = (_yr + 1) * (100000 + 1);
-        return lookup(_x + _yi1, table) * (1 - _yrem)
-            + lookup(_x + _yi2, table) * _yrem;
+        //SIMD<int, Bits> _x = ((x + 10) * 5000).toInt();
+        //
+        //SIMD<float, Bits>  _y = y;
+        //SIMD<int, Bits> _yr;
+        //SIMD<float, Bits>  _yrem;
+        //interpolate(_y, _yr, _yrem);
+        //
+        //// Calculate indices to interpolate
+        //// Get data at all indices, and interpolate xaxis using xrem
+        //SIMD<int, Bits> _yi1 = _yr * (100000 + 1);
+        //SIMD<int, Bits> _yi2 = (_yr + 1) * (100000 + 1);
+        //return lookup(_x + _yi1, table) * (1 - _yrem)
+        //    + lookup(_x + _yi2, table) * _yrem;
     };
 
     template<size_t Bits>
@@ -469,9 +480,12 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto foldLookup(const SIMD<float, Bits>& x, const std::array<float, 100001 + 1>& table)
+    static inline auto foldLookup(const SIMD<float, Bits>& x)
     {
-        SIMD<int, Bits> _x = ((x + 5) * 10000).toInt();
-        return lookup(_x, table);
+        SIMD<float, Bits> t = x * 0.25 + 0.25;
+        return 4 * (t - t.round()).abs() - 0.25;
+
+        //SIMD<int, Bits> _x = ((x + 5) * 10000).toInt();
+        //return lookup(_x, table);
     };
 }

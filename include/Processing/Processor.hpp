@@ -73,7 +73,9 @@ namespace Kaixo
             double bendOffset = 0;
 
             double oscs[2][Oscillators][8]; // Oscillator values, stored separately for modulation
+            double outs[2][8];
             int unison[Oscillators];
+            int unisonMode[Oscillators];
             Oscillator osc[Oscillators * Unison]; // Main oscillators
             Oscillator sub; // Sub oscillator
             Oscillator lfo[LFOs]; // LFOs
@@ -112,6 +114,37 @@ namespace Kaixo
 
             struct SIMDMemory
             {
+                SIMDMemory()
+                {
+                    std::fill_n(_ovsinA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_phasoA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_dcoffA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_enbflA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_fldgaA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_fldbiA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_enbdrA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_drvgaA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_drvshA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_pulswA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_bendaA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_syncaA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_shap1A, Oscillators * Unison * 8, 0);
+                    std::fill_n(_shap2A, Oscillators * Unison * 8, 0);
+                    std::fill_n(_morphA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_shmx1A, Oscillators * Unison * 8, 0);
+                    std::fill_n(_shmx2A, Oscillators * Unison * 8, 0);
+                    std::fill_n(_phaseA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_wtposA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_freqcA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_gainsA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_panniA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_makeuA, Oscillators * Unison * 8, 0);
+                    std::fill_n(_destL, Oscillators * Unison * 8, nullptr);
+                    std::fill_n(_destR, Oscillators * Unison * 8, nullptr);
+                    std::fill_n(_phasR, Oscillators * Unison * 8, nullptr);
+
+                }
+
                 float _ovsinA[Oscillators * Unison * 8];
                 float _phasoA[Oscillators * Unison * 8];
                 float _dcoffA[Oscillators * Unison * 8];

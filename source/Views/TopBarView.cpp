@@ -27,6 +27,13 @@ namespace Kaixo
             return CViewContainer::notify(sender, message);
     }
 
+    CMouseEventResult TopBarView::Button::onMouseExited(CPoint& where, const CButtonState& buttons)
+    {
+        really = false;
+        setDirty(true);
+        return kMouseEventHandled;
+    }
+
     CMouseEventResult TopBarView::Button::onMouseDown(CPoint& where, const CButtonState& buttons)
     {
         bgef.settings.pressed = true;
@@ -38,7 +45,20 @@ namespace Kaixo
     {
         if (bgef.settings.pressed && getViewSize().pointInside(where))
         {
-            press(); // Call callback
+            if (!p)
+            {
+                press(); // Call callback
+            }
+            else if (really && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - pressed).count() > 500)
+            {
+                really = false;
+                press(); // Call callback
+            }
+            else
+            {
+                pressed = std::chrono::steady_clock::now();
+                really = true;
+            }
         }
         bgef.settings.pressed = false;
         setDirty(true);
@@ -52,7 +72,10 @@ namespace Kaixo
         pContext->setFont(pContext->getFont(), 14);
         pContext->setFontColor(Colors::MainText);
         double off = bgef.settings.pressed ? 1 : 0;
-        pContext->drawString(text, { a.left + 8 + off, a.getCenter().y + 3 + off });
+        double xoff = bgef.settings.pressed ? 1 : 0;
+        String str = text;
+        if (really) str = "Sure?", xoff -= 9;
+        pContext->drawString(str, {a.left + (!p ? 8 : 13) + xoff, a.getCenter().y + 3 + off});
     }
 
     CMouseEventResult TopBarView::NameDisplay::onMouseDown(CPoint& where, const CButtonState& buttons)
@@ -93,7 +116,7 @@ namespace Kaixo
     {
         setBackgroundColor({ 0, 0, 0, 0 });
         addView(new BackgroundEffect{ {.size = { 0, 0, getWidth(), getHeight() } } });
-        bInit = new Button{ { 492, 10, 492 + 37, 10 + 25 } };
+        bInit = new Button{ { 484, 10, 484 + 45, 10 + 25 } };
         bInit->text = "Init";
         bInit->press = [this]() {
             this->editor->controller->Init();
@@ -103,7 +126,7 @@ namespace Kaixo
 
         static auto CMBNEX = CFileExtension{ "CMBNEX Preset", "cmbnex", "application/preset", 0, "me.kaixo.cmbnex" };
 
-        bSave = new Button{ { 437, 10, 437 + 50, 10 + 25 } };
+        bSave = new Button{ { 429, 10, 429 + 50, 10 + 25 } };
         bSave->text = "Save";
         bSave->press = [this, editor]() {
             selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile);

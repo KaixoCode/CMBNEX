@@ -4,33 +4,6 @@ void GenerateOscillator(Voice& voice, int os)
     using SIMDType = SIMD<float, Bits>;
     using SIMDiType = SIMD<int, Bits>;
 
-    std::fill_n(voice.memory._ovsinA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._phasoA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._dcoffA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._enbflA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._fldgaA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._fldbiA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._enbdrA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._drvgaA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._drvshA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._pulswA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._bendaA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._syncaA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._shap1A, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._shap2A, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._morphA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._shmx1A, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._shmx2A, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._phaseA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._wtposA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._freqcA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._gainsA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._panniA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._makeuA, Oscillators * Unison * 8, 0);
-    std::fill_n(voice.memory._destL, Oscillators * Unison * 8, nullptr);
-    std::fill_n(voice.memory._destR, Oscillators * Unison * 8, nullptr);
-    std::fill_n(voice.memory._phasR, Oscillators * Unison * 8, nullptr);
-
     // Count amount of voices
     int _unisonVoices = 0;
     int _index = 0;
@@ -152,13 +125,12 @@ void GenerateOscillator(Voice& voice, int os)
         SIMDType _cond = _enbfl > 0.5;
 
         _result = // Fold
-            (_cond & foldLookup(simdmyfmod1(0.25 * (_result * _fldga + _fldbi)) * 4.f, Shapers::getFold())) |
+            (_cond & foldLookup(_result * _fldga + _fldbi)) |
             ((~_cond) & _result);
 
         _cond = _enbdr > 0.5;
-        _result = // Drive
-            (_cond & driveLookup(minmax(_result * _drvga, -10.f, 10.f), _drvsh, Shapers::getDrive())) |
-            ((~_cond) & minmax(_result, -1.f, 1.f));
+        _result = (_cond & driveLookup(_result * _drvga, _drvsh)) | 
+            ((~_cond) & _result);
 
         _result = _result * _gain;
 
@@ -172,7 +144,7 @@ void GenerateOscillator(Voice& voice, int os)
         // Get new phases
         for (int j = 0; j < SIMDType::COUNT; j++)
         {
-            if (voice.memory._destL[i + j])
+            if (i + j < _unisonVoices)
             {   // Assign new phase, and set generated audio to destination
                 (*voice.memory._phasR[i + j]) = _newPhaseData[j];
                 (voice.memory._destL[i + j][(int)voice.memory._ovsinA[i + j]]) += _finalData[j] * voice.memory._makeuA[i + j] * voice.memory._panniA[i + j];

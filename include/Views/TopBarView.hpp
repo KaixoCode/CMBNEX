@@ -19,8 +19,12 @@ namespace Kaixo
             BackgroundEffect bgef{ {.size = getViewSize() } };
             std::function<void(void)> press;
             bool p = false;
+            bool really = false;
             String text;
 
+            std::chrono::steady_clock::time_point pressed;
+
+            CMouseEventResult onMouseExited(CPoint& where, const CButtonState& buttons) override;
             CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override;
             CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons) override;
 
