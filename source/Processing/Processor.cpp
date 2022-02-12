@@ -500,14 +500,14 @@ namespace Kaixo
             voice.dcoffp[i].type = FilterType::HighPass;
             voice.dcoffp[i].Q = 1;
             voice.dcoffp[i].sampleRate = voice.samplerate;
-            voice.dcoffp[i].RecalculateParameters(ratio == 1);
+            voice.dcoffp[i].RecalculateParameters(!generate);
 
             auto _ft = std::floor(params.goals[Params::FilterX + i] * 3); // Filter parameters
             voice.cfilterp[i].sampleRate = voice.samplerate;
             voice.cfilterp[i].f0 = voice.modulated[Params::FreqX + i] * voice.modulated[Params::FreqX + i] * (22000 - 30) + 30;
             voice.cfilterp[i].Q = voice.modulated[Params::ResoX + i] * 16 + 1;
             voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-            voice.cfilterp[i].RecalculateParameters(ratio == 1);
+            voice.cfilterp[i].RecalculateParameters(!generate);
 
             if (!generate)
             {
@@ -576,7 +576,7 @@ namespace Kaixo
             voice.filterp[i].f0 = voice.modulated[Params::Freq1 + i] * voice.modulated[Params::Freq1 + i] * (22000 - 30) + 30;
             voice.filterp[i].Q = voice.modulated[Params::Reso1 + i] * 16 + 1;
             voice.filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
-            voice.filterp[i].RecalculateParameters(ratio == 1);
+            voice.filterp[i].RecalculateParameters(!generate);
             
             if (!generate)
             {
