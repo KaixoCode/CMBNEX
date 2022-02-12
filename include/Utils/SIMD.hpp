@@ -482,8 +482,10 @@ namespace Kaixo
     template<size_t Bits>
     static inline auto foldLookup(const SIMD<float, Bits>& x)
     {
+        // t = 0.25 * x + 0.25
+        // 4 * abs(t - round(t) - 1;
         SIMD<float, Bits> t = x * 0.25 + 0.25;
-        return 4 * (t - t.round()).abs() - 0.25;
+        return 4.f * (t - t.round()).abs() - 1.f;
 
         //SIMD<int, Bits> _x = ((x + 5) * 10000).toInt();
         //return lookup(_x, table);

@@ -71,6 +71,7 @@ namespace Kaixo
             double rand = 0; // Random value, generated each note press.
 
             double bendOffset = 0;
+            int sinceLastParamUpdate = 0;
 
             double oscs[2][Oscillators][8]; // Oscillator values, stored separately for modulation
             double outs[2][8];
@@ -179,7 +180,6 @@ namespace Kaixo
         double projectTimeSamples = 0; // Amount of samples since start project.
         int lastPressedVoice = 0; // Last voice index that was activated
         bool monophonic = false;
-        int sinceLastParamUpdate = 0;
 
         bool doModulationSync = true; // Gets set to false at end to stop modulation sync thread.
 

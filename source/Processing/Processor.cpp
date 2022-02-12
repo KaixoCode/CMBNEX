@@ -631,9 +631,9 @@ namespace Kaixo
         {
             double ratio = index / (double)swapBuffer.amount;
 
-            if (sinceLastParamUpdate >= _pupdate)
+            if (voice.sinceLastParamUpdate >= _pupdate)
             {
-                sinceLastParamUpdate = 0;
+                voice.sinceLastParamUpdate = 0;
             
                 CalculateModulation(voice, ratio, _pupdate);
                 UpdateComponentParameters(voice, ratio, _pupdate);
@@ -657,7 +657,7 @@ namespace Kaixo
                 }
             }
 
-            sinceLastParamUpdate++;
+            voice.sinceLastParamUpdate++;
 
             // Generate Oscillator
             switch (SIMDPATH)
