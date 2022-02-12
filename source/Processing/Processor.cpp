@@ -472,6 +472,8 @@ namespace Kaixo
     {   // Get BPM from process context if valid, otherwise just use 128
         double bpm = (processData->processContext->state & ProcessContext::kTempoValid) ? processData->processContext->tempo : 128;
 
+        bool generate = ratio != 1;
+
         // Calculate bend offset and time mult.
         const double _curSampleRate = processData->processContext->sampleRate / ps;
         const double _bendRatio = 50. / _curSampleRate;
@@ -507,7 +509,7 @@ namespace Kaixo
             voice.cfilterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
             voice.cfilterp[i].RecalculateParameters(ratio == 1);
 
-            if (ratio == 1)
+            if (!generate)
             {
                 voice.cfilter[i].Reset();
                 voice.dcoff[i].Reset();
@@ -527,7 +529,7 @@ namespace Kaixo
             voice.env[i].settings.release = voice.modulated[Params::Env1R + i] * voice.modulated[Params::Env1R + i] * voice.modulated[Params::Env1R + i] * 5;
             voice.env[i].settings.releaseCurve = voice.modulated[Params::Env1RC + i] * 2 - 1;
             voice.env[i].settings.timeMult = _timeMult;
-            voice.env[i].Generate(0);
+            if (generate) voice.env[i].Generate(0);
         }
 
         for (int i = 0; i < LFOs; i++)
@@ -563,7 +565,7 @@ namespace Kaixo
 
             voice.lfo[i].settings.wtpos = voice.modulated[Params::LFOPos1 + i];
             voice.lfo[i].settings.shaper3 = voice.modulated[Params::LFOShaper1 + i];
-            voice.lfo[i].sample = voice.lfo[i].OffsetSimple(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
+            if (generate) voice.lfo[i].sample = voice.lfo[i].OffsetSimple(voice.modulated[Params::LFOPhase1 + i]) * (voice.modulated[Params::LFOLvl1 + i] * 2 - 1);
         }
 
         for (int i = 0; i < Oscillators; i++)
@@ -576,7 +578,7 @@ namespace Kaixo
             voice.filterp[i].type = _ft == 0 ? FilterType::LowPass : _ft == 1 ? FilterType::HighPass : FilterType::BandPass;
             voice.filterp[i].RecalculateParameters(ratio == 1);
             
-            if (ratio == 1)
+            if (!generate)
             {
                 voice.filter[i].Reset();
             }
