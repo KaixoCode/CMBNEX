@@ -126,7 +126,7 @@ void GenerateOscillator(Voice& voice, int os)
 
         SIMDType _newPhase = simdmyfmod1(_phasedata + ((_ovsin + 1) * (_oscFreq / voice.samplerate)));
 
-        _phasedata = _newPhase * (1 - _shmx1) + _shmx1 * lookup3di(_newPhase, _shap1, _morph, Shapers::getMainPhaseShaper());
+        _phasedata = _newPhase * (1 - _shmx1) + _shmx1 * shaperLookup(_newPhase, _shap1, _morph, Shapers::getMainPhaseShaper());
 
         SIMDType _pwdone =
             (_pw & ((_phasedata / _d) > 1.f)) | // If pw < 0 : phase / _d > 1
@@ -137,14 +137,14 @@ void GenerateOscillator(Voice& voice, int os)
             ((~_pw) & (((_phasedata + _pulsw) / _d) + _phaso))
         );
 
-        _phasedata = simdmyfmod1(lookup2di1(_phasedata, _benda, Shapers::getPowerCurve()) * _synca);
+        _phasedata = simdmyfmod1(powerCurveLookup(_phasedata, _benda, Shapers::getPowerCurve()) * _synca);
 
         // calculate the index of the frequency in the wavetable using log and scalar
-        SIMDType _wavetable = lookup3di2(_phasedata, _wtpos, _freqc, Wavetables::getBasicTable());
+        SIMDType _wavetable = wavetableLookup(_phasedata, _wtpos, _freqc, Wavetables::getBasicTable());
 
         _wavetable =
             (_pwdone & 0.f) | // If pulsewidth done, value 0, otherwise other stuff
-            ((~_pwdone) & (_wavetable * (1 - _shmx2) + _shmx2 * lookup3di(_wavetable, _shap2, _morph, Shapers::getMainWaveShaper())));
+            ((~_pwdone) & (_wavetable * (1 - _shmx2) + _shmx2 * shaperLookup(_wavetable, _shap2, _morph, Shapers::getMainWaveShaper())));
 
 
         SIMDType _result = (_wavetable + _dcoff);
@@ -152,12 +152,12 @@ void GenerateOscillator(Voice& voice, int os)
         SIMDType _cond = _enbfl > 0.5;
 
         _result = // Fold
-            (_cond & lookup1di1(simdmyfmod1(0.25 * (_result * _fldga + _fldbi)) * 4.f, Shapers::getFold())) |
+            (_cond & foldLookup(simdmyfmod1(0.25 * (_result * _fldga + _fldbi)) * 4.f, Shapers::getFold())) |
             ((~_cond) & _result);
 
         _cond = _enbdr > 0.5;
         _result = // Drive
-            (_cond & lookup2di2(minmax(_result * _drvga, -10.f, 10.f), _drvsh, Shapers::getDrive())) |
+            (_cond & driveLookup(minmax(_result * _drvga, -10.f, 10.f), _drvsh, Shapers::getDrive())) |
             ((~_cond) & minmax(_result, -1.f, 1.f));
 
         _result = _result * _gain;

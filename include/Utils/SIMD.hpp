@@ -376,7 +376,7 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto lookup3di(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
+    static inline auto shaperLookup(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
         const SIMD<float, Bits>& z, const std::array<float, 4097 * 9 * 1025 + 1>& table)
     {
         SIMD<float, Bits> _x = (x + 1) * 2048;
@@ -405,7 +405,7 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto lookup3di2(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
+    static inline auto wavetableLookup(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
         const SIMD<float, Bits>& z, const std::array<float, 2049 * 4 * 33 + 1>& table)
     {
         SIMD<float, Bits> _x = x * 2048;
@@ -433,7 +433,7 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto lookup2di2(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
+    static inline auto driveLookup(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
         const std::array<float, 100001 * 2 + 1>& table)
     {
         SIMD<int, Bits> _x = ((x + 10) * 5000).toInt();
@@ -452,7 +452,7 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto lookup2di1(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
+    static inline auto powerCurveLookup(const SIMD<float, Bits>& x, const SIMD<float, Bits>& y,
         const std::array<float, 1001 * 1001 + 1>& table)
     {
         SIMD<float, Bits>  _x = x * 1000;
@@ -469,7 +469,7 @@ namespace Kaixo
     };
 
     template<size_t Bits>
-    static inline auto lookup1di1(const SIMD<float, Bits>& x, const std::array<float, 100001 + 1>& table)
+    static inline auto foldLookup(const SIMD<float, Bits>& x, const std::array<float, 100001 + 1>& table)
     {
         SIMD<int, Bits> _x = ((x + 5) * 10000).toInt();
         return lookup(_x, table);

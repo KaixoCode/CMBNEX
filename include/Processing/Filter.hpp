@@ -28,16 +28,16 @@ namespace Kaixo
                 return;
 
             Qb = Q;
-            if (direct)
-            {
+            //if (direct)
+            //{
                 f0b = f0;
-            } 
-            else 
-            {
-                if (f0 - f0b > 5) f0b += 5;
-                else if (f0 - f0b < 5) f0b -= 5;
-                else f0b = f0;
-            }
+            //} 
+            //else 
+            //{
+            //    if (f0 - f0b > 5) f0b += 5;
+            //    else if (f0 - f0b < 5) f0b -= 5;
+            //    else f0b = f0;
+            //}
             sb = sampleRate;
             tb = type;
             dbgb = dbgain;
