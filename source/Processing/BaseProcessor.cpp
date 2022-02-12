@@ -1,4 +1,5 @@
 #include "Processing/BaseProcessor.hpp"
+#include "Processing/Processor.hpp"
 
 namespace Kaixo
 {
@@ -132,7 +133,36 @@ namespace Kaixo
 
         // Prepare the swap buffer with amount of samples, fill with 0s
         swapBuffer.prepare(data.numSamples);
-        Generate(data, data.numSamples); // Call generate to fill buffer
+
+        constexpr static auto _handler = [](auto code, auto ep) {
+
+            // Handle exceptions
+            switch (code)
+            {
+            case STATUS_ILLEGAL_INSTRUCTION:
+            {
+                switch (Processor::SIMDPATH)
+                {
+                case SIMDPATH::s512: Processor::SIMDPATH = SIMDPATH::s256; break;
+                case SIMDPATH::s256: Processor::SIMDPATH = SIMDPATH::s128; break;
+                default: Processor::SIMDPATH = SIMDPATH::s0; break;
+                }
+
+                break;
+            }
+            }
+
+            return EXCEPTION_EXECUTE_HANDLER;
+        };
+
+        __try
+        {
+            Generate(data, data.numSamples); // Call generate to fill buffer
+        }
+        __except (_handler(GetExceptionCode(), GetExceptionInformation()))
+        {
+            std::cout << "Caught exception \n";
+        }
 
         // Then assign the buffer to the output, depending on process mode
         void** out = getChannelBuffersPointer(processSetup, data.outputs[0]);
