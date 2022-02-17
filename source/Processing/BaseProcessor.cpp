@@ -208,13 +208,15 @@ namespace Kaixo
                 {   // Apply value
                     streamer.readDouble(params.goals[i]);
                     if (i < Params::ModCount) // If modable
-                    {   // Set mod goals + amount
+                    {   // Set mod goals + amount 
                         hasmod[i] = false;
                         for (int j = 0; j < ModAmt; j++)
-                        {   // Keep track of if mod, for efficiency
-                            hasmod[i] |= modgoals[(i * ModAmt + j)] > 0;
+                        {
                             streamer.readDouble(modgoals[(i * ModAmt + j)]);
                             streamer.readDouble(modamount[(i * ModAmt + j)]);
+                            
+                            // Keep track of if mod, for efficiency
+                            hasmod[i] |= modgoals[(i * ModAmt + j)] > 0;
                         }
                     }
                     break;
